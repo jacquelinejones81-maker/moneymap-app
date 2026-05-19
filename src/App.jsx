@@ -83,4 +83,42 @@ function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--gold)', marginBot
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--gold)', marginBottom: 8 }}>MoneyMap</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading…</div>
+      </div>
+    </div>
+  );
+}
+
+function AdminLogin({ onSuccess }) {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+
+  const handleLogin = () => {
+    if (pw === ADMIN_PASSWORD) { onSuccess(); }
+    else { setErr('Incorrect password.'); setPw(''); }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+      <div className="modal-box slide-up" style={{ maxWidth: 380 }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 6 }}>Admin Access</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Enter your admin password to view leads</p>
+        </div>
+        <input
+          type="password" value={pw} placeholder="Admin password"
+          onChange={e => { setPw(e.target.value); setErr(''); }}
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          style={{ marginBottom: 12 }}
+        />
+        {err && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 10 }}>{err}</p>}
+        <button className="btn-gold" style={{ width: '100%' }} onClick={handleLogin}>Enter Admin Panel</button>
+        <p style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: 'var(--text-muted)' }}>
+          <a href="#" onClick={e => { e.preventDefault(); window.location.hash = ''; window.location.reload(); }} style={{ color: 'var(--gold)', textDecoration: 'none' }}>← Back</a>
+        </p>
+      </div>
+    </div>
+  );
+}
