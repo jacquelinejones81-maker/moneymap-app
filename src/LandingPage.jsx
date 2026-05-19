@@ -11,6 +11,13 @@ const BENEFITS = [
   { icon: '📧', text: 'Exclusive money tips delivered to your inbox' },
 ];
 
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0,3)}-${digits.slice(3)}`;
+  return `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}`;
+}
+
 export default function LandingPage({ onSubmit }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [errors, setErrors] = useState({});
@@ -30,7 +37,8 @@ export default function LandingPage({ onSubmit }) {
     const e = {};
     if (!form.name.trim()) e.name = 'Your name is required';
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = 'A valid email is required';
-    if (!form.phone.trim() || form.phone.replace(/\D/g,'').length < 10) e.phone = 'A valid phone number is required';
+    const digits = form.phone.replace(/\D/g, '');
+    if (digits.length < 10) e.phone = 'A valid phone number is required';
     return e;
   };
 
@@ -48,6 +56,12 @@ export default function LandingPage({ onSubmit }) {
 
   const handleReviewCheck = () => {
     if (!wantsReview) setWantsReview(true);
+  };
+
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhone(e.target.value);
+    setForm(f => ({ ...f, phone: formatted }));
+    setErrors(er => ({ ...er, phone: '' }));
   };
 
   return (
@@ -75,7 +89,6 @@ export default function LandingPage({ onSubmit }) {
 
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '2rem', alignItems: 'start' }}>
 
-          {/* Left — benefits */}
           <div className="fade-in" style={{ flex: isMobile ? 'none' : '1.1', width: '100%' }}>
             <h2 style={{ fontSize: 18, fontFamily: 'var(--font-display)', marginBottom: '1rem' }}>What you get — 100% free:</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
@@ -97,26 +110,35 @@ export default function LandingPage({ onSubmit }) {
             </div>
           </div>
 
-          {/* Right — signup form */}
           <div className="slide-up" style={{ flex: isMobile ? 'none' : '0.9', width: '100%', background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 'var(--radius-xl)', padding: isMobile ? '1.25rem' : '2rem' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: '0.375rem', textAlign: 'center' }}>Get Free Access</h3>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1.5rem' }}>No credit card. No catch. Just results.</p>
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5, fontWeight: 500 }}>Full name</label>
-              <input type="text" placeholder="Your full name" value={form.name} onChange={e => { setForm(f => ({...f, name: e.target.value})); setErrors(er => ({...er, name: ''})); }} style={errors.name ? { borderColor: 'var(--red)' } : {}} />
+              <input type="text" placeholder="Your full name" value={form.name}
+                onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }}
+                style={errors.name ? { borderColor: 'var(--red)' } : {}} />
               {errors.name && <p style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>{errors.name}</p>}
             </div>
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5, fontWeight: 500 }}>Email address</label>
-              <input type="email" placeholder="your@email.com" value={form.email} onChange={e => { setForm(f => ({...f, email: e.target.value})); setErrors(er => ({...er, email: ''})); }} style={errors.email ? { borderColor: 'var(--red)' } : {}} />
+              <input type="email" placeholder="your@email.com" value={form.email}
+                onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErrors(er => ({ ...er, email: '' })); }}
+                style={errors.email ? { borderColor: 'var(--red)' } : {}} />
               {errors.email && <p style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>{errors.email}</p>}
             </div>
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5, fontWeight: 500 }}>Phone number</label>
-              <input type="tel" placeholder="(555) 000-0000" value={form.phone} onChange={e => { setForm(f => ({...f, phone: e.target.value})); setErrors(er => ({...er, phone: ''})); }} style={errors.phone ? { borderColor: 'var(--red)' } : {}} />
+              <input
+                type="tel"
+                placeholder="555-555-5555"
+                value={form.phone}
+                onChange={handlePhoneChange}
+                style={errors.phone ? { borderColor: 'var(--red)' } : {}}
+              />
               {errors.phone && <p style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>{errors.phone}</p>}
             </div>
 
@@ -126,7 +148,8 @@ export default function LandingPage({ onSubmit }) {
                 Most people have <strong style={{ color: 'var(--text-primary)' }}>no idea how much money they actually need saved to retire on their own terms</strong> — not someone else's timeline. A complimentary financial review changes that. In one free session, we map out exactly where you are, where you want to be, and how to get there.
               </p>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: wantsReview ? 'default' : 'pointer' }}>
-                <input type="checkbox" checked={wantsReview} onChange={handleReviewCheck} style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: 'var(--teal)', cursor: wantsReview ? 'default' : 'pointer' }} />
+                <input type="checkbox" checked={wantsReview} onChange={handleReviewCheck}
+                  style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: 'var(--teal)', cursor: wantsReview ? 'default' : 'pointer' }} />
                 <span style={{ fontSize: 13, color: 'var(--teal-light)', lineHeight: 1.5, fontWeight: 500 }}>
                   {wantsReview
                     ? <><strong style={{ color: '#5eead4' }}>✓ You're locked in</strong> — complimentary financial review requested.</>
@@ -136,14 +159,22 @@ export default function LandingPage({ onSubmit }) {
               </label>
             </div>
 
-            <button className="btn-gold" style={{ width: '100%', padding: '14px', fontSize: 15 }} onClick={handleGetAccess}>Unlock My Free Budget App →</button>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>By signing up you agree to receive financial tips and updates. Unsubscribe anytime.</p>
+            <button className="btn-gold" style={{ width: '100%', padding: '14px', fontSize: 15 }} onClick={handleGetAccess}>
+              Unlock My Free Budget App →
+            </button>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
+              By signing up you agree to receive financial tips and updates. Unsubscribe anytime.
+            </p>
           </div>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            Already have access? <a href="#admin" style={{ color: 'var(--gold)', textDecoration: 'none' }} onClick={() => { window.location.hash = 'admin'; window.location.reload(); }}>Admin login</a>
+            Already have access?{' '}
+            <a href="#admin" style={{ color: 'var(--gold)', textDecoration: 'none' }}
+              onClick={() => { window.location.hash = 'admin'; window.location.reload(); }}>
+              Admin login
+            </a>
           </p>
         </div>
       </div>
@@ -153,8 +184,12 @@ export default function LandingPage({ onSubmit }) {
           <div className="modal-box slide-up" style={{ maxWidth: 540 }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 22 : 26, marginBottom: 10, lineHeight: 1.2 }}>You're In, {submittedLead?.name?.split(' ')[0]}!</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7 }}>Your financial transformation starts <em>right now</em>. You're about to have a tool that shows you exactly where every dollar goes — and a clear path to becoming debt-free.</p>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 22 : 26, marginBottom: 10, lineHeight: 1.2 }}>
+                You're In, {submittedLead?.name?.split(' ')[0]}!
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7 }}>
+                Your financial transformation starts <em>right now</em>.
+              </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
@@ -162,7 +197,7 @@ export default function LandingPage({ onSubmit }) {
                 <span style={{ fontSize: 20, flexShrink: 0 }}>📧</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gold)', marginBottom: 3 }}>Check your email at {submittedLead?.email}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Your free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works"</strong> book is on its way, plus exclusive money tips sent straight to your inbox.</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Your free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works"</strong> book is on its way, plus exclusive money tips.</div>
                 </div>
               </div>
 
@@ -185,7 +220,7 @@ export default function LandingPage({ onSubmit }) {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                     <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📞</span>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                      <strong style={{ color: 'var(--text-secondary)' }}>Prefer we reach out instead?</strong> No problem — someone will personally call you at <strong style={{ color: 'var(--text-primary)' }}>{submittedLead?.phone}</strong> within 24 hours.
+                      <strong style={{ color: 'var(--text-secondary)' }}>Prefer we reach out?</strong> Someone will personally call you at <strong style={{ color: 'var(--text-primary)' }}>{submittedLead?.phone}</strong> within 24 hours.
                     </p>
                   </div>
                 </div>
@@ -194,21 +229,24 @@ export default function LandingPage({ onSubmit }) {
               <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 'var(--radius-md)', padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <span style={{ fontSize: 20, flexShrink: 0 }}>🚀</span>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#4ade80' }}>Your dashboard is ready.</strong> Set your beginning balance, add your debts, and log your first transactions today. The sooner you start, the sooner you win.
+                  <strong style={{ color: '#4ade80' }}>Your dashboard is ready.</strong> Set your beginning balance, add your debts, and log your first transactions today.
                 </div>
               </div>
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: '1.25rem' }}>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-                <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: 'var(--gold)' }} />
+                <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                  style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: 'var(--gold)' }} />
                 <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  I agree to receive the free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works" book</strong>, financial wellness tips, and occasional updates via email. I understand I can unsubscribe at any time.
+                  I agree to receive the free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works" book</strong>, financial wellness tips, and occasional updates via email.
                 </span>
               </label>
             </div>
 
-            <button className="btn-gold" style={{ width: '100%', padding: '14px', fontSize: 15, opacity: agreed ? 1 : 0.4, cursor: agreed ? 'pointer' : 'not-allowed' }} onClick={handleAgree}>
+            <button className="btn-gold"
+              style={{ width: '100%', padding: '14px', fontSize: 15, opacity: agreed ? 1 : 0.4, cursor: agreed ? 'pointer' : 'not-allowed' }}
+              onClick={handleAgree}>
               I Agree — Take Me to My Dashboard 🎯
             </button>
           </div>

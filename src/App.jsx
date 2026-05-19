@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from './firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from 'firebase/auth';
 import LandingPage from './LandingPage';
 import BudgetApp from './BudgetApp';
 import AdminPanel from './AdminPanel';
@@ -10,72 +12,118 @@ const ADMIN_PASSWORD = 'moneymap2024';
 export default function App() {
   const [view, setView] = useState('loading');
   const [currentLead, setCurrentLead] = useState(null);
+  const [firebaseUser, setFirebaseUser] = useState(null);
 
   useEffect(() => {
     const hash = window.location.hash;
     if (hash === '#admin') { setView('admin-login'); return; }
-    const isAuthenticated = sessionStorage.getItem('mm_auth') === 'true';
-    if (isAuthenticated) {
-      const lead = JSON.parse(sessionStorage.getItem('mm_lead') || 'null');
-      setCurrentLead(lead);
-      setView('app');
-      return;
-    }
-    const accounts = JSON.parse(localStorage.getItem('mm_accounts') || '{}');
-    const hasAnyAccount = Object.keys(accounts).length > 0;
-    setView(hasAnyAccount ? 'pin-login' : 'landing');
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setFirebaseUser(user);
+        const lead = JSON.parse(localStorage.getItem(`mm_lead_${user.uid}`) || 'null');
+        setCurrentLead(lead);
+        const pinSet = localStorage.getItem(`mm_pin_${user.uid}`);
+        if (!pinSet) {
+          setView('pin-setup');
+        } else {
+          const sessionAuth = sessionStorage.getItem(`mm_auth_${user.uid}`);
+          if (sessionAuth === 'true') {
+            setView('app');
+          } else {
+            setView('pin-login');
+          }
+        }
+      } else {
+        setFirebaseUser(null);
+        setView('landing');
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const handleLeadSubmit = (lead) => {
-    const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
-    const newLead = {
-      ...lead,
-      id: Date.now(),
-      submittedAt: new Date().toISOString(),
-      crmAdded: false,
-      bookSent: false,
-      reviewCalled: false,
-    };
-    leads.unshift(newLead);
-    localStorage.setItem('mm_leads', JSON.stringify(leads));
-    setCurrentLead(newLead);
-    setView('pin-setup');
+  const handleLeadSubmit = async (lead) => {
+    try {
+      const tempPassword = btoa(lead.email + lead.phone).slice(0, 20) + 'Mm1!';
+      let userCredential;
+      try {
+        userCredential = await createUserWithEmailAndPassword(auth, lead.email, tempPassword);
+      } catch (err) {
+        if (err.code === 'auth/email-already-in-use') {
+          userCredential = await signInWithEmailAndPassword(auth, lead.email, tempPassword);
+        } else throw err;
+      }
+      const user = userCredential.user;
+      await updateProfile(user, { displayName: lead.name });
+      const newLead = {
+        ...lead,
+        uid: user.uid,
+        id: Date.now(),
+        submittedAt: new Date().toISOString(),
+        crmAdded: false,
+        bookSent: false,
+        reviewCalled: false,
+      };
+      const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
+      const exists = leads.find(l => l.email === lead.email);
+      if (!exists) {
+        leads.unshift(newLead);
+        localStorage.setItem('mm_leads', JSON.stringify(leads));
+      }
+      localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(newLead));
+      setCurrentLead(newLead);
+      setFirebaseUser(user);
+      setView('pin-setup');
+    } catch (err) {
+      console.error('Error creating account:', err);
+      alert('Something went wrong. Please try again.');
+    }
   };
 
   const handlePinSetup = (pin) => {
-    const accounts = JSON.parse(localStorage.getItem('mm_accounts') || '{}');
-    const email = currentLead?.email || '';
-    accounts[email.toLowerCase()] = {
-      pin: btoa(pin + email.toLowerCase()),
-      name: currentLead?.name || '',
-      leadId: currentLead?.id,
-    };
-    localStorage.setItem('mm_accounts', JSON.stringify(accounts));
-    sessionStorage.setItem('mm_auth', 'true');
-    sessionStorage.setItem('mm_lead', JSON.stringify(currentLead));
+    if (!firebaseUser) return;
+    localStorage.setItem(`mm_pin_${firebaseUser.uid}`, btoa(pin + firebaseUser.uid));
+    sessionStorage.setItem(`mm_auth_${firebaseUser.uid}`, 'true');
     setView('app');
   };
 
-  const handlePinLogin = (lead) => {
-    sessionStorage.setItem('mm_auth', 'true');
-    sessionStorage.setItem('mm_lead', JSON.stringify(lead));
-    setCurrentLead(lead);
+  const handlePinLogin = () => {
+    if (!firebaseUser) return;
+    sessionStorage.setItem(`mm_auth_${firebaseUser.uid}`, 'true');
     setView('app');
   };
 
-  const handleSignOut = () => {
-    sessionStorage.removeItem('mm_auth');
-    sessionStorage.removeItem('mm_lead');
+  const handleSignOut = async () => {
+    if (firebaseUser) {
+      sessionStorage.removeItem(`mm_auth_${firebaseUser.uid}`);
+    }
+    await signOut(auth);
     setCurrentLead(null);
-    setView('pin-login');
+    setFirebaseUser(null);
+    setView('landing');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!firebaseUser) return;
+    try {
+      localStorage.removeItem(`mm_pin_${firebaseUser.uid}`);
+      localStorage.removeItem(`mm_lead_${firebaseUser.uid}`);
+      sessionStorage.removeItem(`mm_auth_${firebaseUser.uid}`);
+      await firebaseUser.delete();
+      setCurrentLead(null);
+      setFirebaseUser(null);
+      setView('landing');
+    } catch (err) {
+      console.error('Error deleting account:', err);
+    }
   };
 
   if (view === 'loading') return <LoadingScreen />;
   if (view === 'admin-login') return <AdminLogin onSuccess={() => setView('admin')} />;
-  if (view === 'admin') return <AdminPanel onBack={() => { window.location.hash = ''; setView('pin-login'); }} />;
+  if (view === 'admin') return <AdminPanel onBack={() => { window.location.hash = ''; setView('landing'); }} />;
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
-  if (view === 'pin-login') return <PinLogin onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
-  if (view === 'app') return <BudgetApp lead={currentLead} onSignOut={handleSignOut} />;
+  if (view === 'pin-login') return <PinLogin firebaseUser={firebaseUser} onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
+  if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
   return <LandingPage onSubmit={handleLeadSubmit} />;
 }
 
