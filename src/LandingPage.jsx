@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const CALENDLY_URL = 'https://calendly.com/jacquelinejones81/serviceappointment';
 
@@ -18,6 +18,13 @@ export default function LandingPage({ onSubmit }) {
   const [wantsReview, setWantsReview] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submittedLead, setSubmittedLead] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const validate = () => {
     const e = {};
@@ -50,23 +57,26 @@ export default function LandingPage({ onSubmit }) {
         <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,160,0.06) 0%, transparent 70%)' }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem', paddingTop: '2rem' }} className="fade-in">
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: '1.5rem' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto', padding: isMobile ? '1.5rem 1rem 3rem' : '2rem 1.5rem 4rem' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? '2rem' : '3rem', paddingTop: '1.5rem' }} className="fade-in">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: '1.25rem' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block' }}></span>
             <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>FREE FINANCIAL TOOL</span>
           </div>
-          <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.6rem)', fontFamily: 'var(--font-display)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.25rem' }}>
+          <h1 style={{ fontSize: isMobile ? '2rem' : 'clamp(2.2rem, 5vw, 3.6rem)', fontFamily: 'var(--font-display)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1rem' }}>
             Stop Wondering <br />
             <span style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Where Your Money Went</span>
           </h1>
-          <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-secondary)', maxWidth: 560, margin: '0 auto 2rem', lineHeight: 1.7 }}>
+          <p style={{ fontSize: isMobile ? '1rem' : 'clamp(1rem, 2vw, 1.2rem)', color: 'var(--text-secondary)', maxWidth: 560, margin: '0 auto 1.5rem', lineHeight: 1.7 }}>
             The same budgeting system financial professionals use — now free for you. Track spending, crush debt, and finally build savings that stick.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,0.9fr)', gap: '2rem', alignItems: 'start' }}>
-          <div className="fade-in">
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '2rem', alignItems: 'start' }}>
+
+          {/* Left — benefits */}
+          <div className="fade-in" style={{ flex: isMobile ? 'none' : '1.1', width: '100%' }}>
             <h2 style={{ fontSize: 18, fontFamily: 'var(--font-display)', marginBottom: '1rem' }}>What you get — 100% free:</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
               {BENEFITS.map((b, i) => (
@@ -87,7 +97,8 @@ export default function LandingPage({ onSubmit }) {
             </div>
           </div>
 
-          <div className="slide-up" style={{ background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 'var(--radius-xl)', padding: '2rem' }}>
+          {/* Right — signup form */}
+          <div className="slide-up" style={{ flex: isMobile ? 'none' : '0.9', width: '100%', background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 'var(--radius-xl)', padding: isMobile ? '1.25rem' : '2rem' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: '0.375rem', textAlign: 'center' }}>Get Free Access</h3>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1.5rem' }}>No credit card. No catch. Just results.</p>
 
@@ -117,7 +128,10 @@ export default function LandingPage({ onSubmit }) {
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: wantsReview ? 'default' : 'pointer' }}>
                 <input type="checkbox" checked={wantsReview} onChange={handleReviewCheck} style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: 'var(--teal)', cursor: wantsReview ? 'default' : 'pointer' }} />
                 <span style={{ fontSize: 13, color: 'var(--teal-light)', lineHeight: 1.5, fontWeight: 500 }}>
-                  {wantsReview ? <><strong style={{ color: '#5eead4' }}>✓ You're locked in</strong> — complimentary financial review requested.</> : <><strong>Yes, I want to know my number</strong> — sign me up for a free complimentary financial review.</>}
+                  {wantsReview
+                    ? <><strong style={{ color: '#5eead4' }}>✓ You're locked in</strong> — complimentary financial review requested.</>
+                    : <><strong>Yes, I want to know my number</strong> — sign me up for a free complimentary financial review.</>
+                  }
                 </span>
               </label>
             </div>
@@ -127,9 +141,9 @@ export default function LandingPage({ onSubmit }) {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            Already have access? <a href="#admin" style={{ color: 'var(--gold)', textDecoration: 'none' }} onClick={() => window.location.reload()}>Admin login</a>
+            Already have access? <a href="#admin" style={{ color: 'var(--gold)', textDecoration: 'none' }} onClick={() => { window.location.hash = 'admin'; window.location.reload(); }}>Admin login</a>
           </p>
         </div>
       </div>
@@ -139,7 +153,7 @@ export default function LandingPage({ onSubmit }) {
           <div className="modal-box slide-up" style={{ maxWidth: 540 }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, marginBottom: 10, lineHeight: 1.2 }}>You're In, {submittedLead?.name?.split(' ')[0]}!</h2>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 22 : 26, marginBottom: 10, lineHeight: 1.2 }}>You're In, {submittedLead?.name?.split(' ')[0]}!</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7 }}>Your financial transformation starts <em>right now</em>. You're about to have a tool that shows you exactly where every dollar goes — and a clear path to becoming debt-free.</p>
             </div>
 
@@ -165,13 +179,13 @@ export default function LandingPage({ onSubmit }) {
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal-light)', marginBottom: 8, textAlign: 'center' }}>Want to lock in your spot right now?</div>
                     <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #0ea5a0, #5eead4)', color: '#0a0f1e', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 'var(--radius-md)', textDecoration: 'none' }}>
-                      📅 Schedule My Free Review Now — Pick a Time That Works
+                      📅 Schedule My Free Review Now
                     </a>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                     <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📞</span>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                      <strong style={{ color: 'var(--text-secondary)' }}>Prefer we reach out instead?</strong> No problem — if you don't schedule above, someone will personally call you at <strong style={{ color: 'var(--text-primary)' }}>{submittedLead?.phone}</strong> within 24 hours.
+                      <strong style={{ color: 'var(--text-secondary)' }}>Prefer we reach out instead?</strong> No problem — someone will personally call you at <strong style={{ color: 'var(--text-primary)' }}>{submittedLead?.phone}</strong> within 24 hours.
                     </p>
                   </div>
                 </div>
