@@ -52,17 +52,40 @@ export default function App() {
 
   const handleLeadSubmit = async (lead) => {
     try {
-      const tempPassword = btoa(lead.email + lead.phone).slice(0, 20) + 'Mm1!';
-      let userCredential;
-      try {
-        userCredential = await createUserWithEmailAndPassword(auth, lead.email, tempPassword);
-      } catch (err) {
-        if (err.code === 'auth/email-already-in-use') {
-          userCredential = await signInWithEmailAndPassword(auth, lead.email, tempPassword);
-        } else throw err;
+      const cleanPhone = lead.phone.replace(/\D/g, '');
+      const tempPassword = btoa(lead.email + cleanPhone).slice(0, 20) + 'Mm1!';
+
+      const passwordsToTry = [
+        btoa(lead.email + cleanPhone).slice(0, 20) + 'Mm1!',
+        btoa(lead.email + lead.phone).slice(0, 20) + 'Mm1!',
+        btoa(lead.email + '816-739-1742').slice(0, 20) + 'Mm1!',
+        btoa(lead.email + '8167391742').slice(0, 20) + 'Mm1!',
+      ];
+
+      let userCredential = null;
+      let signedIn = false;
+
+      for (const pw of passwordsToTry) {
+        try {
+          userCredential = await signInWithEmailAndPassword(auth, lead.email, pw);
+          signedIn = true;
+          break;
+        } catch (e) {
+          if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+            continue;
+          } else if (e.code === 'auth/too-many-requests') {
+            throw e;
+          }
+        }
       }
+
+      if (!signedIn) {
+        userCredential = await createUserWithEmailAndPassword(auth, lead.email, tempPassword);
+      }
+
       const user = userCredential.user;
       await updateProfile(user, { displayName: lead.name });
+
       const newLead = {
         ...lead,
         uid: user.uid,
@@ -72,15 +95,18 @@ export default function App() {
         bookSent: false,
         reviewCalled: false,
       };
+
       const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
       const exists = leads.find(l => l.email === lead.email);
       if (!exists) {
         leads.unshift(newLead);
         localStorage.setItem('mm_leads', JSON.stringify(leads));
       }
+
       localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(newLead));
       const emailKey = `mm_email_uid_${user.email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
       localStorage.setItem(emailKey, user.uid);
+
       setCurrentLead(newLead);
       setFirebaseUser(user);
       setView('pin-setup');
@@ -137,7 +163,7 @@ export default function App() {
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
   if (view === 'pin-login') return <PinLogin firebaseUser={firebaseUser} onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
   if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
-  return <LandingPage onSubmit={handleLeadSubmit} onReturnUser={() => setView('pin-login')} />;
+  return <LandingPage onSubmit={handleLeadSubmit} />;
 }
 
 function LoadingScreen() {
