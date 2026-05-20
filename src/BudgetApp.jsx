@@ -175,10 +175,12 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const closeCashPopup = () => { localStorage.setItem(`mm_cash_${uid}`, 'true'); setShowCashPopup(false); };
   const closeVideo = () => { localStorage.setItem(`mm_video_${uid}`, 'true'); setShowVideo(false); };
 
-  const handleDeleteAccount = async () => {
+const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
     setShowGoodbye(true);
-    setTimeout(async () => { await onDeleteAccount(); }, 3000);
+    setTimeout(async () => {
+      await onDeleteAccount();
+    }, 2000);
   };
 
   const addNewAccount = () => {

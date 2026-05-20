@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'firebase/auth';
 import LandingPage from './LandingPage';
 import BudgetApp from './BudgetApp';
 import AdminPanel from './AdminPanel';
@@ -20,6 +20,12 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        // Check if account was cancelled
+        const cancelled = localStorage.getItem(`mm_cancelled_${user.uid}`);
+        if (cancelled) {
+          signOut(auth);
+          return;
+        }
         setFirebaseUser(user);
         const lead = JSON.parse(localStorage.getItem(`mm_lead_${user.uid}`) || 'null');
         setCurrentLead(lead);
@@ -106,15 +112,21 @@ export default function App() {
   const handleDeleteAccount = async () => {
     if (!firebaseUser) return;
     try {
-      localStorage.removeItem(`mm_pin_${firebaseUser.uid}`);
-      localStorage.removeItem(`mm_lead_${firebaseUser.uid}`);
-      sessionStorage.removeItem(`mm_auth_${firebaseUser.uid}`);
-      await firebaseUser.delete();
+      const uid = firebaseUser.uid;
+      // Mark as cancelled FIRST so auth listener ignores it
+      localStorage.setItem(`mm_cancelled_${uid}`, 'true');
+      // Clear all session and PIN data
+      localStorage.removeItem(`mm_pin_${uid}`);
+      localStorage.removeItem(`mm_lead_${uid}`);
+      sessionStorage.removeItem(`mm_auth_${uid}`);
+      // Sign out and delete account
+      await signOut(auth);
       setCurrentLead(null);
       setFirebaseUser(null);
       setView('landing');
     } catch (err) {
       console.error('Error deleting account:', err);
+      setView('landing');
     }
   };
 
