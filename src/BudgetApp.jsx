@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Chart, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import AppTour, { useTour } from './AppTour';
 import { db } from './firebase';
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
-Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const GROUPS = {
   'Income':       { color:'#1d9e75', bg:'rgba(29,158,117,0.15)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
@@ -54,7 +52,6 @@ function WelcomeVideoModal({ lead, onClose }) {
   );
 }
 
-// ── Delete Account Modal ─────────────────────────────────────────
 function DeleteAccountModal({ lead, onConfirm, onCancel }) {
   const [confirmed, setConfirmed] = useState(false);
   const firstName = lead?.name?.split(' ')[0] || 'there';
@@ -85,7 +82,6 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
   );
 }
 
-// ── Goodbye Modal ────────────────────────────────────────────────
 function GoodbyeModal({ lead }) {
   const firstName = lead?.name?.split(' ')[0] || 'there';
   return (
@@ -110,7 +106,7 @@ function GoodbyeModal({ lead }) {
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
-  const [accounts, setAccounts] = useState({ main: { name: 'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } });
+  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } });
   const [activeTab, setActiveTab] = useState('register');
   const [periodMode, setPeriodMode] = useState('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -124,7 +120,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [loading, setLoading] = useState(true);
   const { showTour, completeTour, resetTour } = useTour();
 
-  // Load data from Firebase
   useEffect(() => {
     if (!uid) return;
     const docRef = doc(db, 'users', uid, 'data', 'budgetData');
@@ -138,7 +133,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     return () => unsubscribe();
   }, [uid]);
 
-  // Save data to Firebase
   const saveToFirebase = async (updatedAccounts) => {
     if (!uid) return;
     try {
@@ -146,9 +140,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       await setDoc(docRef, { accounts: updatedAccounts }, { merge: true });
       setSavedMsg('Saved');
       setTimeout(() => setSavedMsg(''), 1800);
-    } catch (err) {
-      console.error('Save error:', err);
-    }
+    } catch (err) { console.error('Save error:', err); }
   };
 
   const updateAccount = (field, value) => {
@@ -186,15 +178,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
     setShowGoodbye(true);
-    setTimeout(async () => {
-      await onDeleteAccount();
-    }, 3000);
+    setTimeout(async () => { await onDeleteAccount(); }, 3000);
   };
 
   const addNewAccount = () => {
     if (!newAccountName.trim()) return;
     const key = `account_${Date.now()}`;
-    const updated = { ...accounts, [key]: { name: newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } };
+    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } };
     setAccounts(updated);
     saveToFirebase(updated);
     setActiveAccount(key);
@@ -232,7 +222,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
 
-      {/* Header */}
       <div style={{ borderBottom:'1px solid var(--navy-border)', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
         <div>
           <div style={{ fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'var(--gold)' }}>MoneyMap</div>
@@ -247,7 +236,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
       </div>
 
-      {/* Account tabs */}
       <div style={{ background:'rgba(255,255,255,0.02)', borderBottom:'1px solid var(--navy-border)', padding:'0.5rem 1.5rem', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
         {Object.entries(accounts).map(([key, acctData]) => (
           <button key={key} onClick={() => setActiveAccount(key)} style={{ padding:'5px 14px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'var(--gold)':'var(--navy-border)'}`, background: activeAccount===key?'rgba(201,168,76,0.15)':'transparent', color: activeAccount===key?'var(--gold)':'var(--text-muted)', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
@@ -268,7 +256,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       <div style={{ maxWidth:860, margin:'0 auto', padding:'1.25rem 1rem 4rem' }}>
         <MetricsBar transactions={transactions} debts={debts} beginBal={beginBal} />
         <AlertsBar transactions={transactions} budgets={budgets} />
-
         <div className="tabs">
           {tabs.map(t => (
             <button key={t.id} className={`tab ${activeTab===t.id?'active':''}`} onClick={() => handleTabSwitch(t.id)}>
@@ -276,7 +263,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             </button>
           ))}
         </div>
-
         {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} />}
         {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} setBillsPaid={bps} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
@@ -794,7 +780,7 @@ function CashPopup({onClose}){
         <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:'1.75rem'}}>
           <div style={{background:'rgba(56,189,248,0.08)',border:'1px solid rgba(56,189,248,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>🤔</span>
-            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'var(--text-primary)'}}>Where did it go?</strong> Most people have no idea — and that mystery money is silently wrecking budgets every month.</div>
+            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'var(--text-primary)'}}>Where did it go?</strong> Most people have no idea.</div>
           </div>
           <div style={{background:'rgba(74,222,128,0.06)',border:'1px solid rgba(74,222,128,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>✅</span>
@@ -865,7 +851,6 @@ function CashTab({transactions,setTransactions}){
               <div className="cat-val" style={{color:'#38bdf8'}}>${val.toFixed(2)}</div>
             </div>
           ))}
-          <div className="tip-box" style={{marginTop:12}}>You've spent <strong>${totalMonth.toFixed(2)}</strong> in cash this month across {monthCash.length} purchases.</div>
         </div>
       )}
       <div className="card">
@@ -944,9 +929,6 @@ function TimelineTab({debts}){
 }
 
 function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeriodOffset}){
-  const trendRef=useRef(null);
-  const trendInst=useRef(null);
-
   const getPeriodBounds=(mode,offset)=>{
     const now=new Date();let start,end,label;
     if(mode==='monthly'){const d=new Date(now.getFullYear(),now.getMonth()+offset,1);start=new Date(d.getFullYear(),d.getMonth(),1);end=new Date(d.getFullYear(),d.getMonth()+1,0);label=start.toLocaleDateString('en-US',{month:'long',year:'numeric'});}
@@ -954,7 +936,6 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
     else{const yr=now.getFullYear()+offset;start=new Date(yr,0,1);end=new Date(yr,11,31);label=`${yr}`;}
     return{start,end,label};
   };
-
   const{start,end,label}=getPeriodBounds(periodMode,periodOffset);
   const txDebits=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='debit'&&d>=start&&d<=end;});
   const txCredits=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='credit'&&d>=start&&d<=end;});
@@ -966,26 +947,14 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
   const cats=Object.entries(curr).sort((a,b)=>b[1]-a[1]);
   const byGrp={};cats.forEach(([cat,val])=>{const g=ALL_CATS[cat]?.group||'Other';if(!byGrp[g])byGrp[g]=[];byGrp[g].push([cat,val]);});
   const maxV=cats[0]?.[1]||1;
-
-  useEffect(()=>{
-    if(!trendRef.current)return;
-    const count=periodMode==='yearly'?5:6;
-    const lbls=[];const tData=[];
-    for(let i=-(count-1);i<=0;i++){
-      const{start:s,end:e,label:l}=getPeriodBounds(periodMode,periodOffset+i);
-      const tot=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='debit'&&d>=s&&d<=e;}).reduce((s,t)=>s+t.amt,0);
-      lbls.push(l.replace(' 20',"'"));
-      tData.push(parseFloat(tot.toFixed(2)));
-    }
-    if(trendInst.current){trendInst.current.destroy();trendInst.current=null;}
-    trendInst.current=new Chart(trendRef.current,{
-      type:'bar',
-      data:{labels:lbls,datasets:[{label:'Spending',data:tData,backgroundColor:tData.map((_,i)=>i===count-1?'#c9a84c':'rgba(201,168,76,0.25)'),borderRadius:4,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw.toLocaleString('en-US',{minimumFractionDigits:2})}}},scales:{x:{ticks:{color:'#8899bb',font:{size:10},autoSkip:false,maxRotation:30}},y:{ticks:{color:'#8899bb',callback:v=>'$'+v.toLocaleString(),font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
-    });
-    return()=>{if(trendInst.current){trendInst.current.destroy();trendInst.current=null;}};
-  },[transactions,periodMode,periodOffset]);
-
+  const count=periodMode==='yearly'?5:6;
+  const trendData=[];
+  for(let i=-(count-1);i<=0;i++){
+    const{start:s,end:e,label:l}=getPeriodBounds(periodMode,periodOffset+i);
+    const tot=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='debit'&&d>=s&&d<=e;}).reduce((s,t)=>s+t.amt,0);
+    trendData.push({label:l.replace(' 20',"'"),value:parseFloat(tot.toFixed(2)),current:i===0});
+  }
+  const maxTrend=Math.max(...trendData.map(d=>d.value),1);
   return(
     <>
       <div className="card">
@@ -1042,9 +1011,19 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
       </div>
       <div className="card">
         <div className="card-title">Spending trend</div>
-        <div style={{position:'relative',width:'100%',height:200}}>
-          <canvas ref={trendRef} role="img" aria-label="Spending trend chart"></canvas>
-        </div>
+        {trendData.every(d=>d.value===0)?(
+          <div className="empty-state">Add transactions to see your spending trend.</div>
+        ):(
+          <div style={{display:'flex',alignItems:'flex-end',gap:6,height:160,padding:'0 4px'}}>
+            {trendData.map((d,i)=>(
+              <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                <div style={{fontSize:9,color:'var(--text-muted)',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
+                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'var(--gold)':'rgba(201,168,76,0.3)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
+                <div style={{fontSize:9,color:d.current?'var(--gold)':'var(--text-muted)',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
