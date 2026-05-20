@@ -5,10 +5,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MINUTES = 5;
 
-function getTempPassword(email, phone) {
-  return btoa(email.toLowerCase() + (phone || '')).slice(0, 20) + 'Mm1!';
-}
-
 export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState(['', '', '', '']);
@@ -46,12 +42,20 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
     setLoading(true);
     setError('');
 
-    // Look up all stored leads to find the phone for this email
+    const emailKey = `mm_email_uid_${email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
+    const storedUid = localStorage.getItem(emailKey);
+
+    if (storedUid) {
+      setResolvedUid(storedUid);
+      setLoading(false);
+      setStep('pin');
+      return;
+    }
+
     const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
     const lead = leads.find(l => l.email?.toLowerCase() === email.toLowerCase());
     const phone = lead?.phone?.replace(/\D/g, '') || '';
 
-    // Try to sign into Firebase to get the UID
     const passwordsToTry = [
       btoa(email.toLowerCase() + phone).slice(0, 20) + 'Mm1!',
       btoa(email.toLowerCase() + phone.slice(0,10)).slice(0, 20) + 'Mm1!',
@@ -62,12 +66,11 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
       try {
         const cred = await signInWithEmailAndPassword(auth, email.toLowerCase(), pw);
         setResolvedUid(cred.user.uid);
+        localStorage.setItem(emailKey, cred.user.uid);
         signedIn = true;
         break;
       } catch (err) {
-        if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-          // User exists, wrong password attempt — try next
-        } else if (err.code === 'auth/user-not-found') {
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
           setError("We don't recognize that email. Are you a new user?");
           setLoading(false);
           return;
@@ -77,6 +80,7 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
 
     if (!signedIn && auth.currentUser) {
       setResolvedUid(auth.currentUser.uid);
+      localStorage.setItem(emailKey, auth.currentUser.uid);
       signedIn = true;
     }
 
@@ -168,43 +172,3 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
               {pin.map((d, i) => (
                 <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: d ? 'var(--gold)' : 'transparent', border: `2px solid ${d ? 'var(--gold)' : 'var(--navy-border)'}`, transition: 'all 0.15s ease' }} />
               ))}
-            </div>
-            <div className={shake ? 'shake' : ''} style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: '1.25rem' }}>
-              {pin.map((d, i) => (
-                <input key={i} ref={el => inputRefs.current[i] = el}
-                  type="password" inputMode="numeric" maxLength={1} value={d}
-                  style={{ width: 52, height: 58, textAlign: 'center', fontSize: 24, fontWeight: 700, background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${d ? 'var(--gold)' : 'var(--navy-border)'}`, borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', caretColor: 'transparent' }}
-                  onChange={e => handleDigit(e.target.value, i)}
-                  onKeyDown={e => handleKeyDown(e, i)}
-                  disabled={isLocked} />
-              ))}
-            </div>
-            {error && <div className="alert-box alert-danger" style={{ marginBottom: 14, textAlign: 'left' }}>{error}</div>}
-            {!firebaseUser && (
-              <button className="btn-outline" style={{ fontSize: 12, width: '100%' }} onClick={() => { setStep('email'); setPin(['','','','']); setError(''); setResolvedUid(null); }}>
-                ← Use a different email
-              </button>
-            )}
-          </>
-        )}
-
-        {isLocked && (
-          <div style={{ fontSize: 48, fontFamily: 'var(--font-display)', fontWeight: 800, color: '#f87171', margin: '1rem 0' }}>{fmtCountdown()}</div>
-        )}
-
-        <div style={{ borderTop: '1px solid var(--navy-border)', marginTop: '1.5rem', paddingTop: '1.25rem' }}>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            New here?{' '}
-            <button onClick={onNewUser} style={{ background: 'none', border: 'none', color: 'var(--gold)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
-              Get free access →
-            </button>
-          </p>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-            <a href="#admin" style={{ color: 'var(--text-muted)', textDecoration: 'none' }} onClick={() => window.location.reload()}>Admin login</a>
-          </p>
-        </div>
-      </div>
-      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}.shake{animation:shake 0.5s ease}`}</style>
-    </div>
-  );
-}

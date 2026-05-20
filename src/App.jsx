@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from 'firebase/auth';
 import LandingPage from './LandingPage';
 import BudgetApp from './BudgetApp';
 import AdminPanel from './AdminPanel';
@@ -20,7 +20,6 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-     // Check if account was cancelled - clear flag and treat as new user
         const cancelled = localStorage.getItem(`mm_cancelled_${user.uid}`);
         if (cancelled) {
           localStorage.removeItem(`mm_cancelled_${user.uid}`);
@@ -28,6 +27,8 @@ export default function App() {
           return;
         }
         setFirebaseUser(user);
+        const emailKey = `mm_email_uid_${user.email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
+        localStorage.setItem(emailKey, user.uid);
         const lead = JSON.parse(localStorage.getItem(`mm_lead_${user.uid}`) || 'null');
         setCurrentLead(lead);
         const pinSet = localStorage.getItem(`mm_pin_${user.uid}`);
@@ -78,6 +79,8 @@ export default function App() {
         localStorage.setItem('mm_leads', JSON.stringify(leads));
       }
       localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(newLead));
+      const emailKey = `mm_email_uid_${user.email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
+      localStorage.setItem(emailKey, user.uid);
       setCurrentLead(newLead);
       setFirebaseUser(user);
       setView('pin-setup');
@@ -114,13 +117,10 @@ export default function App() {
     if (!firebaseUser) return;
     try {
       const uid = firebaseUser.uid;
-      // Mark as cancelled FIRST so auth listener ignores it
       localStorage.setItem(`mm_cancelled_${uid}`, 'true');
-      // Clear all session and PIN data
       localStorage.removeItem(`mm_pin_${uid}`);
       localStorage.removeItem(`mm_lead_${uid}`);
       sessionStorage.removeItem(`mm_auth_${uid}`);
-      // Sign out and delete account
       await signOut(auth);
       setCurrentLead(null);
       setFirebaseUser(null);
@@ -137,7 +137,7 @@ export default function App() {
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
   if (view === 'pin-login') return <PinLogin firebaseUser={firebaseUser} onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
   if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
- return <LandingPage onSubmit={handleLeadSubmit} onReturnUser={() => setView('pin-login')} />;
+  return <LandingPage onSubmit={handleLeadSubmit} onReturnUser={() => setView('pin-login')} />;
 }
 
 function LoadingScreen() {
