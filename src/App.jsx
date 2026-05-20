@@ -96,11 +96,16 @@ export default function App() {
         reviewCalled: false,
       };
 
-      const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
+    const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
       const exists = leads.find(l => l.email === lead.email);
       if (!exists) {
         leads.unshift(newLead);
         localStorage.setItem('mm_leads', JSON.stringify(leads));
+        try {
+          const { setDoc, doc } = await import('firebase/firestore');
+          const { db } = await import('./firebase');
+          await setDoc(doc(db, 'leads', user.uid), newLead);
+        } catch(e) { console.error('Lead save error:', e); }
       }
 
       localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(newLead));
