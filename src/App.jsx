@@ -20,9 +20,10 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Check if account was cancelled
+     // Check if account was cancelled - clear flag and treat as new user
         const cancelled = localStorage.getItem(`mm_cancelled_${user.uid}`);
         if (cancelled) {
+          localStorage.removeItem(`mm_cancelled_${user.uid}`);
           signOut(auth);
           return;
         }
