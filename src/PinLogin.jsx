@@ -5,6 +5,10 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MINUTES = 5;
 
+function getTempPassword(email, phone) {
+  return btoa(email.toLowerCase() + (phone || '')).slice(0, 20) + 'Mm1!';
+}
+
 export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState(['', '', '', '']);
@@ -15,6 +19,7 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
   const [lockedUntil, setLockedUntil] = useState(null);
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [resolvedUid, setResolvedUid] = useState(firebaseUser?.uid || null);
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -40,24 +45,49 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
     }
     setLoading(true);
     setError('');
-    try {
-      // Try signing in with a dummy check — if user exists Firebase will respond
-      // We use a placeholder password that won't work but tells us if user exists
-      const tempPassword = btoa(email.toLowerCase() + email.toLowerCase()).slice(0, 20) + 'Mm1!';
-      await signInWithEmailAndPassword(auth, email.toLowerCase(), tempPassword);
-      setStep('pin');
-    } catch (err) {
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        // User exists but password is wrong — that's fine, move to PIN
-        setStep('pin');
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
-        setError("We don't recognize that email. Are you a new user?");
-      } else {
-        // Any other error — still try PIN step
-        setStep('pin');
+
+    // Look up all stored leads to find the phone for this email
+    const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
+    const lead = leads.find(l => l.email?.toLowerCase() === email.toLowerCase());
+    const phone = lead?.phone?.replace(/\D/g, '') || '';
+
+    // Try to sign into Firebase to get the UID
+    const passwordsToTry = [
+      btoa(email.toLowerCase() + phone).slice(0, 20) + 'Mm1!',
+      btoa(email.toLowerCase() + phone.slice(0,10)).slice(0, 20) + 'Mm1!',
+    ];
+
+    let signedIn = false;
+    for (const pw of passwordsToTry) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email.toLowerCase(), pw);
+        setResolvedUid(cred.user.uid);
+        signedIn = true;
+        break;
+      } catch (err) {
+        if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+          // User exists, wrong password attempt — try next
+        } else if (err.code === 'auth/user-not-found') {
+          setError("We don't recognize that email. Are you a new user?");
+          setLoading(false);
+          return;
+        }
       }
     }
+
+    if (!signedIn && auth.currentUser) {
+      setResolvedUid(auth.currentUser.uid);
+      signedIn = true;
+    }
+
+    if (!signedIn) {
+      setError("We couldn't find your account. Please sign up again.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(false);
+    setStep('pin');
   };
 
   const handleDigit = (val, idx) => {
@@ -72,38 +102,14 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
     if (e.key === 'Backspace' && !pin[idx] && idx > 0) inputRefs.current[idx - 1]?.focus();
   };
 
-  const verifyPin = async (enteredPin) => {
-    const user = firebaseUser || auth.currentUser;
-    if (!user) {
-      // Try to find user by email and sign them in properly
-      try {
-        const tempPassword = btoa(email.toLowerCase() + email.toLowerCase()).slice(0, 20) + 'Mm1!';
-        const phoneGuess = '0000000000';
-        // Try common password patterns
-        const passwords = [
-          btoa(email.toLowerCase() + phoneGuess).slice(0, 20) + 'Mm1!',
-        ];
-        let signedIn = false;
-        for (const pw of passwords) {
-          try {
-            await signInWithEmailAndPassword(auth, email.toLowerCase(), pw);
-            signedIn = true;
-            break;
-          } catch {}
-        }
-        if (!signedIn) {
-          setError("Couldn't verify your account. Please sign up again.");
-          return;
-        }
-      } catch {}
+  const verifyPin = (enteredPin) => {
+    const uid = resolvedUid || firebaseUser?.uid || auth.currentUser?.uid;
+    if (!uid) {
+      setError('Account not found. Please sign up again.');
+      return;
     }
-
-    const currentUser = firebaseUser || auth.currentUser;
-    if (!currentUser) { setError('Account not found. Please sign up.'); return; }
-
-    const stored = localStorage.getItem(`mm_pin_${currentUser.uid}`);
-    const expected = btoa(enteredPin + currentUser.uid);
-
+    const stored = localStorage.getItem(`mm_pin_${uid}`);
+    const expected = btoa(enteredPin + uid);
     if (stored === expected) {
       setAttempts(0);
       onSuccess();
@@ -175,7 +181,7 @@ export default function PinLogin({ firebaseUser, onSuccess, onNewUser }) {
             </div>
             {error && <div className="alert-box alert-danger" style={{ marginBottom: 14, textAlign: 'left' }}>{error}</div>}
             {!firebaseUser && (
-              <button className="btn-outline" style={{ fontSize: 12, width: '100%' }} onClick={() => { setStep('email'); setPin(['','','','']); setError(''); }}>
+              <button className="btn-outline" style={{ fontSize: 12, width: '100%' }} onClick={() => { setStep('email'); setPin(['','','','']); setError(''); setResolvedUid(null); }}>
                 ← Use a different email
               </button>
             )}
