@@ -111,8 +111,10 @@ export default function LandingPage({ onSubmit, onReturnUser }) {
           </div>
 
           <div className="slide-up" style={{ flex: isMobile ? 'none' : '0.9', width: '100%', background: 'var(--navy-card)', border: '1px solid var(--navy-border)', borderRadius: 'var(--radius-xl)', padding: isMobile ? '1.25rem' : '2rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: '0.375rem', textAlign: 'center' }}>Get Free Access</h3>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1.5rem' }}>No credit card. No catch. Just results.</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: '0.375rem', textAlign: 'center' }}>Get Free Access or Log Back In</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              New here? Fill out the form below. <strong style={{ color: 'var(--text-secondary)' }}>Already have an account?</strong> Just enter your same email, name, and phone to pick up right where you left off.
+            </p>
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5, fontWeight: 500 }}>Full name</label>
@@ -132,20 +134,16 @@ export default function LandingPage({ onSubmit, onReturnUser }) {
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5, fontWeight: 500 }}>Phone number</label>
-              <input
-                type="tel"
-                placeholder="555-555-5555"
-                value={form.phone}
+              <input type="tel" placeholder="555-555-5555" value={form.phone}
                 onChange={handlePhoneChange}
-                style={errors.phone ? { borderColor: 'var(--red)' } : {}}
-              />
+                style={errors.phone ? { borderColor: 'var(--red)' } : {}} />
               {errors.phone && <p style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>{errors.phone}</p>}
             </div>
 
             <div style={{ background: wantsReview ? 'rgba(14,165,160,0.1)' : 'rgba(14,165,160,0.06)', border: `1px solid ${wantsReview ? 'rgba(14,165,160,0.5)' : 'rgba(14,165,160,0.2)'}`, borderRadius: 'var(--radius-md)', padding: '14px', marginBottom: 16, transition: 'all 0.3s ease' }}>
-              <div style={{ fontSize: 12, color: 'var(--teal-light)', fontWeight: 600, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>💡 Did you know?</div>
+              <div style={{ fontSize: 12, color: 'var(--teal-light)', fontWeight: 600, marginBottom: 5 }}>💡 Did you know?</div>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
-                Most people have <strong style={{ color: 'var(--text-primary)' }}>no idea how much money they actually need saved to retire on their own terms</strong> — not someone else's timeline. A complimentary financial review changes that. In one free session, we map out exactly where you are, where you want to be, and how to get there.
+                Most people have <strong style={{ color: 'var(--text-primary)' }}>no idea how much money they actually need saved to retire on their own terms</strong>. A complimentary financial review changes that.
               </p>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: wantsReview ? 'default' : 'pointer' }}>
                 <input type="checkbox" checked={wantsReview} onChange={handleReviewCheck}
@@ -160,7 +158,7 @@ export default function LandingPage({ onSubmit, onReturnUser }) {
             </div>
 
             <button className="btn-gold" style={{ width: '100%', padding: '14px', fontSize: 15 }} onClick={handleGetAccess}>
-              Unlock My Free Budget App →
+              Get Free Access or Log Back In →
             </button>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
               By signing up you agree to receive financial tips and updates. Unsubscribe anytime.
@@ -169,13 +167,8 @@ export default function LandingPage({ onSubmit, onReturnUser }) {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-           Already have access?{' '}
-            <button onClick={onReturnUser} style={{ background:'none', border:'none', color:'var(--gold)', fontSize:12, cursor:'pointer', fontWeight:600, textDecoration:'underline' }}>
-              Log in here →
-            </button>
-            <span style={{ color:'var(--text-muted)', margin:'0 6px' }}>·</span>
-            <a href="#admin" style={{ color:'var(--text-muted)', fontSize:11, textDecoration:'none' }}
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <a href="#admin" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}
               onClick={() => { window.location.hash = 'admin'; window.location.reload(); }}>
               Admin login
             </a>
@@ -201,7 +194,7 @@ export default function LandingPage({ onSubmit, onReturnUser }) {
                 <span style={{ fontSize: 20, flexShrink: 0 }}>📧</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gold)', marginBottom: 3 }}>Check your email at {submittedLead?.email}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Your free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works"</strong> book is on its way, plus exclusive money tips.</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Your free <strong style={{ color: 'var(--text-primary)' }}>"How Money Works"</strong> book is on its way.</div>
                 </div>
               </div>
 
