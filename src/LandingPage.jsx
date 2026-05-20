@@ -273,7 +273,7 @@ export default function LandingPage({ onSubmit }) {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
                     <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📞</span>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                      <strong style={{ color: 'var(--text-secondary)' }}>Prefer we reach out instead?</strong> No problem — if you don't schedule above, someone will personally call you at <strong style={{ color: 'var(--text-primary)' }}>{submittedLead?.phone}</strong> within 24 hours to set up your session.
+                      <strong style={{ color: 'var(--text-secondary)' }}>Expect a courtesy call</strong> — a financial professional will personally reach out to you within 24 hours to schedule your free review.
                     </p>
                   </div>
                 </div>
