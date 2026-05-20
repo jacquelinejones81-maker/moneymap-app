@@ -18,7 +18,7 @@ function formatPhone(value) {
   return `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}`;
 }
 
-export default function LandingPage({ onSubmit }) {
+export default function LandingPage({ onSubmit, onReturnUser }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [errors, setErrors] = useState({});
   const [showPopup, setShowPopup] = useState(false);
@@ -170,8 +170,12 @@ export default function LandingPage({ onSubmit }) {
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            Already have access?{' '}
-            <a href="#admin" style={{ color: 'var(--gold)', textDecoration: 'none' }}
+           Already have access?{' '}
+            <button onClick={onReturnUser} style={{ background:'none', border:'none', color:'var(--gold)', fontSize:12, cursor:'pointer', fontWeight:600, textDecoration:'underline' }}>
+              Log in here →
+            </button>
+            <span style={{ color:'var(--text-muted)', margin:'0 6px' }}>·</span>
+            <a href="#admin" style={{ color:'var(--text-muted)', fontSize:11, textDecoration:'none' }}
               onClick={() => { window.location.hash = 'admin'; window.location.reload(); }}>
               Admin login
             </a>

@@ -137,7 +137,7 @@ export default function App() {
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
   if (view === 'pin-login') return <PinLogin firebaseUser={firebaseUser} onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
   if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
-  return <LandingPage onSubmit={handleLeadSubmit} />;
+ return <LandingPage onSubmit={handleLeadSubmit} onReturnUser={() => setView('pin-login')} />;
 }
 
 function LoadingScreen() {
