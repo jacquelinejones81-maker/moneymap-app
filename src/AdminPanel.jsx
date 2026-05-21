@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function AdminPanel({ onBack }) {
   const [leads, setLeads] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'leads'), (snap) => {
+    loadLeads();
+  }, []);
+
+  const loadLeads = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const snap = await getDocs(collection(db, 'leads'));
       const data = snap.docs.map(d => ({ ...d.data(), docId: d.id }));
       data.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
       setLeads(data);
+    } catch (err) {
+      console.error('Load error:', err);
+      setError('Could not load leads. Check your Firestore rules.');
+    } finally {
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  };
 
   const updateLead = async (docId, updates) => {
     try {
       await updateDoc(doc(db, 'leads', docId), updates);
+      setLeads(leads.map(l => l.docId === docId ? { ...l, ...updates } : l));
     } catch (err) { console.error('Update error:', err); }
   };
 
@@ -28,6 +40,7 @@ export default function AdminPanel({ onBack }) {
     if (!window.confirm('Delete this lead?')) return;
     try {
       await deleteDoc(doc(db, 'leads', docId));
+      setLeads(leads.filter(l => l.docId !== docId));
     } catch (err) { console.error('Delete error:', err); }
   };
 
@@ -61,6 +74,7 @@ export default function AdminPanel({ onBack }) {
             <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>MoneyMap — all signups in one place</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-outline" onClick={loadLeads}>↻ Refresh</button>
             <button className="btn-outline" onClick={exportCSV}>⬇ Export CSV</button>
             <button className="btn-outline" onClick={onBack}>← Back to app</button>
           </div>
@@ -88,6 +102,11 @@ export default function AdminPanel({ onBack }) {
 
         {loading ? (
           <div className="card"><div className="empty-state">Loading leads...</div></div>
+        ) : error ? (
+          <div className="card">
+            <div className="alert-box alert-danger">{error}</div>
+            <button className="btn-gold" style={{ marginTop: 12 }} onClick={loadLeads}>Try again</button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card"><div className="empty-state">No leads yet. Share your link to start collecting signups!</div></div>
         ) : (
