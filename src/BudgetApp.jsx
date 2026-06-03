@@ -4,19 +4,19 @@ import { db } from './firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const GROUPS = {
-  'Income':       { color:'#1d9e75', bg:'rgba(29,158,117,0.15)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
-  'Housing':      { color:'#378ADD', bg:'rgba(55,138,221,0.12)', cats:['Mortgage / rent','Electric bill','Water bill','Gas / heat bill','Internet','Cable / streaming','Phone bill','HOA fee','Home repair','Other housing'] },
-  'Insurance':    { color:'#a78bfa', bg:'rgba(167,139,250,0.12)', cats:['Auto insurance','Life insurance','Health insurance','Dental / vision','Home / renters ins.','Other insurance'] },
-  'Transportation':{ color:'#fbbf24', bg:'rgba(251,191,36,0.12)', cats:['Car payment','Gas / fuel','Car repair / maintenance','Parking / tolls','Public transit','Rideshare','Registration / tags','Other transport'] },
-  'Food':         { color:'#34d399', bg:'rgba(52,211,153,0.12)', cats:['Groceries','Restaurants / dining out','Fast food','Coffee shops','Other food'] },
-  'Health':       { color:'#f472b6', bg:'rgba(244,114,182,0.12)', cats:['Doctor visit','Dentist','Prescription / pharmacy','Gym membership','Mental health','Other health'] },
-  'Debt Payments':{ color:'#f87171', bg:'rgba(248,113,113,0.12)', cats:['Credit card payment','Student loan','Personal loan','Medical debt','Other debt payment'] },
-  'Kids & Family':{ color:'#86efac', bg:'rgba(134,239,172,0.12)', cats:['Childcare / daycare','School tuition','School supplies','Kids activities','Baby supplies','Other family'] },
-  'Personal':     { color:'#94a3b8', bg:'rgba(148,163,184,0.12)', cats:['Clothing','Haircut / grooming','Subscriptions','Gifts','Charity / donations','Other personal'] },
-  'Entertainment':{ color:'#fb923c', bg:'rgba(251,146,60,0.12)', cats:['Movies / events','Hobbies','Vacation / travel','Dining / nightlife','Books / games','Other entertainment'] },
-  'Savings':      { color:'#c9a84c', bg:'rgba(201,168,76,0.12)', cats:['Emergency fund','Retirement (401k/IRA)','Investment','Savings account','Other savings'] },
-  'Cash Spending':{ color:'#38bdf8', bg:'rgba(56,189,248,0.12)', cats:['Cash - Groceries','Cash - Fast food','Cash - Restaurants','Cash - Gas / fuel','Cash - Coffee','Cash - Hair / grooming','Cash - Clothing','Cash - Entertainment','Cash - Kids','Cash - Household','Cash - Tips','Cash - Other'] },
-  'Other':        { color:'#64748b', bg:'rgba(100,116,139,0.12)', cats:['Miscellaneous','Cash withdrawal','Other'] }
+  'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
+  'Housing':      { color:'#1a6fd4', bg:'rgba(26,111,212,0.1)', cats:['Mortgage / rent','Electric bill','Water bill','Gas / heat bill','Internet','Cable / streaming','Phone bill','HOA fee','Home repair','Other housing'] },
+  'Insurance':    { color:'#7c3aed', bg:'rgba(124,58,237,0.1)', cats:['Auto insurance','Life insurance','Health insurance','Dental / vision','Home / renters ins.','Other insurance'] },
+  'Transportation':{ color:'#d97706', bg:'rgba(217,119,6,0.1)', cats:['Car payment','Gas / fuel','Car repair / maintenance','Parking / tolls','Public transit','Rideshare','Registration / tags','Other transport'] },
+  'Food':         { color:'#059669', bg:'rgba(5,150,105,0.1)', cats:['Groceries','Restaurants / dining out','Fast food','Coffee shops','Other food'] },
+  'Health':       { color:'#db2777', bg:'rgba(219,39,119,0.1)', cats:['Doctor visit','Dentist','Prescription / pharmacy','Gym membership','Mental health','Other health'] },
+  'Debt Payments':{ color:'#dc2626', bg:'rgba(220,38,38,0.1)', cats:['Credit card payment','Student loan','Personal loan','Medical debt','Other debt payment'] },
+  'Kids & Family':{ color:'#16a34a', bg:'rgba(22,163,74,0.1)', cats:['Childcare / daycare','School tuition','School supplies','Kids activities','Baby supplies','Other family'] },
+  'Personal':     { color:'#6b7280', bg:'rgba(107,114,128,0.1)', cats:['Clothing','Haircut / grooming','Subscriptions','Gifts','Charity / donations','Other personal'] },
+  'Entertainment':{ color:'#ea580c', bg:'rgba(234,88,12,0.1)', cats:['Movies / events','Hobbies','Vacation / travel','Dining / nightlife','Books / games','Other entertainment'] },
+  'Savings':      { color:'#1a6fd4', bg:'rgba(26,111,212,0.1)', cats:['Emergency fund','Retirement (401k/IRA)','Investment','Savings account','Other savings'] },
+  'Cash Spending':{ color:'#0ea5e9', bg:'rgba(14,165,233,0.1)', cats:['Cash - Groceries','Cash - Fast food','Cash - Restaurants','Cash - Gas / fuel','Cash - Coffee','Cash - Hair / grooming','Cash - Clothing','Cash - Entertainment','Cash - Kids','Cash - Household','Cash - Tips','Cash - Other'] },
+  'Other':        { color:'#6b7280', bg:'rgba(107,114,128,0.1)', cats:['Miscellaneous','Cash withdrawal','Other'] }
 };
 const ALL_CATS = {};
 Object.entries(GROUPS).forEach(([g,v]) => v.cats.forEach(c => { ALL_CATS[c] = { group:g, color:v.color, bg:v.bg }; }));
@@ -35,10 +35,10 @@ function WelcomeVideoModal({ lead, onClose }) {
   if (!videoId) return null;
   return (
     <div className="modal-overlay" style={{ zIndex:2000 }} onClick={e => e.target===e.currentTarget&&onClose()}>
-      <div className="slide-up" style={{ background:'var(--navy-card)', border:'1px solid var(--navy-border)', borderRadius:'var(--radius-xl)', padding:'2rem', maxWidth:620, width:'100%' }}>
+      <div className="slide-up" style={{ background:'#fff', border:'1px solid var(--navy-border)', borderRadius:'var(--radius-xl)', padding:'2rem', maxWidth:620, width:'100%' }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:6 }}>A personal note for you, {firstName} 👋</h2>
-          <p style={{ fontSize:13, color:'var(--text-secondary)', lineHeight:1.6 }}>Before you dive in — take 2 minutes to watch this.</p>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:6, color:'#0f2a5e' }}>A personal note for you, {firstName} 👋</h2>
+          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.6 }}>Before you dive in — take 2 minutes to watch this.</p>
         </div>
         <div style={{ position:'relative', paddingBottom:'56.25%', height:0, borderRadius:'var(--radius-lg)', overflow:'hidden', border:'1px solid var(--navy-border)', marginBottom:'1.25rem' }}>
           <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`} title="Welcome to MoneyMap" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none' }} />
@@ -60,20 +60,20 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
       <div className="modal-box slide-up" style={{ maxWidth:460 }}>
         <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
           <div style={{ fontSize:44, marginBottom:12 }}>⚠️</div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, marginBottom:8 }}>Cancel your account?</h2>
-          <p style={{ fontSize:13, color:'var(--text-secondary)', lineHeight:1.7 }}>
-            Are you sure you want to cancel, {firstName}? Your email and PIN will be deactivated and all your data will be removed. <strong style={{ color:'var(--text-primary)' }}>This cannot be undone.</strong>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, marginBottom:8, color:'#0f2a5e' }}>Cancel your account?</h2>
+          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.7 }}>
+            Are you sure you want to cancel, {firstName}? Your email and PIN will be deactivated and all your data will be removed. <strong style={{ color:'#0f2a5e' }}>This cannot be undone.</strong>
           </p>
         </div>
-        <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:'var(--radius-md)', padding:'12px 16px', marginBottom:'1.25rem' }}>
+        <div style={{ background:'#f8faff', borderRadius:'var(--radius-md)', padding:'12px 16px', marginBottom:'1.25rem' }}>
           <label style={{ display:'flex', alignItems:'flex-start', gap:10, cursor:'pointer' }}>
-            <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} style={{ width:16, height:16, flexShrink:0, marginTop:2, accentColor:'#f87171' }} />
-            <span style={{ fontSize:12, color:'var(--text-secondary)', lineHeight:1.6 }}>Yes, I understand — permanently cancel my account and remove all my data.</span>
+            <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} style={{ width:16, height:16, flexShrink:0, marginTop:2, accentColor:'#dc2626' }} />
+            <span style={{ fontSize:12, color:'#6b8dc4', lineHeight:1.6 }}>Yes, I understand — permanently cancel my account and remove all my data.</span>
           </label>
         </div>
         <div style={{ display:'flex', gap:10 }}>
           <button className="btn-outline" style={{ flex:1 }} onClick={onCancel}>Keep my account</button>
-          <button onClick={onConfirm} disabled={!confirmed} style={{ flex:1, background: confirmed ? '#a32d2d' : 'rgba(163,45,45,0.3)', color:'#fff', border:'none', borderRadius:'var(--radius-md)', padding:'12px', fontSize:13, fontWeight:700, cursor: confirmed ? 'pointer' : 'not-allowed', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
+          <button onClick={onConfirm} disabled={!confirmed} style={{ flex:1, background: confirmed ? '#dc2626' : 'rgba(220,38,38,0.3)', color:'#fff', border:'none', borderRadius:'var(--radius-md)', padding:'12px', fontSize:13, fontWeight:700, cursor: confirmed ? 'pointer' : 'not-allowed', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
             Cancel my account
           </button>
         </div>
@@ -88,16 +88,12 @@ function GoodbyeModal({ lead }) {
     <div className="modal-overlay" style={{ zIndex:3000 }}>
       <div className="modal-box slide-up" style={{ maxWidth:460, textAlign:'center' }}>
         <div style={{ fontSize:52, marginBottom:16 }}>👋</div>
-        <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10 }}>Take care, {firstName}!</h2>
-        <p style={{ fontSize:14, color:'var(--text-secondary)', lineHeight:1.7, marginBottom:16 }}>
-          Your account has been cancelled. Your email and PIN are no longer active, and all your data has been removed.
-        </p>
-        <div style={{ background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.2)', borderRadius:'var(--radius-md)', padding:'14px 16px', marginBottom:16 }}>
-          <p style={{ fontSize:13, color:'var(--text-secondary)', lineHeight:1.6 }}>
-            💛 You're always welcome back. If you ever want to get back on track with your finances, just sign up again — it's always free.
-          </p>
+        <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10, color:'#0f2a5e' }}>Take care, {firstName}!</h2>
+        <p style={{ fontSize:14, color:'#6b8dc4', lineHeight:1.7, marginBottom:16 }}>Your account has been cancelled. Your email and PIN are no longer active.</p>
+        <div style={{ background:'rgba(26,111,212,0.06)', border:'1px solid rgba(26,111,212,0.2)', borderRadius:'var(--radius-md)', padding:'14px 16px', marginBottom:16 }}>
+          <p style={{ fontSize:13, color:'#2d5a9e', lineHeight:1.6 }}>💙 You're always welcome back. Just sign up again — it's always free.</p>
         </div>
-        <p style={{ fontSize:12, color:'var(--text-muted)' }}>Redirecting you in a moment…</p>
+        <p style={{ fontSize:12, color:'#6b8dc4' }}>Redirecting you in a moment…</p>
       </div>
     </div>
   );
@@ -175,12 +171,10 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const closeCashPopup = () => { localStorage.setItem(`mm_cash_${uid}`, 'true'); setShowCashPopup(false); };
   const closeVideo = () => { localStorage.setItem(`mm_video_${uid}`, 'true'); setShowVideo(false); };
 
-const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
     setShowGoodbye(true);
-    setTimeout(async () => {
-      await onDeleteAccount();
-    }, 2000);
+    setTimeout(async () => { await onDeleteAccount(); }, 2000);
   };
 
   const addNewAccount = () => {
@@ -208,39 +202,41 @@ const handleDeleteAccount = async () => {
   ];
 
   if (loading) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f0f6ff' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, color:'var(--gold)', marginBottom:8 }}>MoneyMap</div>
-        <div style={{ fontSize:13, color:'var(--text-muted)' }}>Loading your data…</div>
+        <div style={{ fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, color:'#1a6fd4', marginBottom:8 }}>MoneyMap</div>
+        <div style={{ fontSize:13, color:'#6b8dc4' }}>Loading your data…</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight:'100vh' }}>
+    <div style={{ minHeight:'100vh', background:'#f0f6ff' }}>
       {showTour && <AppTour onComplete={completeTour} />}
       {showVideo && <WelcomeVideoModal lead={lead} onClose={closeVideo} />}
       {showCashPopup && <CashPopup onClose={closeCashPopup} />}
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
 
-      <div style={{ borderBottom:'1px solid var(--navy-border)', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+      {/* Header */}
+      <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8, boxShadow:'0 2px 8px rgba(26,111,212,0.08)' }}>
         <div>
-          <div style={{ fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'var(--gold)' }}>MoneyMap</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)' }}>Welcome back, {firstName} 👋</div>
+          <div style={{ fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'#1a6fd4' }}>MoneyMap</div>
+          <div style={{ fontSize:12, color:'#6b8dc4' }}>Welcome back, {firstName} 👋</div>
         </div>
         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
-          {savedMsg && <span style={{ fontSize:12, color:'#4ade80' }}>✓ {savedMsg}</span>}
+          {savedMsg && <span style={{ fontSize:12, color:'#16a34a' }}>✓ {savedMsg}</span>}
           <button className="btn-outline" style={{ fontSize:11 }} onClick={resetTour}>🗺 Tour</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => exportCSV(transactions, beginBal)}>⬇ CSV</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={onSignOut}>Sign out</button>
-          <button onClick={() => setShowDeleteModal(true)} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', textDecoration:'underline' }}>Cancel account</button>
+          <button onClick={() => setShowDeleteModal(true)} style={{ background:'none', border:'none', color:'#6b8dc4', fontSize:11, cursor:'pointer', textDecoration:'underline' }}>Cancel account</button>
         </div>
       </div>
 
-      <div style={{ background:'rgba(255,255,255,0.02)', borderBottom:'1px solid var(--navy-border)', padding:'0.5rem 1.5rem', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+      {/* Account tabs */}
+      <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.5rem 1.5rem', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
         {Object.entries(accounts).map(([key, acctData]) => (
-          <button key={key} onClick={() => setActiveAccount(key)} style={{ padding:'5px 14px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'var(--gold)':'var(--navy-border)'}`, background: activeAccount===key?'rgba(201,168,76,0.15)':'transparent', color: activeAccount===key?'var(--gold)':'var(--text-muted)', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
+          <button key={key} onClick={() => setActiveAccount(key)} style={{ padding:'5px 14px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'#1a6fd4':'#c7ddf7'}`, background: activeAccount===key?'rgba(26,111,212,0.1)':'transparent', color: activeAccount===key?'#1a6fd4':'#6b8dc4', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
             {acctData.name}
           </button>
         ))}
@@ -251,7 +247,7 @@ const handleDeleteAccount = async () => {
             <button className="btn-outline" style={{ padding:'5px 10px', fontSize:12 }} onClick={() => setShowAddAccount(false)}>✕</button>
           </div>
         ) : (
-          <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed var(--navy-border)', background:'transparent', color:'var(--text-muted)', transition:'all 0.2s' }}>+ Add account</button>
+          <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed #c7ddf7', background:'transparent', color:'#6b8dc4', transition:'all 0.2s' }}>+ Add account</button>
         )}
       </div>
 
@@ -356,25 +352,25 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
         {!beginBal.set?(
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,padding:'4px 0'}}>
             <div>
-              <div style={{fontSize:13,fontWeight:600,color:'var(--gold)'}}>💰 Set beginning balance</div>
-              <div style={{fontSize:12,color:'var(--text-muted)'}}>Enter your account balance before tracking starts</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#1a6fd4'}}>💰 Set beginning balance</div>
+              <div style={{fontSize:12,color:'#6b8dc4'}}>Enter your account balance before tracking starts</div>
             </div>
             <button className="btn-gold" style={{fontSize:12,padding:'8px 16px'}} onClick={()=>setBbEdit(true)}>Set balance</button>
           </div>
         ):(
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
             <div>
-              <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:2}}>Beginning balance</div>
-              <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:700,color:'var(--gold)'}}>
+              <div style={{fontSize:12,color:'#6b8dc4',marginBottom:2}}>Beginning balance</div>
+              <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:700,color:'#1a6fd4'}}>
                 ${beginBal.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
-                <span style={{fontSize:12,color:'var(--text-muted)',fontWeight:400,marginLeft:8}}>as of {new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                <span style={{fontSize:12,color:'#6b8dc4',fontWeight:400,marginLeft:8}}>as of {new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
               </div>
             </div>
             <button className="btn-outline" style={{fontSize:12}} onClick={()=>setBbEdit(true)}>Edit</button>
           </div>
         )}
         {bbEdit&&(
-          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--navy-border)'}}>
+          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid #c7ddf7'}}>
             <div className="form-row r3">
               <input type="date" value={bbForm.date} onChange={e=>setBbForm(f=>({...f,date:e.target.value}))}/>
               <input type="number" value={bbForm.amount} placeholder="Starting balance ($)" step="0.01" onChange={e=>setBbForm(f=>({...f,amount:e.target.value}))}/>
@@ -386,8 +382,8 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
       <div className="card">
         <div className="card-title">Add transaction</div>
         <div className="form-row r2">
-          <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'var(--red)'}:{}}/>
-          <input type="text" placeholder="Description" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'var(--red)'}:{}}/>
+          <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'#dc2626'}:{}}/>
+          <input type="text" placeholder="Description" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'#dc2626'}:{}}/>
         </div>
         <div className="form-row r4" style={{marginBottom:12}}>
           <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}><option value="debit">Debit</option><option value="credit">Credit</option></select>
@@ -395,11 +391,11 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
             <option value="">-- Group --</option>
             {Object.keys(GROUPS).map(g=><option key={g} value={g}>{g}</option>)}
           </select>
-          <select value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))} style={err.cat?{borderColor:'var(--red)'}:{}}>
+          <select value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))} style={err.cat?{borderColor:'#dc2626'}:{}}>
             <option value="">-- Category --</option>
             {grpCats.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
-          <input type="number" placeholder="Amount" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={err.amt?{borderColor:'var(--red)'}:{}} onKeyDown={e=>e.key==='Enter'&&addTx()}/>
+          <input type="number" placeholder="Amount" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={err.amt?{borderColor:'#dc2626'}:{}} onKeyDown={e=>e.key==='Enter'&&addTx()}/>
         </div>
         <button className="btn-gold" onClick={addTx}>+ Add entry</button>
       </div>
@@ -426,19 +422,19 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
             {beginBal.set&&!filterGrp&&!filterCat&&(
               <tr className="bb-row">
                 <td style={{fontSize:11}}>{new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-                <td colSpan={4} style={{color:'var(--text-muted)'}}>💰 Beginning balance</td>
+                <td colSpan={4} style={{color:'#6b8dc4'}}>💰 Beginning balance</td>
                 <td className="fw credit-color">${beginBal.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 <td></td>
               </tr>
             )}
             {filtered.map(t=>{
               const bal=bals[t.id];
-              const ci=ALL_CATS[t.cat]||{color:'#64748b',bg:'rgba(100,116,139,0.12)'};
+              const ci=ALL_CATS[t.cat]||{color:'#6b7280',bg:'rgba(107,114,128,0.1)'};
               return(
                 <tr key={t.id}>
                   <td style={{fontSize:11,whiteSpace:'nowrap'}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
                   <td title={t.desc} style={{fontSize:12}}>{t.desc}</td>
-                  <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span><span style={{fontSize:11,color:'var(--text-secondary)'}}>{t.cat}</span></td>
+                  <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span><span style={{fontSize:11,color:'#6b8dc4'}}>{t.cat}</span></td>
                   <td className="debit-color">{t.type==='debit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className="credit-color">{t.type==='credit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className={`fw ${bal>=0?'credit-color':'debit-color'}`} style={{fontSize:12}}>${Math.abs(bal).toFixed(2)}</td>
@@ -504,15 +500,15 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
           <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowForm(f=>!f)}>{showForm?'✕ Cancel':'+ Add bill'}</button>
         </div>
         {showForm&&(
-          <div style={{borderTop:'1px solid var(--navy-border)',paddingTop:'1rem'}}>
+          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Bill name</label><input placeholder="e.g. Car payment" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'var(--red)'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Monthly amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'var(--red)'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
-              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{BILL_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Bill name</label><input placeholder="e.g. Car payment" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Monthly amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{BILL_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             </div>
-            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:14,fontSize:13,color:'var(--text-secondary)'}}>
-              <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'var(--gold)'}}/>
+            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:14,fontSize:13,color:'#2d5a9e'}}>
+              <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
               This bill is on autopay
             </label>
             <button className="btn-gold" onClick={addBill}>Save bill</button>
@@ -537,21 +533,21 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
               {bills.map(bill=>{
                 const paid=isPaid(bill.id);
                 const status=paid?'paid':getDueStatus(bill.dueDay);
-                const statusColors={paid:{bg:'rgba(74,222,128,0.12)',color:'#4ade80',label:'✓ Paid'},overdue:{bg:'rgba(248,113,113,0.12)',color:'#f87171',label:'Overdue'},'due-soon':{bg:'rgba(251,191,36,0.12)',color:'#fbbf24',label:'Due soon'},upcoming:{bg:'rgba(255,255,255,0.04)',color:'var(--text-muted)',label:'Upcoming'}};
+                const statusColors={paid:{bg:'rgba(22,163,74,0.1)',color:'#16a34a',label:'✓ Paid'},overdue:{bg:'rgba(220,38,38,0.1)',color:'#dc2626',label:'Overdue'},'due-soon':{bg:'rgba(217,119,6,0.1)',color:'#d97706',label:'Due soon'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',label:'Upcoming'}};
                 const sc=statusColors[status];
                 return(
                   <tr key={bill.id} style={{opacity:paid?0.75:1}}>
                     <td style={{padding:'10px 16px'}}>
-                      <div style={{fontWeight:600,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)',textDecoration:paid?'line-through':'none'}}>{bill.name}</div>
-                      {bill.autopay&&<div style={{fontSize:10,color:'var(--teal-light)',fontWeight:600,marginTop:1}}>⚡ AUTOPAY</div>}
+                      <div style={{fontWeight:600,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e',textDecoration:paid?'line-through':'none'}}>{bill.name}</div>
+                      {bill.autopay&&<div style={{fontSize:10,color:'#0ea5e9',fontWeight:600,marginTop:1}}>⚡ AUTOPAY</div>}
                     </td>
-                    <td style={{fontSize:11,color:'var(--text-muted)'}}>{bill.category}</td>
-                    <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'var(--text-muted)':status==='overdue'?'#f87171':status==='due-soon'?'#fbbf24':'var(--text-secondary)'}}>{daySuffix(bill.dueDay)}</span></td>
-                    <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                    <td style={{fontSize:11,color:'#6b8dc4'}}>{bill.category}</td>
+                    <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(bill.dueDay)}</span></td>
+                    <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                     <td style={{textAlign:'center'}}>
-                      <button onClick={()=>togglePaid(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}30`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                      <button onClick={()=>togglePaid(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                     </td>
-                    <td style={{textAlign:'center',fontSize:11,color:'var(--text-muted)'}}>{paidAt(bill.id)||'—'}</td>
+                    <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(bill.id)||'—'}</td>
                     <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setBills(bills.filter(b=>b.id!==bill.id))}>✕</button></td>
                   </tr>
                 );
@@ -563,11 +559,11 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
       {bills.length>0&&(
         <div className="card">
           <div className="card-title">Monthly bill progress</div>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text-muted)',marginBottom:6}}><span>{paidCount} of {bills.length} bills paid</span><span>${totalPaid.toFixed(2)} of ${totalBills.toFixed(2)}</span></div>
-          <div style={{background:'rgba(255,255,255,0.05)',borderRadius:6,height:10,overflow:'hidden'}}>
-            <div style={{height:10,borderRadius:6,width:`${totalBills>0?Math.round((totalPaid/totalBills)*100):0}%`,background:paidCount===bills.length?'#4ade80':'linear-gradient(90deg, var(--gold), #e8cc7a)',transition:'width 0.4s ease'}}/>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#6b8dc4',marginBottom:6}}><span>{paidCount} of {bills.length} bills paid</span><span>${totalPaid.toFixed(2)} of ${totalBills.toFixed(2)}</span></div>
+          <div style={{background:'#e8f1fd',borderRadius:6,height:10,overflow:'hidden'}}>
+            <div style={{height:10,borderRadius:6,width:`${totalBills>0?Math.round((totalPaid/totalBills)*100):0}%`,background:paidCount===bills.length?'#16a34a':'linear-gradient(90deg, #1a6fd4, #5ba3f5)',transition:'width 0.4s ease'}}/>
           </div>
-          {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#4ade80',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
+          {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
     </>
@@ -586,14 +582,14 @@ function BudgetsTab({transactions,budgets,setBudgets}){
     <>
       <div className="card">
         <div className="card-title">Monthly budget limits</div>
-        <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:12}}>Set $0 to skip. You'll get an alert when you exceed a limit.</div>
+        <div style={{fontSize:12,color:'#6b8dc4',marginBottom:12}}>Set $0 to skip. You'll get an alert when you exceed a limit.</div>
         {Object.entries(GROUPS).filter(([g])=>g!=='Income'&&g!=='Savings').map(([g,v])=>(
           <div key={g} style={{marginBottom:14}}>
-            <div style={{fontSize:11,fontWeight:600,color:v.color,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8,paddingBottom:4,borderBottom:'1px solid var(--navy-border)'}}>{g}</div>
+            <div style={{fontSize:11,fontWeight:600,color:v.color,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8,paddingBottom:4,borderBottom:'1px solid #e8f1fd'}}>{g}</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
               {v.cats.map(c=>(
                 <div key={c} style={{display:'flex',alignItems:'center',gap:6}}>
-                  <label style={{fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text-secondary)'}} title={c}>{c}</label>
+                  <label style={{fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#2d5a9e'}} title={c}>{c}</label>
                   <input type="number" value={localBudgets[c]||''} placeholder="$0" min="0" step="5" style={{width:80,flexShrink:0}} onChange={e=>setLocalBudgets(b=>({...b,[c]:parseFloat(e.target.value)||0}))}/>
                 </div>
               ))}
@@ -609,17 +605,17 @@ function BudgetsTab({transactions,budgets,setBudgets}){
             const gv=GROUPS[g];
             return(
               <div key={g} style={{marginBottom:12}}>
-                <div style={{fontSize:11,fontWeight:600,color:gv?.color||'#64748b',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{g}</div>
+                <div style={{fontSize:11,fontWeight:600,color:gv?.color||'#6b7280',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{g}</div>
                 {cats.map(c=>{
                   const spent=catTotals[c]||0;const limit=localBudgets[c]||0;const over=limit>0&&spent>limit;
                   return(
                     <div key={c} className="cat-row">
                       <div className="cat-label" title={c}>{c}</div>
                       <div className="cat-track">
-                        <div className="cat-fill" style={{width:`${Math.round((spent/maxVal)*100)}%`,background:over?'#f87171':ALL_CATS[c]?.color||'#64748b'}}/>
-                        {limit>0&&<div style={{position:'absolute',top:0,left:`${Math.round((limit/maxVal)*100)}%`,width:2,height:'100%',background:'rgba(255,255,255,0.4)'}}/>}
+                        <div className="cat-fill" style={{width:`${Math.round((spent/maxVal)*100)}%`,background:over?'#dc2626':ALL_CATS[c]?.color||'#6b7280'}}/>
+                        {limit>0&&<div style={{position:'absolute',top:0,left:`${Math.round((limit/maxVal)*100)}%`,width:2,height:'100%',background:'rgba(0,0,0,0.2)'}}/>}
                       </div>
-                      <div className="cat-val" style={over?{color:'#f87171'}:{}}>${spent.toFixed(0)}{limit>0&&<span style={{color:'var(--text-muted)'}}>/{limit.toFixed(0)}</span>}</div>
+                      <div className="cat-val" style={over?{color:'#dc2626'}:{}}>${spent.toFixed(0)}{limit>0&&<span style={{color:'#6b8dc4'}}>/{limit.toFixed(0)}</span>}</div>
                     </div>
                   );
                 })}
@@ -663,23 +659,23 @@ function DebtsTab({debts,setDebts}){
           <>
             {sorted.map((d,i)=>{
               const labels=['Attack first','Attack next','Hold minimum'];
-              const colors=['#f87171','#fbbf24','#4ade80'];
-              const bgs=['rgba(248,113,113,0.12)','rgba(251,191,36,0.12)','rgba(74,222,128,0.1)'];
+              const colors=['#dc2626','#d97706','#16a34a'];
+              const bgs=['rgba(220,38,38,0.1)','rgba(217,119,6,0.1)','rgba(22,163,74,0.1)'];
               const label=i<2?labels[i]:labels[2];
               const color=i<2?colors[i]:colors[2];
               const bg=i<2?bgs[i]:bgs[2];
               return(
-                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid var(--navy-border)'}}>
+                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid #e8f1fd'}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700}}>{d.name}</span>
+                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{d.name}</span>
                       <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
                     </div>
-                    <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
+                    <div style={{fontSize:12,color:'#6b8dc4'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
                     <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
                   </div>
                   <div style={{textAlign:'right',flexShrink:0}}>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'#0f2a5e'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
                     <button className="btn-danger" style={{marginTop:6}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
                   </div>
                 </div>
@@ -732,15 +728,15 @@ function SavingsTab({transactions,goals,setGoals}){
         <div className="card-title">Your savings goals</div>
         {goals.length===0?<div className="empty-state">Add a goal above — emergency fund, vacation, down payment…</div>:goals.map(g=>{
           const pct=Math.min(100,Math.round(g.saved/g.target*100));
-          const barC=pct>=100?'#4ade80':pct>=50?'var(--gold)':'#60a5fa';
+          const barC=pct>=100?'#16a34a':pct>=50?'#1a6fd4':'#0ea5e9';
           return(
-            <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:'1px solid var(--navy-border)'}}>
+            <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:'1px solid #e8f1fd'}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
-                  <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700}}>{g.name}</span>
-                  <span style={{fontSize:12,color:'var(--text-muted)'}}>${Math.max(0,g.target-g.saved).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} to go</span>
+                  <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{g.name}</span>
+                  <span style={{fontSize:12,color:'#6b8dc4'}}>${Math.max(0,g.target-g.saved).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} to go</span>
                 </div>
-                <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:5}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} of ${g.target.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+                <div style={{fontSize:12,color:'#6b8dc4',marginBottom:5}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} of ${g.target.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
                 <div className="goal-bar-track"><div className="goal-bar-fill" style={{width:`${pct}%`,background:barC}}/></div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
@@ -759,8 +755,8 @@ function SavingsTab({transactions,goals,setGoals}){
             <thead><tr><th style={{width:70}}>Date</th><th>Description</th><th style={{width:130}}>Category</th><th style={{width:90,textAlign:'right'}}>Amount</th></tr></thead>
             <tbody>
               {savTxs.map(t=>{
-                const ci=ALL_CATS[t.cat]||{color:'var(--gold)',bg:'rgba(201,168,76,0.12)'};
-                return(<tr key={t.id}><td style={{fontSize:11}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td><td>{t.desc}</td><td><span className="badge" style={{background:ci.bg,color:ci.color}}>{t.cat}</span></td><td style={{textAlign:'right',fontWeight:600,color:'var(--gold)'}}>+${t.amt.toFixed(2)}</td></tr>);
+                const ci=ALL_CATS[t.cat]||{color:'#1a6fd4',bg:'rgba(26,111,212,0.1)'};
+                return(<tr key={t.id}><td style={{fontSize:11}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td><td>{t.desc}</td><td><span className="badge" style={{background:ci.bg,color:ci.color}}>{t.cat}</span></td><td style={{textAlign:'right',fontWeight:600,color:'#1a6fd4'}}>+${t.amt.toFixed(2)}</td></tr>);
               })}
             </tbody>
           </table>
@@ -776,21 +772,21 @@ function CashPopup({onClose}){
       <div className="modal-box slide-up" style={{maxWidth:500}}>
         <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
           <div style={{fontSize:48,marginBottom:12}}>💵</div>
-          <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10}}>Cash Spending Tracker</h2>
-          <p style={{fontSize:14,color:'var(--text-secondary)',lineHeight:1.7}}>Cash feels simple — but it's actually the <strong style={{color:'var(--text-primary)'}}>hardest money to track.</strong></p>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'#0f2a5e'}}>Cash Spending Tracker</h2>
+          <p style={{fontSize:14,color:'#6b8dc4',lineHeight:1.7}}>Cash feels simple — but it's actually the <strong style={{color:'#0f2a5e'}}>hardest money to track.</strong></p>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:'1.75rem'}}>
-          <div style={{background:'rgba(56,189,248,0.08)',border:'1px solid rgba(56,189,248,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
+          <div style={{background:'rgba(14,165,233,0.06)',border:'1px solid rgba(14,165,233,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>🤔</span>
-            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'var(--text-primary)'}}>Where did it go?</strong> Most people have no idea.</div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'#0f2a5e'}}>Where did it go?</strong> Most people have no idea.</div>
           </div>
-          <div style={{background:'rgba(74,222,128,0.06)',border:'1px solid rgba(74,222,128,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
+          <div style={{background:'rgba(22,163,74,0.06)',border:'1px solid rgba(22,163,74,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>✅</span>
-            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>This tab fixes that. Log every cash purchase here. <strong style={{color:'#4ade80'}}>Including the money you thought just disappeared.</strong></div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>This tab fixes that. Log every cash purchase here. <strong style={{color:'#16a34a'}}>Including the money you thought just disappeared.</strong></div>
           </div>
-          <div style={{background:'rgba(201,168,76,0.08)',border:'1px solid rgba(201,168,76,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
+          <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>💡</span>
-            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}><strong style={{color:'var(--gold)'}}>Pro tip:</strong> Log cash purchases right when you spend them. Even $3 for coffee adds up to $90 a month.</div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}><strong style={{color:'#1a6fd4'}}>Pro tip:</strong> Log cash purchases right when you spend them. Even $3 for coffee adds up to $90 a month.</div>
           </div>
         </div>
         <button className="btn-gold" style={{width:'100%',padding:'13px',fontSize:14}} onClick={onClose}>Got it — let me start tracking my cash 💪</button>
@@ -825,21 +821,21 @@ function CashTab({transactions,setTransactions}){
   return(
     <>
       <div className="metric-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
-        <div className="metric-card"><div className="lbl">Cash spent this month</div><div className="val" style={{color:'#38bdf8'}}>${totalMonth.toFixed(2)}</div></div>
+        <div className="metric-card"><div className="lbl">Cash spent this month</div><div className="val" style={{color:'#0ea5e9'}}>${totalMonth.toFixed(2)}</div></div>
         <div className="metric-card"><div className="lbl">Transactions (month)</div><div className="val val-gold">{monthCash.length}</div></div>
         <div className="metric-card"><div className="lbl">Total cash tracked</div><div className="val val-teal">${totalAll.toFixed(2)}</div></div>
       </div>
       <div className="card">
         <div className="card-title">Log a cash purchase</div>
         <div className="form-row r3">
-          <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'var(--red)'}:{}}/>
-          <input type="text" placeholder="What did you buy?" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'var(--red)'}:{}} onKeyDown={e=>e.key==='Enter'&&addCash()}/>
+          <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'#dc2626'}:{}}/>
+          <input type="text" placeholder="What did you buy?" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'#dc2626'}:{}} onKeyDown={e=>e.key==='Enter'&&addCash()}/>
           <select value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))}>
             {CASH_CATS.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div style={{display:'flex',gap:10,alignItems:'center'}}>
-          <input type="number" placeholder="Amount ($)" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={{maxWidth:180,...(err.amt?{borderColor:'var(--red)'}:{})}} onKeyDown={e=>e.key==='Enter'&&addCash()}/>
+          <input type="number" placeholder="Amount ($)" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={{maxWidth:180,...(err.amt?{borderColor:'#dc2626'}:{})}} onKeyDown={e=>e.key==='Enter'&&addCash()}/>
           <button className="btn-gold" onClick={addCash}>+ Log cash</button>
         </div>
       </div>
@@ -849,8 +845,8 @@ function CashTab({transactions,setTransactions}){
           {catList.map(([cat,val])=>(
             <div key={cat} className="cat-row">
               <div className="cat-label" title={cat}>{cat.replace('Cash - ','')}</div>
-              <div className="cat-track"><div className="cat-fill" style={{width:`${Math.round((val/maxVal)*100)}%`,background:'#38bdf8'}}/></div>
-              <div className="cat-val" style={{color:'#38bdf8'}}>${val.toFixed(2)}</div>
+              <div className="cat-track"><div className="cat-fill" style={{width:`${Math.round((val/maxVal)*100)}%`,background:'#0ea5e9'}}/></div>
+              <div className="cat-val" style={{color:'#0ea5e9'}}>${val.toFixed(2)}</div>
             </div>
           ))}
         </div>
@@ -865,8 +861,8 @@ function CashTab({transactions,setTransactions}){
                 <tr key={t.id}>
                   <td style={{fontSize:11}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
                   <td>{t.desc}</td>
-                  <td><span className="badge" style={{background:'rgba(56,189,248,0.12)',color:'#38bdf8'}}>{t.cat.replace('Cash - ','')}</span></td>
-                  <td style={{textAlign:'right',fontWeight:600,color:'#38bdf8'}}>${t.amt.toFixed(2)}</td>
+                  <td><span className="badge" style={{background:'rgba(14,165,233,0.1)',color:'#0ea5e9'}}>{t.cat.replace('Cash - ','')}</span></td>
+                  <td style={{textAlign:'right',fontWeight:600,color:'#0ea5e9'}}>${t.amt.toFixed(2)}</td>
                   <td><button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button></td>
                 </tr>
               ))}
@@ -900,7 +896,7 @@ function TimelineTab({debts}){
         <div className="card-title">Extra monthly payment toward top debt</div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <input type="number" placeholder="Extra payment ($/mo)" min="0" step="10" value={extra} style={{maxWidth:220}} onChange={e=>setExtra(e.target.value)}/>
-          <span style={{fontSize:13,color:'var(--text-muted)'}}>beyond minimums</span>
+          <span style={{fontSize:13,color:'#6b8dc4'}}>beyond minimums</span>
         </div>
       </div>
       {debts.length===0?<div className="card"><div className="empty-state">Add debts in the Debt Stack tab first.</div></div>:(
@@ -911,15 +907,15 @@ function TimelineTab({debts}){
             <div className="metric-card"><div className="lbl">Total interest paid</div><div className="val val-red">${ti.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
           </div>
           {results.map((r,i)=>(
-            <div key={i} style={{display:'flex',alignItems:'baseline',gap:10,padding:'8px 0',borderBottom:'1px solid var(--navy-border)'}}>
-              <div style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:'var(--gold)',minWidth:32}}>#{i+1}</div>
+            <div key={i} style={{display:'flex',alignItems:'baseline',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+              <div style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:'#1a6fd4',minWidth:32}}>#{i+1}</div>
               <div style={{flex:1}}>
-                <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700}}>{r.name}</div>
-                <div style={{fontSize:12,color:'var(--text-muted)'}}>{r.rate.toFixed(2)}% APR · min ${r.min.toFixed(2)}/mo</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{r.name}</div>
+                <div style={{fontSize:12,color:'#6b8dc4'}}>{r.rate.toFixed(2)}% APR · min ${r.min.toFixed(2)}/mo</div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700}}>{fmtMo(r.months)}</div>
-                <div style={{fontSize:12,fontWeight:600,color:'#4ade80'}}>${r.interest.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} interest</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'#0f2a5e'}}>{fmtMo(r.months)}</div>
+                <div style={{fontSize:12,fontWeight:600,color:'#16a34a'}}>${r.interest.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} interest</div>
               </div>
             </div>
           ))}
@@ -986,11 +982,11 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
             const gv=GROUPS[g];
             return(
               <div key={g} style={{marginBottom:12}}>
-                <div style={{fontSize:11,fontWeight:600,color:gv?.color||'#64748b',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{g}</div>
+                <div style={{fontSize:11,fontWeight:600,color:gv?.color||'#6b7280',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{g}</div>
                 {items.map(([cat,val])=>(
                   <div key={cat} className="cat-row">
                     <div className="cat-label" title={cat}>{cat}</div>
-                    <div className="cat-track"><div className="cat-fill" style={{width:`${Math.round((val/maxV)*100)}%`,background:ALL_CATS[cat]?.color||'#64748b'}}/></div>
+                    <div className="cat-track"><div className="cat-fill" style={{width:`${Math.round((val/maxV)*100)}%`,background:ALL_CATS[cat]?.color||'#6b7280'}}/></div>
                     <div className="cat-val">${val.toFixed(2)}</div>
                   </div>
                 ))}
@@ -1006,7 +1002,7 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
           <tbody>
             {cats.length===0?<tr><td colSpan={5} className="empty-state">No data for this period.</td></tr>:cats.map(([cat,val])=>{
               const g=ALL_CATS[cat]?.group||'Other';const gv=GROUPS[g];
-              return(<tr key={cat}><td><span className="grp-badge" style={{background:gv?.bg||'rgba(100,116,139,0.12)',color:gv?.color||'#64748b'}}>{g}</span></td><td style={{fontSize:12}}>{cat}</td><td>{counts[cat]||0}</td><td style={{textAlign:'right',fontWeight:600}}>${val.toFixed(2)}</td><td style={{textAlign:'right'}}>{totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>);
+              return(<tr key={cat}><td><span className="grp-badge" style={{background:gv?.bg||'rgba(107,114,128,0.1)',color:gv?.color||'#6b7280'}}>{g}</span></td><td style={{fontSize:12}}>{cat}</td><td>{counts[cat]||0}</td><td style={{textAlign:'right',fontWeight:600}}>${val.toFixed(2)}</td><td style={{textAlign:'right'}}>{totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>);
             })}
           </tbody>
         </table>
@@ -1019,9 +1015,9 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
           <div style={{display:'flex',alignItems:'flex-end',gap:6,height:160,padding:'0 4px'}}>
             {trendData.map((d,i)=>(
               <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                <div style={{fontSize:9,color:'var(--text-muted)',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
-                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'var(--gold)':'rgba(201,168,76,0.3)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
-                <div style={{fontSize:9,color:d.current?'var(--gold)':'var(--text-muted)',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
+                <div style={{fontSize:9,color:'#6b8dc4',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
+                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'#1a6fd4':'rgba(26,111,212,0.25)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
+                <div style={{fontSize:9,color:d.current?'#1a6fd4':'#6b8dc4',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
               </div>
             ))}
           </div>
