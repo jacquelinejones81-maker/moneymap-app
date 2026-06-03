@@ -66,16 +66,11 @@ export default function LandingPage({ onSubmit }) {
   const handleGetAccess = function() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-
     const lead = Object.assign({}, form, { wantsReview: wantsReview });
-
-    // If returning user — skip popup and go straight in
     if (isReturningUser(form.email)) {
       onSubmit(lead);
       return;
     }
-
-    // New user — show popup
     setSubmittedLead(lead);
     setShowPopup(true);
   };
@@ -84,10 +79,6 @@ export default function LandingPage({ onSubmit }) {
     if (!agreed) return;
     markReturningUser(submittedLead.email);
     onSubmit(Object.assign({}, submittedLead));
-  };
-
-  const handleReviewCheck = function() {
-    if (!wantsReview) setWantsReview(true);
   };
 
   const handlePhoneChange = function(e) {
@@ -182,16 +173,16 @@ export default function LandingPage({ onSubmit }) {
             </div>
 
             {!isReturning && (
-              <div style={{ background: wantsReview ? 'rgba(26,111,212,0.08)' : 'rgba(26,111,212,0.04)', border: '1px solid ' + (wantsReview ? 'rgba(26,111,212,0.4)' : 'rgba(26,111,212,0.15)'), borderRadius: 'var(--radius-md)', padding: '14px', marginBottom: 16, transition: 'all 0.3s ease' }}>
-                <div style={{ fontSize: 12, color: '#1a6fd4', fontWeight: 600, marginBottom: 5 }}>💡 Did you know?</div>
+              <div style={{ background: 'rgba(26,111,212,0.04)', border: '1px solid rgba(26,111,212,0.15)', borderRadius: 'var(--radius-md)', padding: '14px', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: '#1a6fd4', fontWeight: 600, marginBottom: 5 }}>💡 Optional: Free Financial Review</div>
                 <p style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 10 }}>
-                  Most people have <strong style={{ color: '#0f2a5e' }}>no idea how much money they actually need saved to retire on their own terms</strong>. A complimentary financial review changes that.
+                  Want to know exactly how much you need saved to retire on your own terms? Check the box below to request a <strong style={{ color: '#0f2a5e' }}>free complimentary financial review</strong>.
                 </p>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: wantsReview ? 'default' : 'pointer' }}>
-                  <input type="checkbox" checked={wantsReview} onChange={handleReviewCheck}
-                    style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: '#1a6fd4', cursor: wantsReview ? 'default' : 'pointer' }} />
-                  <span style={{ fontSize: 13, color: '#1a6fd4', lineHeight: 1.5, fontWeight: 500 }}>
-                    {wantsReview ? 'You are locked in — complimentary financial review requested.' : 'Yes, I want to know my number — sign me up for a free complimentary financial review.'}
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={wantsReview} onChange={function() { setWantsReview(function(v) { return !v; }); }}
+                    style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: '#1a6fd4', cursor: 'pointer' }} />
+                  <span style={{ fontSize: 13, color: wantsReview ? '#16a34a' : '#1a6fd4', lineHeight: 1.5, fontWeight: 500 }}>
+                    {wantsReview ? '✓ Yes, I want a free financial review!' : 'Yes, I want to know my number — request a free financial review.'}
                   </span>
                 </label>
               </div>
@@ -230,6 +221,7 @@ export default function LandingPage({ onSubmit }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.5rem' }}>
+
               <div style={{ background: 'rgba(26,111,212,0.06)', border: '1px solid rgba(26,111,212,0.2)', borderRadius: 'var(--radius-md)', padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <span style={{ fontSize: 20, flexShrink: 0 }}>📧</span>
                 <div>
@@ -260,6 +252,18 @@ export default function LandingPage({ onSubmit }) {
                       <strong style={{ color: '#2d5a9e' }}>Expect a courtesy call</strong> — a financial professional will personally reach out to you within 24 hours to schedule your free review.
                     </p>
                   </div>
+                </div>
+              )}
+
+              {/* Always show booking option even if they didn't check the box */}
+              {!wantsReview && (
+                <div style={{ background: '#f8faff', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-md)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ fontSize: 13, color: '#2d5a9e', lineHeight: 1.6 }}>
+                    <strong style={{ color: '#0f2a5e' }}>Want to know your retirement number?</strong> A free 1-on-1 financial review can map out exactly where you are and how to get where you want to be.
+                  </div>
+                  <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '11px 20px', borderRadius: 'var(--radius-md)', textDecoration: 'none' }}>
+                    📅 Book a Free Financial Review — Optional
+                  </a>
                 </div>
               )}
 
