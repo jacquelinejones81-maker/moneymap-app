@@ -61,9 +61,7 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
         <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
           <div style={{ fontSize:44, marginBottom:12 }}>⚠️</div>
           <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, marginBottom:8, color:'#0f2a5e' }}>Cancel your account?</h2>
-          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.7 }}>
-            Are you sure you want to cancel, {firstName}? Your email and PIN will be deactivated and all your data will be removed. <strong style={{ color:'#0f2a5e' }}>This cannot be undone.</strong>
-          </p>
+          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.7 }}>Are you sure you want to cancel, {firstName}? <strong style={{ color:'#0f2a5e' }}>This cannot be undone.</strong></p>
         </div>
         <div style={{ background:'#f8faff', borderRadius:'var(--radius-md)', padding:'12px 16px', marginBottom:'1.25rem' }}>
           <label style={{ display:'flex', alignItems:'flex-start', gap:10, cursor:'pointer' }}>
@@ -89,7 +87,7 @@ function GoodbyeModal({ lead }) {
       <div className="modal-box slide-up" style={{ maxWidth:460, textAlign:'center' }}>
         <div style={{ fontSize:52, marginBottom:16 }}>👋</div>
         <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10, color:'#0f2a5e' }}>Take care, {firstName}!</h2>
-        <p style={{ fontSize:14, color:'#6b8dc4', lineHeight:1.7, marginBottom:16 }}>Your account has been cancelled. Your email and PIN are no longer active.</p>
+        <p style={{ fontSize:14, color:'#6b8dc4', lineHeight:1.7, marginBottom:16 }}>Your account has been cancelled.</p>
         <div style={{ background:'rgba(26,111,212,0.06)', border:'1px solid rgba(26,111,212,0.2)', borderRadius:'var(--radius-md)', padding:'14px 16px', marginBottom:16 }}>
           <p style={{ fontSize:13, color:'#2d5a9e', lineHeight:1.6 }}>💙 You're always welcome back. Just sign up again — it's always free.</p>
         </div>
@@ -99,11 +97,9 @@ function GoodbyeModal({ lead }) {
   );
 }
 
-// ── Pay Bill Modal ────────────────────────────────────────────────
 function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
   const [selectedAccount, setSelectedAccount] = useState(Object.keys(accounts)[0] || 'main');
   const [deductFromAccount, setDeductFromAccount] = useState(true);
-
   return (
     <div className="modal-overlay" style={{ zIndex:3000 }}>
       <div className="modal-box slide-up" style={{ maxWidth:420 }}>
@@ -112,7 +108,6 @@ function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
           <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:6, color:'#0f2a5e' }}>Mark "{bill.name}" as paid</h2>
           <p style={{ fontSize:13, color:'#6b8dc4' }}>${bill.amount.toFixed(2)}</p>
         </div>
-
         <div style={{ marginBottom:16 }}>
           <label style={{ fontSize:12, color:'#6b8dc4', display:'block', marginBottom:6, fontWeight:500 }}>Deduct from which account?</label>
           <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)} style={{ marginBottom:10 }}>
@@ -125,19 +120,71 @@ function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
             Automatically add debit transaction to this account
           </label>
         </div>
-
         <div style={{ background:'#f0f6ff', borderRadius:'var(--radius-md)', padding:'10px 14px', marginBottom:16, fontSize:12, color:'#2d5a9e' }}>
-          {deductFromAccount
-            ? `A debit of $${bill.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.`
-            : 'Bill will be marked paid without affecting any account balance.'
-          }
+          {deductFromAccount ? `A debit of $${bill.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.` : 'Bill will be marked paid without affecting any account balance.'}
         </div>
-
         <div style={{ display:'flex', gap:10 }}>
           <button className="btn-outline" style={{ flex:1 }} onClick={onCancel}>Cancel</button>
-          <button className="btn-gold" style={{ flex:1 }} onClick={() => onConfirm(selectedAccount, deductFromAccount)}>
-            ✓ Mark as Paid
-          </button>
+          <button className="btn-gold" style={{ flex:1 }} onClick={() => onConfirm(selectedAccount, deductFromAccount)}>✓ Mark as Paid</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Split Transaction Modal ──────────────────────────────────────
+function SplitModal({ form, onConfirm, onCancel }) {
+  const [splits, setSplits] = useState([
+    { grp: form.grp || '', cat: form.cat || '', amt: form.amt || '', note: '' },
+    { grp: '', cat: '', amt: '', note: '' },
+  ]);
+  const total = splits.reduce((s, sp) => s + (parseFloat(sp.amt) || 0), 0);
+  const original = parseFloat(form.amt) || 0;
+  const remaining = parseFloat((original - total).toFixed(2));
+
+  const addSplit = () => setSplits([...splits, { grp: '', cat: '', amt: '', note: '' }]);
+  const removeSplit = i => setSplits(splits.filter((_, idx) => idx !== i));
+  const updateSplit = (i, field, val) => {
+    const updated = splits.map((s, idx) => idx === i ? { ...s, [field]: val } : s);
+    setSplits(updated);
+  };
+
+  const handleConfirm = () => {
+    const valid = splits.filter(s => s.cat && parseFloat(s.amt) > 0);
+    if (valid.length < 2) { alert('Add at least 2 valid split amounts.'); return; }
+    if (Math.abs(remaining) > 0.01) { alert(`Split total ($${total.toFixed(2)}) must equal original amount ($${original.toFixed(2)}). Remaining: $${remaining.toFixed(2)}`); return; }
+    onConfirm(valid);
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex:3000 }}>
+      <div className="modal-box slide-up" style={{ maxWidth:520 }}>
+        <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
+          <div style={{ fontSize:32, marginBottom:8 }}>✂️</div>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:4, color:'#0f2a5e' }}>Split Transaction</h2>
+          <p style={{ fontSize:13, color:'#6b8dc4' }}>Total: ${original.toFixed(2)} — Remaining: <strong style={{ color: Math.abs(remaining) < 0.01 ? '#16a34a' : '#dc2626' }}>${remaining.toFixed(2)}</strong></p>
+        </div>
+        {splits.map((sp, i) => (
+          <div key={i} style={{ background:'#f8faff', borderRadius:'var(--radius-md)', padding:'12px', marginBottom:8, border:'1px solid #c7ddf7' }}>
+            <div style={{ display:'flex', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+              <select value={sp.grp} onChange={e => updateSplit(i, 'grp', e.target.value)} style={{ flex:1, minWidth:120 }}>
+                <option value="">-- Group --</option>
+                {Object.keys(GROUPS).map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+              <select value={sp.cat} onChange={e => updateSplit(i, 'cat', e.target.value)} style={{ flex:1, minWidth:120 }}>
+                <option value="">-- Category --</option>
+                {(sp.grp ? GROUPS[sp.grp]?.cats || [] : Object.values(GROUPS).flatMap(v => v.cats)).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <input type="number" placeholder="Amount" min="0" step="0.01" value={sp.amt} onChange={e => updateSplit(i, 'amt', e.target.value)} style={{ width:90 }} />
+              {splits.length > 2 && <button className="btn-danger" onClick={() => removeSplit(i)}>✕</button>}
+            </div>
+            <input placeholder="Note (optional)" value={sp.note} onChange={e => updateSplit(i, 'note', e.target.value)} style={{ fontSize:12 }} />
+          </div>
+        ))}
+        <button className="btn-outline" style={{ width:'100%', marginBottom:12, fontSize:12 }} onClick={addSplit}>+ Add another split</button>
+        <div style={{ display:'flex', gap:10 }}>
+          <button className="btn-outline" style={{ flex:1 }} onClick={onCancel}>Cancel</button>
+          <button className="btn-gold" style={{ flex:1 }} onClick={handleConfirm}>Save splits</button>
         </div>
       </div>
     </div>
@@ -160,6 +207,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [newAccountName, setNewAccountName] = useState('');
   const [loading, setLoading] = useState(true);
   const [payBillModal, setPayBillModal] = useState(null);
+  const [splitModal, setSplitModal] = useState(null);
+  const [budgetResetBanner, setBudgetResetBanner] = useState(false);
   const { showTour, completeTour, resetTour } = useTour();
 
   useEffect(() => {
@@ -174,6 +223,26 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     });
     return () => unsubscribe();
   }, [uid]);
+
+  // Budget reset banner on 1st of month
+  useEffect(() => {
+    const today = new Date();
+    if (today.getDate() === 1) {
+      const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
+      if (!localStorage.getItem(key)) setBudgetResetBanner(true);
+    }
+  }, [uid]);
+
+  const dismissBudgetBanner = (copy) => {
+    const today = new Date();
+    const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
+    localStorage.setItem(key, 'true');
+    setBudgetResetBanner(false);
+    if (copy) {
+      // Copy last month's budgets to this month (they're already there, just confirm)
+      alert('Budget limits carried over! Review them in the Budgets tab.');
+    }
+  };
 
   const saveToFirebase = async (updatedAccounts) => {
     if (!uid) return;
@@ -235,47 +304,25 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     setShowAddAccount(false);
   };
 
-  // Handle paying a bill and optionally deducting from an account
-  const handlePayBill = (bill) => {
-    setPayBillModal(bill);
-  };
+  const handlePayBill = (bill) => setPayBillModal(bill);
 
   const handlePayBillConfirm = (selectedAccountKey, deductFromAccount) => {
     const bill = payBillModal;
     const now = new Date();
     const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const key = `${monthKey}_${bill.id}`;
-
-    // Mark as paid in current active account's billsPaid
     const updatedBillsPaid = { ...billsPaid, [key]: { paidAt: now.toISOString() } };
-
     if (deductFromAccount) {
-      // Add debit transaction to selected account
       const targetAcct = accounts[selectedAccountKey];
-      const newTx = {
-        id: Date.now(),
-        date: now.toISOString().split('T')[0],
-        desc: bill.name,
-        type: 'debit',
-        grp: 'Housing',
-        cat: bill.category || 'Other',
-        amt: bill.amount,
-      };
+      const newTx = { id: Date.now(), date: now.toISOString().split('T')[0], desc: bill.name, type: 'debit', grp: 'Housing', cat: bill.category || 'Other', amt: bill.amount, note: '', refNum: '' };
       const updatedTxs = [newTx, ...(targetAcct.transactions || [])];
       updatedTxs.sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
-
-      // Update both the billsPaid in active account AND transactions in selected account
-      const updated = {
-        ...accounts,
-        [activeAccount]: { ...accounts[activeAccount], billsPaid: updatedBillsPaid },
-        [selectedAccountKey]: { ...accounts[selectedAccountKey], transactions: updatedTxs },
-      };
+      const updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], billsPaid: updatedBillsPaid }, [selectedAccountKey]: { ...accounts[selectedAccountKey], transactions: updatedTxs } };
       setAccounts(updated);
       saveToFirebase(updated);
     } else {
       updateAccount('billsPaid', updatedBillsPaid);
     }
-
     setPayBillModal(null);
   };
 
@@ -318,6 +365,18 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
+      {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
+
+      {/* Budget Reset Banner */}
+      {budgetResetBanner && (
+        <div style={{ background:'linear-gradient(135deg, #1a6fd4, #5ba3f5)', padding:'12px 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+          <div style={{ fontSize:13, color:'#fff', fontWeight:500 }}>🎯 New month! Would you like to carry over last month's budget limits?</div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={() => dismissBudgetBanner(true)} style={{ background:'#fff', color:'#1a6fd4', border:'none', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Yes, carry over</button>
+            <button onClick={() => dismissBudgetBanner(false)} style={{ background:'rgba(255,255,255,0.2)', color:'#fff', border:'1px solid rgba(255,255,255,0.4)', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:600, cursor:'pointer' }}>Dismiss</button>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8, boxShadow:'0 2px 8px rgba(26,111,212,0.08)' }}>
@@ -362,7 +421,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             </button>
           ))}
         </div>
-        {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} />}
+        {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} />}
         {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
@@ -412,14 +471,18 @@ function AlertsBar({transactions,budgets}){
   return <div style={{marginBottom:'1rem'}}>{alerts.map((a,i)=><div key={i} className={`alert-box alert-${a.type}`} dangerouslySetInnerHTML={{__html:a.msg}}/>)}</div>;
 }
 
-function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
-  const [form,setForm]=useState({date:new Date().toISOString().split('T')[0],desc:'',type:'debit',grp:'',cat:'',amt:''});
+function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitRequest}){
+  const emptyForm = {date:new Date().toISOString().split('T')[0],desc:'',type:'debit',grp:'',cat:'',amt:'',note:'',refNum:'',recurring:'none'};
+  const [form,setForm]=useState(emptyForm);
   const [bbEdit,setBbEdit]=useState(false);
   const [bbForm,setBbForm]=useState({date:beginBal.date||new Date().toISOString().split('T')[0],amount:beginBal.amount||''});
   const [filterGrp,setFilterGrp]=useState('');
   const [filterCat,setFilterCat]=useState('');
+  const [search,setSearch]=useState('');
+  const [showExtra,setShowExtra]=useState(false);
   const [err,setErr]=useState({});
   const grpCats=form.grp?GROUPS[form.grp]?.cats||[]:[];
+
   const addTx=()=>{
     const e={};
     if(!form.date)e.date=true;
@@ -427,26 +490,44 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
     if(!form.cat)e.cat=true;
     if(!form.amt||isNaN(parseFloat(form.amt))||parseFloat(form.amt)<=0)e.amt=true;
     if(Object.keys(e).length){setErr(e);return;}
-    const updated=[{id:Date.now(),date:form.date,desc:form.desc.trim(),type:form.type,grp:form.grp,cat:form.cat,amt:parseFloat(form.amt)},...transactions];
+    const newTx={id:Date.now(),date:form.date,desc:form.desc.trim(),type:form.type,grp:form.grp,cat:form.cat,amt:parseFloat(form.amt),note:form.note||'',refNum:form.refNum||'',recurring:form.recurring||'none'};
+    const updated=[newTx,...transactions];
     updated.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
     setTransactions(updated);
-    setForm(f=>({...f,desc:'',amt:''}));
+    setForm(f=>({...f,desc:'',amt:'',note:'',refNum:''}));
     setErr({});
   };
+
+  const handleSplit=()=>{
+    if(!form.amt||isNaN(parseFloat(form.amt))||parseFloat(form.amt)<=0){alert('Enter an amount first.');return;}
+    onSplitRequest(form,(splits)=>{
+      const newTxs=splits.map((sp,i)=>({id:Date.now()+i,date:form.date,desc:form.desc.trim()||'Split transaction',type:form.type,grp:sp.grp||'Other',cat:sp.cat,amt:parseFloat(sp.amt),note:sp.note||'Split',refNum:form.refNum||'',recurring:'none'}));
+      const updated=[...newTxs,...transactions];
+      updated.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+      setTransactions(updated);
+      setForm(emptyForm);
+      setErr({});
+    });
+  };
+
   const saveBB=()=>{
     const amt=parseFloat(bbForm.amount);
     if(isNaN(amt))return;
     setBeginBal({amount:amt,date:bbForm.date,set:true});
     setBbEdit(false);
   };
+
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
   let runBal=beginBal.amount||0;
   const bals={};
   sorted.forEach(t=>{runBal+=t.type==='credit'?t.amt:-t.amt;bals[t.id]=runBal;});
+
   let filtered=transactions;
   if(filterGrp)filtered=filtered.filter(t=>t.grp===filterGrp);
   if(filterCat)filtered=filtered.filter(t=>t.cat===filterCat);
+  if(search)filtered=filtered.filter(t=>`${t.desc} ${t.cat} ${t.grp} ${t.amt} ${t.refNum||''}`.toLowerCase().includes(search.toLowerCase()));
   const grpFilterCats=filterGrp?GROUPS[filterGrp]?.cats||[]:Object.values(GROUPS).flatMap(v=>v.cats);
+
   return(
     <>
       <div className="card">
@@ -480,13 +561,14 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
           </div>
         )}
       </div>
+
       <div className="card">
         <div className="card-title">Add transaction</div>
         <div className="form-row r2">
           <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'#dc2626'}:{}}/>
           <input type="text" placeholder="Description" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'#dc2626'}:{}}/>
         </div>
-        <div className="form-row r4" style={{marginBottom:12}}>
+        <div className="form-row r4" style={{marginBottom:10}}>
           <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}><option value="debit">Debit</option><option value="credit">Credit</option></select>
           <select value={form.grp} onChange={e=>setForm(f=>({...f,grp:e.target.value,cat:''}))}>
             <option value="">-- Group --</option>
@@ -498,12 +580,46 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
           </select>
           <input type="number" placeholder="Amount" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={err.amt?{borderColor:'#dc2626'}:{}} onKeyDown={e=>e.key==='Enter'&&addTx()}/>
         </div>
-        <button className="btn-gold" onClick={addTx}>+ Add entry</button>
+
+        <button className="btn-outline" style={{fontSize:11,marginBottom:10}} onClick={()=>setShowExtra(x=>!x)}>
+          {showExtra?'▲ Hide extras':'▼ Add note, ref #, recurring'}
+        </button>
+
+        {showExtra&&(
+          <div style={{background:'#f8faff',borderRadius:'var(--radius-md)',padding:'12px',marginBottom:10,border:'1px solid #c7ddf7'}}>
+            <div className="form-row r2" style={{marginBottom:8}}>
+              <div>
+                <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Note (optional)</label>
+                <input placeholder="e.g. split with spouse, reimbursable..." value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))}/>
+              </div>
+              <div>
+                <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Confirmation / Ref #</label>
+                <input placeholder="e.g. TXN123456" value={form.refNum} onChange={e=>setForm(f=>({...f,refNum:e.target.value}))}/>
+              </div>
+            </div>
+            <div>
+              <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Recurring</label>
+              <select value={form.recurring} onChange={e=>setForm(f=>({...f,recurring:e.target.value}))} style={{maxWidth:200}}>
+                <option value="none">Not recurring</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <button className="btn-gold" onClick={addTx}>+ Add entry</button>
+          <button className="btn-outline" onClick={handleSplit} style={{fontSize:12}}>✂️ Split</button>
+        </div>
       </div>
+
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem',flexWrap:'wrap',gap:8}}>
           <div className="card-title" style={{marginBottom:0}}>Register</div>
-          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
+            <input placeholder="🔍 Search transactions..." value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'5px 10px',width:180}}/>
             <select value={filterGrp} onChange={e=>{setFilterGrp(e.target.value);setFilterCat('');}} style={{width:'auto',fontSize:12,padding:'4px 8px'}}>
               <option value="">All groups</option>
               {Object.keys(GROUPS).map(g=><option key={g} value={g}>{g}</option>)}
@@ -516,11 +632,16 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
         </div>
         <table>
           <thead><tr>
-            <th style={{width:64}}>Date</th><th>Description</th><th style={{width:112}}>Category</th>
-            <th style={{width:66}}>Debit</th><th style={{width:66}}>Credit</th><th style={{width:72}}>Balance</th><th style={{width:28}}></th>
+            <th style={{width:64}}>Date</th>
+            <th>Description</th>
+            <th style={{width:100}}>Category</th>
+            <th style={{width:66}}>Debit</th>
+            <th style={{width:66}}>Credit</th>
+            <th style={{width:72}}>Balance</th>
+            <th style={{width:28}}></th>
           </tr></thead>
           <tbody>
-            {beginBal.set&&!filterGrp&&!filterCat&&(
+            {beginBal.set&&!filterGrp&&!filterCat&&!search&&(
               <tr className="bb-row">
                 <td style={{fontSize:11}}>{new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                 <td colSpan={4} style={{color:'#6b8dc4'}}>💰 Beginning balance</td>
@@ -534,8 +655,13 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
               return(
                 <tr key={t.id}>
                   <td style={{fontSize:11,whiteSpace:'nowrap'}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
-                  <td title={t.desc} style={{fontSize:12}}>{t.desc}</td>
-                  <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span><span style={{fontSize:11,color:'#6b8dc4'}}>{t.cat}</span></td>
+                  <td>
+                    <div style={{fontSize:12}}>{t.desc}</div>
+                    {t.note&&<div style={{fontSize:10,color:'#6b8dc4',fontStyle:'italic'}}>📝 {t.note}</div>}
+                    {t.refNum&&<div style={{fontSize:10,color:'#1a6fd4'}}>Ref: {t.refNum}</div>}
+                    {t.recurring&&t.recurring!=='none'&&<div style={{fontSize:10,color:'#7c3aed'}}>🔁 {t.recurring}</div>}
+                  </td>
+                  <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span></td>
                   <td className="debit-color">{t.type==='debit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className="credit-color">{t.type==='credit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className={`fw ${bal>=0?'credit-color':'debit-color'}`} style={{fontSize:12}}>${Math.abs(bal).toFixed(2)}</td>
@@ -543,7 +669,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
                 </tr>
               );
             })}
-            {filtered.length===0&&<tr><td colSpan={7} className="empty-state">No transactions yet.</td></tr>}
+            {filtered.length===0&&<tr><td colSpan={7} className="empty-state">No transactions found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -639,9 +765,9 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill}){
                     <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(bill.dueDay)}</span></td>
                     <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                     <td style={{textAlign:'center'}}>
-                      {paid ? (
+                      {paid?(
                         <button onClick={()=>onUnpayBill(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
-                      ) : (
+                      ):(
                         <button onClick={()=>onPayBill(bill)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                       )}
                     </td>
@@ -911,7 +1037,7 @@ function CashTab({transactions,setTransactions}){
     if(!form.desc.trim())e.desc=true;
     if(!form.amt||isNaN(parseFloat(form.amt))||parseFloat(form.amt)<=0)e.amt=true;
     if(Object.keys(e).length){setErr(e);return;}
-    const updated=[{id:Date.now(),date:form.date,desc:form.desc.trim(),type:'debit',grp:'Cash Spending',cat:form.cat,amt:parseFloat(form.amt)},...transactions];
+    const updated=[{id:Date.now(),date:form.date,desc:form.desc.trim(),type:'debit',grp:'Cash Spending',cat:form.cat,amt:parseFloat(form.amt),note:'',refNum:''},...transactions];
     updated.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
     setTransactions(updated);
     setForm(f=>({...f,desc:'',amt:''}));setErr({});
@@ -1051,15 +1177,25 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
     trendData.push({label:l.replace(' 20',"'"),value:parseFloat(tot.toFixed(2)),current:i===0});
   }
   const maxTrend=Math.max(...trendData.map(d=>d.value),1);
+
+  const exportMonthlySummary=()=>{
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>MoneyMap Summary — ${label}</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#0f2a5e;background:#fff}h1{color:#1a6fd4;border-bottom:2px solid #1a6fd4;padding-bottom:10px}h2{color:#2d5a9e;margin-top:24px;font-size:16px}.metric{display:inline-block;background:#f0f6ff;border:1px solid #c7ddf7;border-radius:8px;padding:12px 20px;margin:6px;text-align:center}.metric .val{font-size:24px;font-weight:800;color:#1a6fd4}.metric .lbl{font-size:11px;color:#6b8dc4;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#f0f6ff;padding:8px;text-align:left;font-size:12px;color:#6b8dc4;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #e8f1fd;font-size:13px}.green{color:#16a34a}.red{color:#dc2626}</style></head><body><h1>💰 MoneyMap Monthly Summary</h1><h2>${label}</h2><div><div class="metric"><div class="val">$${totalIncome.toFixed(2)}</div><div class="lbl">Income</div></div><div class="metric"><div class="val red">$${totalSpent.toFixed(2)}</div><div class="lbl">Spent</div></div><div class="metric"><div class="val ${net>=0?'green':'red'}">${net<0?'-':''}$${Math.abs(net).toFixed(2)}</div><div class="lbl">Net ${net>=0?'Surplus':'Deficit'}</div></div></div><h2>Spending by Category</h2><table><tr><th>Category</th><th>Group</th><th>Transactions</th><th>Total</th><th>% of Spending</th></tr>${cats.map(([cat,val])=>`<tr><td>${cat}</td><td>${ALL_CATS[cat]?.group||'Other'}</td><td>${counts[cat]||0}</td><td>$${val.toFixed(2)}</td><td>${totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>`).join('')}</table><p style="margin-top:30px;font-size:11px;color:#6b8dc4;text-align:center">Generated by MoneyMap — ${new Date().toLocaleDateString()}</p></body></html>`;
+    const blob=new Blob([html],{type:'text/html'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`MoneyMap_${label.replace(' ','_')}.html`;a.click();
+  };
+
   return(
     <>
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,marginBottom:'1rem'}}>
           <div className="card-title" style={{marginBottom:0}}>Spending report</div>
-          <div className="pb-bar">
-            {['monthly','quarterly','yearly'].map(mode=>(
-              <button key={mode} className={`pb ${periodMode===mode?'active':''}`} onClick={()=>{setPeriodMode(mode);setPeriodOffset(0);}}>{mode.charAt(0).toUpperCase()+mode.slice(1)}</button>
-            ))}
+          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+            <div className="pb-bar">
+              {['monthly','quarterly','yearly'].map(mode=>(
+                <button key={mode} className={`pb ${periodMode===mode?'active':''}`} onClick={()=>{setPeriodMode(mode);setPeriodOffset(0);}}>{mode.charAt(0).toUpperCase()+mode.slice(1)}</button>
+              ))}
+            </div>
+            <button className="btn-outline" style={{fontSize:11}} onClick={exportMonthlySummary}>📤 Export Summary</button>
           </div>
         </div>
         <div className="period-nav">
@@ -1127,10 +1263,10 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
 
 function exportCSV(transactions,beginBal){
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
-  const rows=[['Date','Description','Group','Category','Type','Amount','Balance']];
+  const rows=[['Date','Description','Group','Category','Type','Amount','Balance','Note','Ref #','Recurring']];
   let runBal=beginBal.amount||0;
-  if(beginBal.set)rows.push([beginBal.date,'Beginning Balance','—','—','credit',beginBal.amount.toFixed(2),runBal.toFixed(2)]);
-  sorted.forEach(t=>{runBal+=t.type==='credit'?t.amt:-t.amt;rows.push([t.date,`"${t.desc}"`,t.grp||'',t.cat,t.type,t.amt.toFixed(2),runBal.toFixed(2)]);});
+  if(beginBal.set)rows.push([beginBal.date,'Beginning Balance','—','—','credit',beginBal.amount.toFixed(2),runBal.toFixed(2),'','','']);
+  sorted.forEach(t=>{runBal+=t.type==='credit'?t.amt:-t.amt;rows.push([t.date,`"${t.desc}"`,t.grp||'',t.cat,t.type,t.amt.toFixed(2),runBal.toFixed(2),t.note||'',t.refNum||'',t.recurring||'none']);});
   const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='moneymap_register.csv';a.click();
 }
