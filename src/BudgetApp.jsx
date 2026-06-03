@@ -99,6 +99,51 @@ function GoodbyeModal({ lead }) {
   );
 }
 
+// ── Pay Bill Modal ────────────────────────────────────────────────
+function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
+  const [selectedAccount, setSelectedAccount] = useState(Object.keys(accounts)[0] || 'main');
+  const [deductFromAccount, setDeductFromAccount] = useState(true);
+
+  return (
+    <div className="modal-overlay" style={{ zIndex:3000 }}>
+      <div className="modal-box slide-up" style={{ maxWidth:420 }}>
+        <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
+          <div style={{ fontSize:36, marginBottom:8 }}>💳</div>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:6, color:'#0f2a5e' }}>Mark "{bill.name}" as paid</h2>
+          <p style={{ fontSize:13, color:'#6b8dc4' }}>${bill.amount.toFixed(2)}</p>
+        </div>
+
+        <div style={{ marginBottom:16 }}>
+          <label style={{ fontSize:12, color:'#6b8dc4', display:'block', marginBottom:6, fontWeight:500 }}>Deduct from which account?</label>
+          <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)} style={{ marginBottom:10 }}>
+            {Object.entries(accounts).map(([key, acct]) => (
+              <option key={key} value={key}>{acct.name}</option>
+            ))}
+          </select>
+          <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, color:'#2d5a9e' }}>
+            <input type="checkbox" checked={deductFromAccount} onChange={e => setDeductFromAccount(e.target.checked)} style={{ width:15, height:15, accentColor:'#1a6fd4' }} />
+            Automatically add debit transaction to this account
+          </label>
+        </div>
+
+        <div style={{ background:'#f0f6ff', borderRadius:'var(--radius-md)', padding:'10px 14px', marginBottom:16, fontSize:12, color:'#2d5a9e' }}>
+          {deductFromAccount
+            ? `A debit of $${bill.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.`
+            : 'Bill will be marked paid without affecting any account balance.'
+          }
+        </div>
+
+        <div style={{ display:'flex', gap:10 }}>
+          <button className="btn-outline" style={{ flex:1 }} onClick={onCancel}>Cancel</button>
+          <button className="btn-gold" style={{ flex:1 }} onClick={() => onConfirm(selectedAccount, deductFromAccount)}>
+            ✓ Mark as Paid
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
@@ -114,6 +159,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [payBillModal, setPayBillModal] = useState(null);
   const { showTour, completeTour, resetTour } = useTour();
 
   useEffect(() => {
@@ -139,8 +185,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     } catch (err) { console.error('Save error:', err); }
   };
 
-  const updateAccount = (field, value) => {
-    const updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], [field]: value } };
+  const updateAccount = (field, value, accountKey) => {
+    const key = accountKey || activeAccount;
+    const updated = { ...accounts, [key]: { ...accounts[key], [field]: value } };
     setAccounts(updated);
     saveToFirebase(updated);
   };
@@ -188,6 +235,59 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     setShowAddAccount(false);
   };
 
+  // Handle paying a bill and optionally deducting from an account
+  const handlePayBill = (bill) => {
+    setPayBillModal(bill);
+  };
+
+  const handlePayBillConfirm = (selectedAccountKey, deductFromAccount) => {
+    const bill = payBillModal;
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const key = `${monthKey}_${bill.id}`;
+
+    // Mark as paid in current active account's billsPaid
+    const updatedBillsPaid = { ...billsPaid, [key]: { paidAt: now.toISOString() } };
+
+    if (deductFromAccount) {
+      // Add debit transaction to selected account
+      const targetAcct = accounts[selectedAccountKey];
+      const newTx = {
+        id: Date.now(),
+        date: now.toISOString().split('T')[0],
+        desc: bill.name,
+        type: 'debit',
+        grp: 'Housing',
+        cat: bill.category || 'Other',
+        amt: bill.amount,
+      };
+      const updatedTxs = [newTx, ...(targetAcct.transactions || [])];
+      updatedTxs.sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+
+      // Update both the billsPaid in active account AND transactions in selected account
+      const updated = {
+        ...accounts,
+        [activeAccount]: { ...accounts[activeAccount], billsPaid: updatedBillsPaid },
+        [selectedAccountKey]: { ...accounts[selectedAccountKey], transactions: updatedTxs },
+      };
+      setAccounts(updated);
+      saveToFirebase(updated);
+    } else {
+      updateAccount('billsPaid', updatedBillsPaid);
+    }
+
+    setPayBillModal(null);
+  };
+
+  const handleUnpayBill = (billId) => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const key = `${monthKey}_${billId}`;
+    const updated = { ...billsPaid };
+    delete updated[key];
+    updateAccount('billsPaid', updated);
+  };
+
   const firstName = lead?.name?.split(' ')[0] || firebaseUser?.displayName?.split(' ')[0] || 'there';
 
   const tabs = [
@@ -217,6 +317,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showCashPopup && <CashPopup onClose={closeCashPopup} />}
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
+      {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
 
       {/* Header */}
       <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8, boxShadow:'0 2px 8px rgba(26,111,212,0.08)' }}>
@@ -262,7 +363,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           ))}
         </div>
         {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} />}
-        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} setBillsPaid={bps} />}
+        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
         {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} />}
@@ -450,7 +551,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal}){
   );
 }
 
-function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
+function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -468,13 +569,6 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
     setBills(updated);
     setForm({name:'',amount:'',dueDay:'1',category:'Electric bill',autopay:false});
     setErr({});setShowForm(false);
-  };
-  const togglePaid=billId=>{
-    const key=`${monthKey}_${billId}`;
-    const updated={...billsPaid};
-    if(updated[key])delete updated[key];
-    else updated[key]={paidAt:new Date().toISOString()};
-    setBillsPaid(updated);
   };
   const isPaid=billId=>!!billsPaid[`${monthKey}_${billId}`];
   const paidAt=billId=>{const p=billsPaid[`${monthKey}_${billId}`];return p?new Date(p.paidAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):null;};
@@ -525,7 +619,7 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
               <th style={{width:90}}>Category</th>
               <th style={{width:70,textAlign:'center'}}>Due</th>
               <th style={{width:80,textAlign:'right'}}>Amount</th>
-              <th style={{width:100,textAlign:'center'}}>Status</th>
+              <th style={{width:120,textAlign:'center'}}>Status</th>
               <th style={{width:90,textAlign:'center'}}>Paid on</th>
               <th style={{width:40}}></th>
             </tr></thead>
@@ -545,7 +639,11 @@ function BillsTab({bills,setBills,billsPaid,setBillsPaid}){
                     <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(bill.dueDay)}</span></td>
                     <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                     <td style={{textAlign:'center'}}>
-                      <button onClick={()=>togglePaid(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                      {paid ? (
+                        <button onClick={()=>onUnpayBill(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                      ) : (
+                        <button onClick={()=>onPayBill(bill)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                      )}
                     </td>
                     <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(bill.id)||'—'}</td>
                     <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setBills(bills.filter(b=>b.id!==bill.id))}>✕</button></td>
@@ -778,15 +876,15 @@ function CashPopup({onClose}){
         <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:'1.75rem'}}>
           <div style={{background:'rgba(14,165,233,0.06)',border:'1px solid rgba(14,165,233,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>🤔</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'#0f2a5e'}}>Where did it go?</strong> Most people have no idea.</div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'#0f2a5e'}}>Where did it go?</strong></div>
           </div>
           <div style={{background:'rgba(22,163,74,0.06)',border:'1px solid rgba(22,163,74,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>✅</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>This tab fixes that. Log every cash purchase here. <strong style={{color:'#16a34a'}}>Including the money you thought just disappeared.</strong></div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>This tab fixes that. <strong style={{color:'#16a34a'}}>Log every cash purchase here.</strong></div>
           </div>
           <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>💡</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}><strong style={{color:'#1a6fd4'}}>Pro tip:</strong> Log cash purchases right when you spend them. Even $3 for coffee adds up to $90 a month.</div>
+            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}><strong style={{color:'#1a6fd4'}}>Pro tip:</strong> Log cash right when you spend it. $3 coffee = $90/month.</div>
           </div>
         </div>
         <button className="btn-gold" style={{width:'100%',padding:'13px',fontSize:14}} onClick={onClose}>Got it — let me start tracking my cash 💪</button>
