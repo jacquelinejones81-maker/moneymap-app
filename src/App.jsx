@@ -13,8 +13,20 @@ export default function App() {
   const [view, setView] = useState('loading');
   const [currentLead, setCurrentLead] = useState(null);
   const [firebaseUser, setFirebaseUser] = useState(null);
+  const [repName, setRepName] = useState('');
 
   useEffect(() => {
+    // Read ?rep= from URL
+    const params = new URLSearchParams(window.location.search);
+    const rep = params.get('rep');
+    if (rep) {
+      setRepName(rep);
+      localStorage.setItem('mm_rep', rep);
+    } else {
+      const savedRep = localStorage.getItem('mm_rep');
+      if (savedRep) setRepName(savedRep);
+    }
+
     const hash = window.location.hash;
     if (hash === '#admin') { setView('admin-login'); return; }
 
@@ -86,17 +98,21 @@ export default function App() {
       const user = userCredential.user;
       await updateProfile(user, { displayName: lead.name });
 
+      // Get rep from state or localStorage
+      const rep = repName || localStorage.getItem('mm_rep') || '';
+
       const newLead = {
         ...lead,
         uid: user.uid,
         id: Date.now(),
         submittedAt: new Date().toISOString(),
+        referredBy: rep,
         crmAdded: false,
         bookSent: false,
         reviewCalled: false,
       };
 
-    const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
+      const leads = JSON.parse(localStorage.getItem('mm_leads') || '[]');
       const exists = leads.find(l => l.email === lead.email);
       if (!exists) {
         leads.unshift(newLead);
@@ -168,15 +184,15 @@ export default function App() {
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
   if (view === 'pin-login') return <PinLogin firebaseUser={firebaseUser} onSuccess={handlePinLogin} onNewUser={() => setView('landing')} />;
   if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
-  return <LandingPage onSubmit={handleLeadSubmit} />;
+  return <LandingPage onSubmit={handleLeadSubmit} repName={repName} />;
 }
 
 function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--gold)', marginBottom: 8 }}>MoneyMap</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading…</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: '#1a6fd4', marginBottom: 8 }}>MoneyMap</div>
+        <div style={{ fontSize: 13, color: '#6b8dc4' }}>Loading…</div>
       </div>
     </div>
   );
@@ -196,19 +212,17 @@ function AdminLogin({ onSuccess }) {
       <div className="modal-box slide-up" style={{ maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 6 }}>Admin Access</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Enter your admin password to view leads</p>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 6, color: '#0f2a5e' }}>Admin Access</h2>
+          <p style={{ color: '#6b8dc4', fontSize: 13 }}>Enter your admin password to view leads</p>
         </div>
-        <input
-          type="password" value={pw} placeholder="Admin password"
+        <input type="password" value={pw} placeholder="Admin password"
           onChange={e => { setPw(e.target.value); setErr(''); }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          style={{ marginBottom: 12 }}
-        />
-        {err && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 10 }}>{err}</p>}
+          style={{ marginBottom: 12 }} />
+        {err && <p style={{ color: '#dc2626', fontSize: 12, marginBottom: 10 }}>{err}</p>}
         <button className="btn-gold" style={{ width: '100%' }} onClick={handleLogin}>Enter Admin Panel</button>
-        <p style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: 'var(--text-muted)' }}>
-          <a href="#" onClick={e => { e.preventDefault(); window.location.hash = ''; window.location.reload(); }} style={{ color: 'var(--gold)', textDecoration: 'none' }}>← Back</a>
+        <p style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: '#6b8dc4' }}>
+          <a href="#" onClick={e => { e.preventDefault(); window.location.hash = ''; window.location.reload(); }} style={{ color: '#1a6fd4', textDecoration: 'none' }}>← Back</a>
         </p>
       </div>
     </div>
