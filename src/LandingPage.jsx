@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-const CALENDLY_URL = 'https://calendly.com/jacquelinejones81/serviceappointment';
-
 const BENEFITS = [
   { icon: '📊', text: 'Checkbook-style register that tracks every dollar' },
   { icon: '🎯', text: 'Debt stacking engine that shows your payoff timeline' },
@@ -30,7 +28,7 @@ function markReturningUser(email) {
   localStorage.setItem(emailKey, 'true');
 }
 
-export default function LandingPage({ onSubmit }) {
+export default function LandingPage({ onSubmit, repName }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [errors, setErrors] = useState({});
   const [showPopup, setShowPopup] = useState(false);
@@ -87,6 +85,9 @@ export default function LandingPage({ onSubmit }) {
     setErrors(function(er) { return Object.assign({}, er, { phone: '' }); });
   };
 
+  // Format rep name nicely for display
+  const repDisplay = repName ? repName.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase()) : '';
+
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
@@ -95,6 +96,14 @@ export default function LandingPage({ onSubmit }) {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto', padding: isMobile ? '1.5rem 1rem 3rem' : '2rem 1.5rem 4rem' }}>
+
+        {repDisplay && (
+          <div style={{ textAlign: 'center', marginBottom: 12 }}>
+            <span style={{ background: 'rgba(26,111,212,0.08)', border: '1px solid rgba(26,111,212,0.2)', borderRadius: 20, padding: '5px 14px', fontSize: 12, color: '#1a6fd4', fontWeight: 600 }}>
+              👤 Shared by {repDisplay}
+            </span>
+          </div>
+        )}
 
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '2rem' : '3rem', paddingTop: '1.5rem' }} className="fade-in">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(26,111,212,0.1)', border: '1px solid rgba(26,111,212,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: '1.25rem' }}>
@@ -138,7 +147,7 @@ export default function LandingPage({ onSubmit }) {
           <div className="slide-up" style={{ flex: isMobile ? 'none' : '0.9', width: '100%', background: '#fff', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-xl)', padding: isMobile ? '1.25rem' : '2rem', boxShadow: '0 4px 20px rgba(26,111,212,0.1)' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: '0.375rem', textAlign: 'center', color: '#0f2a5e' }}>Get Free Access or Log Back In</h3>
             <p style={{ fontSize: 12, color: '#6b8dc4', textAlign: 'center', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              New here? Fill out the form to get started. <strong style={{ color: '#2d5a9e' }}>Already have an account?</strong> Enter your same name, email, and phone to pick up right where you left off — no new sign-up, no duplicate offers.
+              New here? Fill out the form to get started. <strong style={{ color: '#2d5a9e' }}>Already have an account?</strong> Enter your same name, email, and phone to pick up right where you left off.
             </p>
 
             {isReturning && (
@@ -176,13 +185,13 @@ export default function LandingPage({ onSubmit }) {
               <div style={{ background: 'rgba(26,111,212,0.04)', border: '1px solid rgba(26,111,212,0.15)', borderRadius: 'var(--radius-md)', padding: '14px', marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: '#1a6fd4', fontWeight: 600, marginBottom: 5 }}>💡 Optional: Free Financial Review</div>
                 <p style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 10 }}>
-                  Want to know exactly how much you need saved to retire on your own terms? Check the box below to request a <strong style={{ color: '#0f2a5e' }}>free complimentary financial review</strong>.
+                  Would you like a complimentary financial review? Check the box and a financial professional will reach out to you within 24 hours.
                 </p>
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                   <input type="checkbox" checked={wantsReview} onChange={function() { setWantsReview(function(v) { return !v; }); }}
                     style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2, accentColor: '#1a6fd4', cursor: 'pointer' }} />
                   <span style={{ fontSize: 13, color: wantsReview ? '#16a34a' : '#1a6fd4', lineHeight: 1.5, fontWeight: 500 }}>
-                    {wantsReview ? '✓ Yes, I want a free financial review!' : 'Yes, I want to know my number — request a free financial review.'}
+                    {wantsReview ? '✓ Yes, I want a free financial review!' : 'Yes, I want a free complimentary financial review.'}
                   </span>
                 </label>
               </div>
@@ -231,39 +240,33 @@ export default function LandingPage({ onSubmit }) {
               </div>
 
               {wantsReview && (
-                <div style={{ background: 'rgba(26,111,212,0.06)', border: '1px solid rgba(26,111,212,0.3)', borderRadius: 'var(--radius-md)', padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ background: 'rgba(26,111,212,0.06)', border: '1px solid rgba(26,111,212,0.3)', borderRadius: 'var(--radius-md)', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <span style={{ fontSize: 22, flexShrink: 0 }}>📅</span>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#1a6fd4', marginBottom: 5 }}>Your complimentary financial review is confirmed ✓</div>
-                      <div style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6 }}>Most people retire on someone else's timeline because they never knew their number. We're going to change that for you.</div>
+                      <div style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6 }}>
+                        {repDisplay
+                          ? `${repDisplay} will personally reach out to you within 24 hours to schedule your free review.`
+                          : 'A financial professional will personally reach out to you within 24 hours to schedule your free review.'
+                        }
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ borderTop: '1px solid rgba(26,111,212,0.15)' }} />
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#1a6fd4', marginBottom: 8, textAlign: 'center' }}>Want to lock in your spot right now?</div>
-                    <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, padding: '13px 20px', borderRadius: 'var(--radius-md)', textDecoration: 'none' }}>
-                      📅 Schedule My Free Review Now
-                    </a>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: '#f8faff', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📞</span>
-                    <p style={{ fontSize: 12, color: '#6b8dc4', lineHeight: 1.6, margin: 0 }}>
-                      <strong style={{ color: '#2d5a9e' }}>Expect a courtesy call</strong> — a financial professional will personally reach out to you within 24 hours to schedule your free review.
-                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Always show booking option even if they didn't check the box */}
               {!wantsReview && (
-                <div style={{ background: '#f8faff', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-md)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ fontSize: 13, color: '#2d5a9e', lineHeight: 1.6 }}>
+                <div style={{ background: '#f8faff', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-md)', padding: '14px' }}>
+                  <div style={{ fontSize: 13, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 8 }}>
                     <strong style={{ color: '#0f2a5e' }}>Want to know your retirement number?</strong> A free 1-on-1 financial review can map out exactly where you are and how to get where you want to be.
                   </div>
-                  <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, padding: '11px 20px', borderRadius: 'var(--radius-md)', textDecoration: 'none' }}>
-                    📅 Book a Free Financial Review — Optional
-                  </a>
+                  <div style={{ fontSize: 12, color: '#6b8dc4' }}>
+                    {repDisplay
+                      ? `Simply reply to your welcome email or ask ${repDisplay} to schedule a free review with you.`
+                      : 'Simply reply to your welcome email to request a free complimentary financial review.'
+                    }
+                  </div>
                 </div>
               )}
 
