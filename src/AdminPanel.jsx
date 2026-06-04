@@ -6,12 +6,11 @@ export default function AdminPanel({ onBack }) {
   const [leads, setLeads] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [repFilter, setRepFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadLeads();
-  }, []);
+  useEffect(() => { loadLeads(); }, []);
 
   const loadLeads = async () => {
     try {
@@ -45,8 +44,16 @@ export default function AdminPanel({ onBack }) {
   };
 
   const exportCSV = () => {
-    const rows = [['Name', 'Email', 'Phone', 'Wants Review', 'CRM Added', 'Book Sent', 'Review Scheduled', 'Date']];
-    leads.forEach(l => rows.push([l.name, l.email, l.phone, l.wantsReview ? 'Yes' : 'No', l.crmAdded ? 'Yes' : 'No', l.bookSent ? 'Yes' : 'No', l.reviewCalled ? 'Yes' : 'No', new Date(l.submittedAt).toLocaleDateString()]));
+    const rows = [['Name', 'Email', 'Phone', 'Referred By', 'Wants Review', 'CRM Added', 'Book Sent', 'Review Scheduled', 'Date']];
+    filtered.forEach(l => rows.push([
+      l.name, l.email, l.phone,
+      l.referredBy || 'Direct',
+      l.wantsReview ? 'Yes' : 'No',
+      l.crmAdded ? 'Yes' : 'No',
+      l.bookSent ? 'Yes' : 'No',
+      l.reviewCalled ? 'Yes' : 'No',
+      new Date(l.submittedAt).toLocaleDateString()
+    ]));
     const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'moneymap_leads.csv'; a.click();
   };
@@ -56,22 +63,26 @@ export default function AdminPanel({ onBack }) {
     alert('Copied!');
   };
 
+  // Get unique rep names for filter dropdown
+  const allReps = [...new Set(leads.map(l => l.referredBy).filter(Boolean))];
+
   let filtered = leads;
-  if (search) filtered = filtered.filter(l => `${l.name} ${l.email} ${l.phone}`.toLowerCase().includes(search.toLowerCase()));
+  if (search) filtered = filtered.filter(l => `${l.name} ${l.email} ${l.phone} ${l.referredBy||''}`.toLowerCase().includes(search.toLowerCase()));
   if (filter === 'review') filtered = filtered.filter(l => l.wantsReview);
   if (filter === 'action') filtered = filtered.filter(l => !l.crmAdded || !l.bookSent || !l.reviewCalled);
+  if (repFilter) filtered = filtered.filter(l => (l.referredBy || '') === repFilter);
 
   const totalReview = leads.filter(l => l.wantsReview).length;
   const totalAction = leads.filter(l => !l.crmAdded || !l.bookSent || !l.reviewCalled).length;
   const totalDone = leads.filter(l => l.crmAdded && l.bookSent && l.reviewCalled).length;
 
   return (
-    <div style={{ minHeight: '100vh', padding: '2rem 1.5rem' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', padding: '2rem 1.5rem', background: '#f0f6ff' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 4 }}>📋 Lead Dashboard</h1>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>MoneyMap — all signups in one place</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 4, color: '#0f2a5e' }}>📋 Lead Dashboard</h1>
+            <p style={{ fontSize: 13, color: '#6b8dc4' }}>MoneyMap — all signups in one place</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn-outline" onClick={loadLeads}>↻ Refresh</button>
@@ -89,10 +100,15 @@ export default function AdminPanel({ onBack }) {
 
         <div className="card" style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input placeholder="Search by name, email, or phone..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+            <input placeholder="Search by name, email, phone, or rep..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+            <select value={repFilter} onChange={e => setRepFilter(e.target.value)} style={{ width: 'auto', fontSize: 12, padding: '8px 12px' }}>
+              <option value="">All reps</option>
+              <option value="">Direct (no rep)</option>
+              {allReps.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
             <div style={{ display: 'flex', gap: 6 }}>
               {['all', 'review', 'action'].map(f => (
-                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${filter === f ? 'var(--gold)' : 'var(--navy-border)'}`, background: filter === f ? 'rgba(201,168,76,0.15)' : 'transparent', color: filter === f ? 'var(--gold)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${filter === f ? '#1a6fd4' : '#c7ddf7'}`, background: filter === f ? 'rgba(26,111,212,0.1)' : 'transparent', color: filter === f ? '#1a6fd4' : '#6b8dc4', fontFamily: 'var(--font-display)' }}>
                   {f === 'all' ? 'All' : f === 'review' ? '📅 Wants review' : '⚠️ Action needed'}
                 </button>
               ))}
@@ -115,22 +131,30 @@ export default function AdminPanel({ onBack }) {
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700 }}>{lead.name}</span>
-                    {lead.wantsReview && <span style={{ background: 'rgba(14,165,160,0.12)', color: 'var(--teal-light)', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10 }}>Wants review</span>}
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(lead.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: '#0f2a5e' }}>{lead.name}</span>
+                    {lead.wantsReview && <span style={{ background: 'rgba(26,111,212,0.1)', color: '#1a6fd4', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10 }}>Wants review</span>}
+                    {lead.referredBy && (
+                      <span style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10 }}>
+                        👤 {lead.referredBy}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: '#6b8dc4' }}>{new Date(lead.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 2 }}>📧 {lead.email}</div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>📞 {lead.phone}</div>
+                  <div style={{ fontSize: 13, color: '#2d5a9e', marginBottom: 2 }}>📧 {lead.email}</div>
+                  <div style={{ fontSize: 13, color: '#2d5a9e', marginBottom: 2 }}>📞 {lead.phone}</div>
+                  <div style={{ fontSize: 12, color: '#6b8dc4' }}>
+                    👤 Referred by: <strong style={{ color: lead.referredBy ? '#7c3aed' : '#6b8dc4' }}>{lead.referredBy || 'Direct signup'}</strong>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button className="btn-outline" style={{ fontSize: 11 }} onClick={() => copyContact(lead)}>Copy</button>
                   <button className="btn-danger" style={{ fontSize: 11 }} onClick={() => deleteLead(lead.docId)}>✕</button>
                 </div>
               </div>
-              <div style={{ borderTop: '1px solid var(--navy-border)', marginTop: 12, paddingTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ borderTop: '1px solid #e8f1fd', marginTop: 12, paddingTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[['crmAdded', 'CRM Added'], ['bookSent', 'Book Sent'], ['reviewCalled', 'Review Scheduled']].map(([field, label]) => (
                   <button key={field} onClick={() => updateLead(lead.docId, { [field]: !lead[field] })}
-                    style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${lead[field] ? '#4ade80' : 'var(--navy-border)'}`, background: lead[field] ? 'rgba(74,222,128,0.12)' : 'transparent', color: lead[field] ? '#4ade80' : 'var(--text-muted)', transition: 'all 0.2s' }}>
+                    style={{ padding: '5px 12px', fontSize: 11, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${lead[field] ? '#16a34a' : '#c7ddf7'}`, background: lead[field] ? 'rgba(22,163,74,0.1)' : 'transparent', color: lead[field] ? '#16a34a' : '#6b8dc4', transition: 'all 0.2s' }}>
                     {lead[field] ? '✓ ' : ''}{label}
                   </button>
                 ))}
