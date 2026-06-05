@@ -16,7 +16,7 @@ export default function App() {
   const [repName, setRepName] = useState('');
 
   useEffect(() => {
-    // Read ?rep= from URL
+    // Read ?rep= from URL and save it
     const params = new URLSearchParams(window.location.search);
     const rep = params.get('rep');
     if (rep) {
@@ -27,15 +27,23 @@ export default function App() {
       if (savedRep) setRepName(savedRep);
     }
 
+    // Check for admin hash
     const hash = window.location.hash;
     if (hash === '#admin') { setView('admin-login'); return; }
 
+    // Set a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      setView('landing');
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      clearTimeout(loadingTimeout);
       if (user) {
         const cancelled = localStorage.getItem(`mm_cancelled_${user.uid}`);
         if (cancelled) {
           localStorage.removeItem(`mm_cancelled_${user.uid}`);
           signOut(auth);
+          setView('landing');
           return;
         }
         setFirebaseUser(user);
@@ -55,11 +63,16 @@ export default function App() {
           }
         }
       } else {
+        clearTimeout(loadingTimeout);
         setFirebaseUser(null);
         setView('landing');
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      clearTimeout(loadingTimeout);
+      unsubscribe();
+    };
   }, []);
 
   const handleLeadSubmit = async (lead) => {
@@ -70,8 +83,6 @@ export default function App() {
       const passwordsToTry = [
         btoa(lead.email + cleanPhone).slice(0, 20) + 'Mm1!',
         btoa(lead.email + lead.phone).slice(0, 20) + 'Mm1!',
-        btoa(lead.email + '816-739-1742').slice(0, 20) + 'Mm1!',
-        btoa(lead.email + '8167391742').slice(0, 20) + 'Mm1!',
       ];
 
       let userCredential = null;
@@ -98,7 +109,6 @@ export default function App() {
       const user = userCredential.user;
       await updateProfile(user, { displayName: lead.name });
 
-      // Get rep from state or localStorage
       const rep = repName || localStorage.getItem('mm_rep') || '';
 
       const newLead = {
@@ -189,7 +199,7 @@ export default function App() {
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f6ff' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: '#1a6fd4', marginBottom: 8 }}>MoneyMap</div>
         <div style={{ fontSize: 13, color: '#6b8dc4' }}>Loading…</div>
@@ -208,7 +218,7 @@ function AdminLogin({ onSuccess }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: '#f0f6ff' }}>
       <div className="modal-box slide-up" style={{ maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
