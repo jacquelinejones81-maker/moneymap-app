@@ -213,15 +213,21 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
 
   useEffect(() => {
     if (!uid) return;
+    const timeout = setTimeout(() => { setLoading(false); }, 4000);
     const docRef = doc(db, 'users', uid, 'data', 'budgetData');
     const unsubscribe = onSnapshot(docRef, (snap) => {
+      clearTimeout(timeout);
       if (snap.exists()) {
         const data = snap.data();
         if (data.accounts) setAccounts(data.accounts);
       }
       setLoading(false);
+    }, (error) => {
+      console.error('Firestore error:', error);
+      clearTimeout(timeout);
+      setLoading(false);
     });
-    return () => unsubscribe();
+    return () => { clearTimeout(timeout); unsubscribe(); };
   }, [uid]);
 
   // Budget reset banner on 1st of month
