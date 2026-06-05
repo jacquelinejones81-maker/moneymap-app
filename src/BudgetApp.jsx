@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import AppTour, { useTour } from './AppTour';
 import { db } from './firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import FinancialTips from './FinancialTips';
 
 const GROUPS = {
   'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
@@ -245,7 +246,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     localStorage.setItem(key, 'true');
     setBudgetResetBanner(false);
     if (copy) {
-      // Copy last month's budgets to this month (they're already there, just confirm)
       alert('Budget limits carried over! Review them in the Budgets tab.');
     }
   };
@@ -286,8 +286,19 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   }, [uid]);
 
   const handleTabSwitch = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'cash' && !localStorage.getItem(`mm_cash_${uid}`)) setShowCashPopup(true);
+    const tabMap = {
+      'Register': 'register',
+      'Bills': 'bills',
+      'Budgets': 'budgets',
+      'Debt Stack': 'debts',
+      'Savings': 'savings',
+      'Cash': 'cash',
+      'Payoff Timeline': 'timeline',
+      'Spending': 'spending',
+    };
+    const tabId = tabMap[tab] || tab;
+    setActiveTab(tabId);
+    if (tabId === 'cash' && !localStorage.getItem(`mm_cash_${uid}`)) setShowCashPopup(true);
   };
 
   const closeCashPopup = () => { localStorage.setItem(`mm_cash_${uid}`, 'true'); setShowCashPopup(false); };
@@ -372,6 +383,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showGoodbye && <GoodbyeModal lead={lead} />}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
+
+      {/* Financial Tips Popup */}
+      <FinancialTips currentUser={firebaseUser} onTabSwitch={handleTabSwitch} />
 
       {/* Budget Reset Banner */}
       {budgetResetBanner && (
