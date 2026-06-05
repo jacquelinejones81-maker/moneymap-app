@@ -17,7 +17,9 @@ export default function AdminPanel({ onBack }) {
       setLoading(true);
       setError('');
       const snap = await getDocs(collection(db, 'leads'));
-      const data = snap.docs.map(d => ({ ...d.data(), docId: d.id }));
+      const data = snap.docs
+        .map(d => ({ ...d.data(), docId: d.id }))
+        .filter(d => !d.archived);
       data.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
       setLeads(data);
     } catch (err) {
