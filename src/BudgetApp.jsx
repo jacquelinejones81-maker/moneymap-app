@@ -195,7 +195,7 @@ function SplitModal({ form, onConfirm, onCancel }) {
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
-  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } });
+  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'' } });
   const [activeTab, setActiveTab] = useState('register');
   const [periodMode, setPeriodMode] = useState('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -269,7 +269,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   };
 
   const acct = accounts[activeAccount] || accounts.main;
-  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid } = acct;
+  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment } = acct;
 
   const txs = v => updateAccount('transactions', v);
   const dbs = v => updateAccount('debts', v);
@@ -278,6 +278,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const gls = v => updateAccount('goals', v);
   const bls = v => updateAccount('bills', v);
   const bps = v => updateAccount('billsPaid', v);
+  const eps = v => updateAccount('extraPayment', v);
 
   useEffect(() => {
     const videoId = getYouTubeId(WELCOME_VIDEO_ID);
@@ -303,7 +304,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const addNewAccount = () => {
     if (!newAccountName.trim()) return;
     const key = `account_${Date.now()}`;
-    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{} } };
+    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'' } };
     setAccounts(updated);
     saveToFirebase(updated);
     setActiveAccount(key);
@@ -436,7 +437,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
         {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} />}
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
-        {activeTab==='timeline' && <TimelineTab debts={debts} />}
+        {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
       </div>
     </div>
@@ -1107,8 +1108,9 @@ function CashTab({transactions,setTransactions}){
   );
 }
 
-function TimelineTab({debts}){
-  const [extra,setExtra]=useState('');
+function TimelineTab({debts, extraPayment, setExtraPayment}){
+  const extra = extraPayment || '';
+  const setExtra = setExtraPayment;
   const extraAmt=parseFloat(extra)||0;
   const sorted=[...debts].sort((a,b)=>b.rate-a.rate);
   let freed=0;
