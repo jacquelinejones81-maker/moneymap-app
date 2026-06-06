@@ -1,376 +1,370 @@
-import { useState, useEffect } from "react";
-import { db } from "./firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import React, { useState, useEffect } from 'react';
 
 const TIPS = [
-  // Life Insurance
   {
-    id: "li_1",
-    category: "Life Insurance",
-    emoji: "🛡️",
-    headline: "Is your family protected?",
-    body: "Most families are underinsured — or not insured at all. A quick 15-minute life insurance review could make sure everything you've built is protected, no matter what.",
-    cta: "Get a Free Review",
-    tabTarget: null,
+    id: 'life_ins_1',
+    category: 'Life Insurance',
+    icon: '🛡️',
+    color: '#1a6fd4',
+    bg: 'rgba(26,111,212,0.06)',
+    border: 'rgba(26,111,212,0.2)',
+    title: 'Is your family protected?',
+    body: 'Most families are underinsured — or not insured at all. Life insurance ensures your loved ones are taken care of financially if something happens to you. A 10-minute conversation could give your family a lifetime of security.',
+    cta: 'Learn about life insurance',
   },
   {
-    id: "li_2",
-    category: "Life Insurance",
-    emoji: "🛡️",
-    headline: "Term vs. Whole Life — do you know the difference?",
-    body: "The right type of life insurance depends on your goals, your family, and your budget. Your financial rep can walk you through both options in plain English.",
-    cta: "Ask My Rep",
-    tabTarget: null,
-  },
-
-  // Debt
-  {
-    id: "debt_1",
-    category: "Debt",
-    emoji: "📉",
-    headline: "Debt avalanche vs. debt snowball",
-    body: "Two proven payoff strategies — one saves more money, one builds faster momentum. Check your Debt Stack tab to see which method works best for your situation.",
-    cta: "View Debt Stack",
-    tabTarget: "Debt Stack",
+    id: 'life_ins_2',
+    category: 'Life Insurance',
+    icon: '💙',
+    color: '#1a6fd4',
+    bg: 'rgba(26,111,212,0.06)',
+    border: 'rgba(26,111,212,0.2)',
+    title: 'Term vs. whole life — do you know the difference?',
+    body: "Choosing the wrong type of life insurance could cost you thousands. Term life is affordable and straightforward. Whole life builds cash value. Knowing which one fits your situation is key to protecting your family the right way.",
+    cta: 'Get a free life insurance review',
   },
   {
-    id: "debt_2",
-    category: "Debt",
-    emoji: "📉",
-    headline: "See your debt-free date",
-    body: "Your Payoff Timeline tab shows exactly when you'll be debt-free based on your current payments. Want to get there faster? Your rep can help you find extra dollars to accelerate.",
-    cta: "View Payoff Timeline",
-    tabTarget: "Payoff Timeline",
-  },
-
-  // Savings
-  {
-    id: "sav_1",
-    category: "Savings",
-    emoji: "🐷",
-    headline: "Do you have 3–6 months saved?",
-    body: "An emergency fund covering 3–6 months of expenses is the foundation of any solid financial plan. Without it, one unexpected event can derail everything.",
-    cta: "Talk to My Rep",
-    tabTarget: null,
+    id: 'debt_1',
+    category: 'Debt',
+    icon: '📉',
+    color: '#dc2626',
+    bg: 'rgba(220,38,38,0.06)',
+    border: 'rgba(220,38,38,0.2)',
+    title: 'High interest debt is costing you more than you think',
+    body: 'A $5,000 credit card balance at 24% APR costs you over $1,200 a year in interest alone. Your Debt Stack tab shows you the fastest way out — the avalanche method attacks the highest interest first to save you the most money.',
+    cta: 'Review my debt plan',
+    action: 'tab:debts',
   },
   {
-    id: "sav_2",
-    category: "Savings",
-    emoji: "🐷",
-    headline: "The average American retires with less than $50K",
-    body: "Social Security alone won't cut it. Do you know your retirement number? Your financial rep can help you build a savings strategy to hit it.",
-    cta: "Get My Retirement Plan",
-    tabTarget: null,
-  },
-
-  // Auto & Home Insurance
-  {
-    id: "ahi_1",
-    category: "Auto & Home Insurance",
-    emoji: "🏠",
-    headline: "Are you overpaying for insurance?",
-    body: "Many people are paying too much for auto and home coverage — or carrying the wrong coverage altogether. A quick review could save you money and fill dangerous gaps.",
-    cta: "Request a Review",
-    tabTarget: null,
+    id: 'debt_2',
+    category: 'Debt',
+    icon: '🏆',
+    color: '#dc2626',
+    bg: 'rgba(220,38,38,0.06)',
+    border: 'rgba(220,38,38,0.2)',
+    title: 'Every extra dollar toward debt saves you more later',
+    body: 'Even an extra $50/month toward your highest-interest debt can shave years off your payoff timeline and save thousands in interest. Check your Payoff tab to see exactly how much you could save.',
+    cta: 'See my payoff timeline',
+    action: 'tab:timeline',
   },
   {
-    id: "ahi_2",
-    category: "Auto & Home Insurance",
-    emoji: "🚗",
-    headline: "Bundling auto and home can save big",
-    body: "Bundling your auto and home insurance is one of the easiest ways to lower your premiums. Ask your rep if you qualify for a bundled rate.",
-    cta: "Ask My Rep",
-    tabTarget: null,
-  },
-
-  // Legal Protection
-  {
-    id: "leg_1",
-    category: "Legal Protection",
-    emoji: "⚖️",
-    headline: "Do you have a will?",
-    body: "Over 60% of Americans don't have a will. Without one, the state decides what happens to your assets and your children. Legal protection plans can give you access to an attorney at an affordable monthly rate.",
-    cta: "Learn More",
-    tabTarget: null,
+    id: 'savings_1',
+    category: 'Savings',
+    icon: '🐷',
+    color: '#16a34a',
+    bg: 'rgba(22,163,74,0.06)',
+    border: 'rgba(22,163,74,0.2)',
+    title: 'Do you have an emergency fund?',
+    body: 'Financial experts recommend 3-6 months of expenses saved before anything else. Without it, one unexpected event — a car repair, medical bill, or job loss — can derail everything. Start small. Even $500 is a foundation.',
+    cta: 'Set up my emergency fund goal',
+    action: 'tab:savings',
   },
   {
-    id: "leg_2",
-    category: "Legal Protection",
-    emoji: "⚖️",
-    headline: "Attorney access shouldn't be a luxury",
-    body: "Legal issues don't just happen to other people — traffic tickets, landlord disputes, contract reviews. A legal protection plan gives you an attorney in your corner when you need one.",
-    cta: "Talk to My Rep",
-    tabTarget: null,
-  },
-
-  // Identity Theft
-  {
-    id: "id_1",
-    category: "Identity Theft Protection",
-    emoji: "🔒",
-    headline: "Your identity is worth protecting",
-    body: "Identity theft affects millions of Americans every year. Recovery can take years and thousands of dollars. Identity theft protection monitors your info 24/7 and helps you recover fast if something goes wrong.",
-    cta: "Get Protected",
-    tabTarget: null,
+    id: 'savings_2',
+    category: 'Savings',
+    icon: '📈',
+    color: '#16a34a',
+    bg: 'rgba(22,163,74,0.06)',
+    border: 'rgba(22,163,74,0.2)',
+    title: 'The average American retires with less than $50,000',
+    body: "Most people don't know their retirement number — the amount they need saved to retire on their own timeline. A free financial review can map out exactly what you need and how to get there.",
+    cta: 'Find out my retirement number',
   },
   {
-    id: "id_2",
-    category: "Identity Theft Protection",
-    emoji: "🔒",
-    headline: "Is your info already exposed?",
-    body: "Data breaches happen constantly. Your Social Security number, bank account, and personal details may already be on the dark web. Ask your rep about monitoring services that alert you instantly.",
-    cta: "Ask My Rep",
-    tabTarget: null,
-  },
-
-  // Home Security
-  {
-    id: "hs_1",
-    category: "Home Security",
-    emoji: "🏡",
-    headline: "A monitored home is a safer home",
-    body: "Homes without security systems are 300% more likely to be broken into. Home security doesn't just protect your family — it can also lower your homeowner's insurance premium.",
-    cta: "Learn About Home Security",
-    tabTarget: null,
+    id: 'auto_home_1',
+    category: 'Auto & Home Insurance',
+    icon: '🏠',
+    color: '#d97706',
+    bg: 'rgba(217,119,6,0.06)',
+    border: 'rgba(217,119,6,0.2)',
+    title: 'Are you overpaying for auto insurance?',
+    body: 'The average American overpays for auto insurance by $400+ per year simply by not shopping around. A quick review could find you better coverage at a lower rate — more money to put toward your financial goals.',
+    cta: 'Review my auto insurance',
   },
   {
-    id: "hs_2",
-    category: "Home Security",
-    emoji: "🏡",
-    headline: "Smart home security = insurance discounts",
-    body: "Many insurance providers offer discounts for monitored security systems. Your rep can help you find a package that protects your home AND saves you money.",
-    cta: "Talk to My Rep",
-    tabTarget: null,
-  },
-
-  // Budgeting
-  {
-    id: "bud_1",
-    category: "Budgeting",
-    emoji: "💡",
-    headline: "Where does your money actually go?",
-    body: "Most people underestimate their spending by 20–30%. Your Spending tab gives you a real breakdown — no guessing. Knowledge is the first step to change.",
-    cta: "Check My Spending",
-    tabTarget: "Spending",
+    id: 'auto_home_2',
+    category: 'Auto & Home Insurance',
+    icon: '🔑',
+    color: '#d97706',
+    bg: 'rgba(217,119,6,0.06)',
+    border: 'rgba(217,119,6,0.2)',
+    title: 'Is your home properly protected?',
+    body: "Many homeowners are underinsured — meaning if something major happened, their policy wouldn't fully cover the cost to rebuild. When did you last review your homeowner's or renter's insurance coverage?",
+    cta: 'Review my home coverage',
   },
   {
-    id: "bud_2",
-    category: "Budgeting",
-    emoji: "💡",
-    headline: "Every dollar should have a job",
-    body: "Zero-based budgeting means assigning every dollar a purpose before the month begins. Head to your Register tab to start giving your money direction.",
-    cta: "Open My Register",
-    tabTarget: "Register",
+    id: 'legal_1',
+    category: 'Legal Protection',
+    icon: '⚖️',
+    color: '#7c3aed',
+    bg: 'rgba(124,58,237,0.06)',
+    border: 'rgba(124,58,237,0.2)',
+    title: 'Do you have a will?',
+    body: "Over 60% of Americans don't have a will. Without one, the state decides what happens to your assets and who raises your children. Legal protection plans make it affordable to have a will, power of attorney, and more.",
+    cta: 'Learn about legal protection',
+  },
+  {
+    id: 'legal_2',
+    category: 'Legal Protection',
+    icon: '📋',
+    color: '#7c3aed',
+    bg: 'rgba(124,58,237,0.06)',
+    border: 'rgba(124,58,237,0.2)',
+    title: "Legal help shouldn't be a luxury",
+    body: 'Attorney fees average $250-$350 per hour. Legal protection plans give you access to attorneys for a fraction of that cost — for everything from reviewing contracts to handling traffic tickets to creating estate documents.',
+    cta: 'Learn about legal plans',
+  },
+  {
+    id: 'identity_1',
+    category: 'Identity Theft Protection',
+    icon: '🔒',
+    color: '#db2777',
+    bg: 'rgba(219,39,119,0.06)',
+    border: 'rgba(219,39,119,0.2)',
+    title: 'Identity theft happens every 2 seconds in the US',
+    body: 'Recovering from identity theft takes an average of 200 hours and $1,300 out of pocket. Identity theft protection monitors your credit, alerts you to suspicious activity, and helps restore your identity if stolen.',
+    cta: 'Learn about identity protection',
+  },
+  {
+    id: 'identity_2',
+    category: 'Identity Theft Protection',
+    icon: '🛡️',
+    color: '#db2777',
+    bg: 'rgba(219,39,119,0.06)',
+    border: 'rgba(219,39,119,0.2)',
+    title: 'Your financial data is more exposed than you think',
+    body: 'Data breaches exposed over 422 million records last year. Your Social Security number, bank accounts, and credit cards could already be on the dark web. Monitoring services alert you before damage is done.',
+    cta: 'Check my exposure risk',
+  },
+  {
+    id: 'home_security_1',
+    category: 'Home Security',
+    icon: '📷',
+    color: '#059669',
+    bg: 'rgba(5,150,105,0.06)',
+    border: 'rgba(5,150,105,0.2)',
+    title: 'A home without security is 3x more likely to be burglarized',
+    body: "Home security systems deter break-ins and can lower your homeowner's insurance premium by up to 20%. Modern systems are affordable, easy to install, and monitored 24/7 for fire, carbon monoxide, and intrusion.",
+    cta: 'Learn about home security',
+  },
+  {
+    id: 'home_security_2',
+    category: 'Home Security',
+    icon: '🏡',
+    color: '#059669',
+    bg: 'rgba(5,150,105,0.06)',
+    border: 'rgba(5,150,105,0.2)',
+    title: "Protect what you've worked hard to build",
+    body: "Your home is likely your biggest asset. A monitored security system gives you peace of mind whether you're home or away — and many insurers offer discounts just for having one installed.",
+    cta: 'Explore home security options',
+  },
+  {
+    id: 'budget_1',
+    category: 'Budgeting',
+    icon: '💡',
+    color: '#0ea5e9',
+    bg: 'rgba(14,165,233,0.06)',
+    border: 'rgba(14,165,233,0.2)',
+    title: 'The 50/30/20 rule — are you following it?',
+    body: '50% of your income goes to needs, 30% to wants, and 20% to savings and debt payoff. Check your Spending tab to see how your breakdown compares. Small adjustments now create big results over time.',
+    cta: 'Review my spending breakdown',
+    action: 'tab:spending',
+  },
+  {
+    id: 'budget_2',
+    category: 'Budgeting',
+    icon: '📊',
+    color: '#0ea5e9',
+    bg: 'rgba(14,165,233,0.06)',
+    border: 'rgba(14,165,233,0.2)',
+    title: 'Do you know where every dollar is going?',
+    body: "People who track their spending save an average of 20% more per month than those who don't. You're already using MoneyMap — you're ahead of most people. Keep logging and watch your financial picture get clearer.",
+    cta: 'Keep tracking',
+    action: 'tab:register',
+  },
+  {
+    id: 'fna_1',
+    category: 'Financial Needs Analysis',
+    icon: '💼',
+    color: '#1a6fd4',
+    bg: 'rgba(26,111,212,0.06)',
+    border: 'rgba(26,111,212,0.2)',
+    title: 'Have you had a Financial Needs Analysis?',
+    body: 'A free Financial Needs Analysis looks at your complete financial picture — insurance coverage, debt, savings, retirement, and protection gaps. It takes about 30 minutes and gives you a clear roadmap to financial security. Most people are shocked by what they discover.',
+    cta: 'Request my free FNA',
+  },
+  {
+    id: 'fna_2',
+    category: 'Financial Needs Analysis',
+    icon: '🗺️',
+    color: '#1a6fd4',
+    bg: 'rgba(26,111,212,0.06)',
+    border: 'rgba(26,111,212,0.2)',
+    title: "You're tracking your money — now build a plan",
+    body: "Tracking your spending is step one. Step two is building a complete financial plan that covers your income, protection, debt elimination, and long-term goals. A Financial Needs Analysis connects all the dots in one free session.",
+    cta: 'Get my financial roadmap',
   },
 ];
 
-const STORAGE_KEY = "moneymap_seen_tips";
-const LAST_SHOWN_KEY = "moneymap_tip_last_shown";
-const MIN_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
-const INITIAL_DELAY_MS = 30 * 1000; // 30 seconds after login
+function getNextTip(uid) {
+  const seenKey = 'mm_tips_seen_' + uid;
+  const lastKey = 'mm_tips_last_' + uid;
+  const seen = JSON.parse(localStorage.getItem(seenKey) || '[]');
+  const last = localStorage.getItem(lastKey);
+  if (last) {
+    const daysSince = (Date.now() - parseInt(last)) / (1000 * 60 * 60 * 24);
+    if (daysSince < 3) return null;
+  }
+  const unseen = TIPS.filter(function(t) { return !seen.includes(t.id); });
+  if (unseen.length === 0) return null;
+  return unseen[Math.floor(Math.random() * unseen.length)];
+}
 
-export default function FinancialTips({ currentUser, onTabSwitch }) {
+function markTipSeen(uid, tipId) {
+  const seenKey = 'mm_tips_seen_' + uid;
+  const lastKey = 'mm_tips_last_' + uid;
+  const seen = JSON.parse(localStorage.getItem(seenKey) || '[]');
+  if (!seen.includes(tipId)) seen.push(tipId);
+  localStorage.setItem(seenKey, JSON.stringify(seen));
+  localStorage.setItem(lastKey, Date.now().toString());
+}
+
+// ── Rep Contact Card ─────────────────────────────────────────────
+export function RepContactCard({ repName, uid }) {
+  const [rep, setRep] = useState(null);
+
+  useEffect(function() {
+    if (!repName) return;
+    async function fetchRep() {
+      try {
+        const { db } = await import('./firebase');
+        const { collection, getDocs } = await import('firebase/firestore');
+        const snap = await getDocs(collection(db, 'leads'));
+        const leads = snap.docs.map(function(d) { return d.data(); });
+        // Find lead whose name matches the rep slug
+        const slug = repName.toLowerCase().replace(/\s+/g, '');
+        const match = leads.find(function(l) {
+          if (!l.name) return false;
+          const nameSlug = l.name.toLowerCase().replace(/\s+/g, '');
+          return nameSlug.includes(slug) || slug.includes(nameSlug.slice(0, 6));
+        });
+        if (match) {
+          setRep({ name: match.name, phone: match.phone });
+        }
+      } catch (err) {
+        console.error('Rep lookup error:', err);
+      }
+    }
+    fetchRep();
+  }, [repName]);
+
+  if (!rep) return null;
+
+  const formatPhone = function(phone) {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (digits.length === 10) return digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+    return phone;
+  };
+
+  return (
+    <div style={{ background: 'rgba(26,111,212,0.06)', border: '1px solid rgba(26,111,212,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#fff', fontWeight: 700, flexShrink: 0 }}>
+          {rep.name ? rep.name.charAt(0).toUpperCase() : '?'}
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: '#6b8dc4', fontWeight: 500 }}>Your financial rep</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f2a5e', fontFamily: 'var(--font-display)' }}>{rep.name}</div>
+        </div>
+      </div>
+      <a href={'tel:' + rep.phone.replace(/\D/g, '')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '7px 14px', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+        📞 {formatPhone(rep.phone)}
+      </a>
+    </div>
+  );
+}
+
+// ── Financial Tip Popup ──────────────────────────────────────────
+export default function FinancialTipPopup({ uid, lead, onTabSwitch }) {
   const [tip, setTip] = useState(null);
   const [visible, setVisible] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  useEffect(() => {
-    if (!currentUser) return;
+  useEffect(function() {
+    if (!uid) return;
+    const timer = setTimeout(function() {
+      const next = getNextTip(uid);
+      if (next) {
+        setTip(next);
+        setVisible(true);
+      }
+    }, 30000);
+    return function() { clearTimeout(timer); };
+  }, [uid]);
 
-    const timer = setTimeout(() => {
-      const now = Date.now();
-      const lastShown = parseInt(localStorage.getItem(LAST_SHOWN_KEY) || "0");
-
-      if (now - lastShown < MIN_INTERVAL_MS) return;
-
-      const seen = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      const unseen = TIPS.filter((t) => !seen.includes(t.id));
-
-      if (unseen.length === 0) return;
-
-      const pick = unseen[Math.floor(Math.random() * unseen.length)];
-      setTip(pick);
-      setVisible(true);
-    }, INITIAL_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [currentUser]);
-
-  const dismiss = () => {
-    if (!tip) return;
-    const seen = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...seen, tip.id]));
-    localStorage.setItem(LAST_SHOWN_KEY, Date.now().toString());
+  const handleDismiss = function() {
+    if (tip) markTipSeen(uid, tip.id);
     setVisible(false);
-    setTimeout(() => setTip(null), 400);
   };
 
-  const handleCTA = async () => {
-    if (!tip) return;
-
-    // If this tip links to a tab, switch to it
-    if (tip.tabTarget && onTabSwitch) {
-      onTabSwitch(tip.tabTarget);
-      dismiss();
+  const handleLearnMore = async function() {
+    if (tip) markTipSeen(uid, tip.id);
+    if (tip && tip.action && tip.action.startsWith('tab:')) {
+      const tabName = tip.action.replace('tab:', '');
+      if (onTabSwitch) onTabSwitch(tabName);
+      setVisible(false);
       return;
     }
-
-    // Otherwise log interest to Firebase
     setSending(true);
     try {
-      await addDoc(collection(db, "tip_interests"), {
-        userId: currentUser.uid,
-        userEmail: currentUser.email || "",
-        tipId: tip.id,
-        tipCategory: tip.category,
-        tipHeadline: tip.headline,
-        timestamp: serverTimestamp(),
+      const { db } = await import('./firebase');
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'leads', uid), {
+        ['interest_' + tip.id]: true,
+        lastInterestAt: new Date().toISOString(),
+        lastInterestTopic: tip.category,
       });
       setSent(true);
-      setTimeout(() => {
-        dismiss();
-        setSent(false);
-        setSending(false);
-      }, 1800);
+      setTimeout(function() { setVisible(false); }, 2500);
     } catch (err) {
-      console.error("Error logging tip interest:", err);
-      setSending(false);
-      dismiss();
+      console.error('Interest save error:', err);
+      setVisible(false);
     }
+    setSending(false);
   };
 
-  if (!tip) return null;
+  if (!visible || !tip) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.45)",
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.35s ease",
-        pointerEvents: visible ? "auto" : "none",
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: "16px",
-          maxWidth: "420px",
-          width: "100%",
-          padding: "28px 24px 24px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-          transform: visible ? "translateY(0)" : "translateY(20px)",
-          transition: "transform 0.35s ease",
-          position: "relative",
-        }}
-      >
-        {/* Category badge */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            backgroundColor: "#e8f0fe",
-            color: "#1a73e8",
-            fontSize: "11px",
-            fontWeight: 700,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            padding: "4px 10px",
-            borderRadius: "20px",
-            marginBottom: "14px",
-          }}
-        >
-          <span>{tip.emoji}</span>
-          <span>{tip.category}</span>
+    <div style={{ position: 'fixed', bottom: 24, right: 24, maxWidth: 360, width: 'calc(100vw - 48px)', background: '#fff', border: '1px solid ' + tip.border, borderRadius: 'var(--radius-xl)', boxShadow: '0 8px 40px rgba(26,111,212,0.15)', zIndex: 999, overflow: 'hidden', animation: 'slideUpTip 0.4s ease forwards' }}>
+      <style>{'@keyframes slideUpTip { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }'}</style>
+      <div style={{ height: 4, background: 'linear-gradient(90deg, ' + tip.color + ', ' + tip.color + '88)' }} />
+      <div style={{ padding: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 22 }}>{tip.icon}</span>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: tip.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tip.category}</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#0f2a5e', lineHeight: 1.3 }}>{tip.title}</div>
+            </div>
+          </div>
+          <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: '#6b8dc4', fontSize: 16, cursor: 'pointer', flexShrink: 0, marginLeft: 8 }}>✕</button>
         </div>
-
-        {/* Headline */}
-        <h2
-          style={{
-            margin: "0 0 10px",
-            fontSize: "18px",
-            fontWeight: 700,
-            color: "#1a1a2e",
-            lineHeight: 1.3,
-          }}
-        >
-          {tip.headline}
-        </h2>
-
-        {/* Body */}
-        <p
-          style={{
-            margin: "0 0 22px",
-            fontSize: "14px",
-            color: "#555",
-            lineHeight: 1.6,
-          }}
-        >
-          {tip.body}
-        </p>
-
-        {/* Buttons */}
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button
-            onClick={handleCTA}
-            disabled={sending}
-            style={{
-              flex: 1,
-              minWidth: "140px",
-              backgroundColor: sending ? "#a0b4e0" : "#1a73e8",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              padding: "11px 16px",
-              fontSize: "14px",
-              fontWeight: 600,
-              cursor: sending ? "not-allowed" : "pointer",
-              transition: "background 0.2s",
-            }}
-          >
-            {sent ? "✅ Message Sent!" : sending ? "Sending..." : tip.cta}
-          </button>
-
-          <button
-            onClick={dismiss}
-            style={{
-              flex: 1,
-              minWidth: "100px",
-              backgroundColor: "#f1f3f4",
-              color: "#444",
-              border: "none",
-              borderRadius: "8px",
-              padding: "11px 16px",
-              fontSize: "14px",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-          >
-            Got it 👍
-          </button>
-        </div>
-
-        {/* Fine print */}
-        {!tip.tabTarget && (
-          <p
-            style={{
-              margin: "14px 0 0",
-              fontSize: "11px",
-              color: "#aaa",
-              textAlign: "center",
-            }}
-          >
-            Tapping "{tip.cta}" will notify your financial rep that you're interested.
-          </p>
+        <p style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 12 }}>{tip.body}</p>
+        {sent ? (
+          <div style={{ textAlign: 'center', fontSize: 13, color: '#16a34a', fontWeight: 600, padding: '8px 0' }}>
+            ✓ Your rep will be in touch soon!
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleLearnMore} disabled={sending} style={{ flex: 1, background: 'linear-gradient(135deg, ' + tip.color + ', ' + tip.color + 'cc)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-display)', lineHeight: 1.3 }}>
+              {sending ? 'Sending…' : tip.cta}
+            </button>
+            <button onClick={handleDismiss} style={{ background: '#f8faff', color: '#6b8dc4', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Got it 👍
+            </button>
+          </div>
         )}
       </div>
     </div>
