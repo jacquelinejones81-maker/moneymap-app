@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AppTour, { useTour } from './AppTour';
+import FinancialTipPopup, { RepContactCard } from './FinancialTips';
 import { db } from './firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
-import FinancialTips from './FinancialTips';
 
 const GROUPS = {
   'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
@@ -246,6 +246,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     localStorage.setItem(key, 'true');
     setBudgetResetBanner(false);
     if (copy) {
+      // Copy last month's budgets to this month (they're already there, just confirm)
       alert('Budget limits carried over! Review them in the Budgets tab.');
     }
   };
@@ -286,19 +287,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   }, [uid]);
 
   const handleTabSwitch = (tab) => {
-    const tabMap = {
-      'Register': 'register',
-      'Bills': 'bills',
-      'Budgets': 'budgets',
-      'Debt Stack': 'debts',
-      'Savings': 'savings',
-      'Cash': 'cash',
-      'Payoff Timeline': 'timeline',
-      'Spending': 'spending',
-    };
-    const tabId = tabMap[tab] || tab;
-    setActiveTab(tabId);
-    if (tabId === 'cash' && !localStorage.getItem(`mm_cash_${uid}`)) setShowCashPopup(true);
+    setActiveTab(tab);
+    if (tab === 'cash' && !localStorage.getItem(`mm_cash_${uid}`)) setShowCashPopup(true);
   };
 
   const closeCashPopup = () => { localStorage.setItem(`mm_cash_${uid}`, 'true'); setShowCashPopup(false); };
@@ -377,15 +367,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   return (
     <div style={{ minHeight:'100vh', background:'#f0f6ff' }}>
       {showTour && <AppTour onComplete={completeTour} />}
+      <FinancialTipPopup uid={uid} lead={lead} onTabSwitch={handleTabSwitch} />
       {showVideo && <WelcomeVideoModal lead={lead} onClose={closeVideo} />}
       {showCashPopup && <CashPopup onClose={closeCashPopup} />}
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
-
-      {/* Financial Tips Popup */}
-      <FinancialTips currentUser={firebaseUser} onTabSwitch={handleTabSwitch} />
 
       {/* Budget Reset Banner */}
       {budgetResetBanner && (
@@ -432,6 +420,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       </div>
 
       <div style={{ maxWidth:860, margin:'0 auto', padding:'1.25rem 1rem 4rem' }}>
+        {lead && lead.referredBy && <RepContactCard repName={lead.referredBy} uid={uid} />}
         <MetricsBar transactions={transactions} debts={debts} beginBal={beginBal} />
         <AlertsBar transactions={transactions} budgets={budgets} />
         <div className="tabs">
