@@ -147,6 +147,47 @@ export default function AdminPanel({ onBack }) {
                   <div style={{ fontSize: 12, color: '#6b8dc4' }}>
                     👤 Referred by: <strong style={{ color: lead.referredBy ? '#7c3aed' : '#6b8dc4' }}>{lead.referredBy || 'Direct signup'}</strong>
                   </div>
+                  {(() => {
+                    const interestMap = {
+                      'life_ins_1': '🛡️ Life Insurance',
+                      'life_ins_2': '🛡️ Life Insurance',
+                      'debt_1': '📉 Debt Help',
+                      'debt_2': '📉 Debt Help',
+                      'savings_1': '🐷 Savings',
+                      'savings_2': '🐷 Savings',
+                      'auto_home_1': '🏠 Auto & Home Insurance',
+                      'auto_home_2': '🏠 Auto & Home Insurance',
+                      'legal_1': '⚖️ Legal Protection',
+                      'legal_2': '⚖️ Legal Protection',
+                      'identity_1': '🔒 Identity Theft Protection',
+                      'identity_2': '🔒 Identity Theft Protection',
+                      'home_security_1': '🏡 Home Security',
+                      'home_security_2': '🏡 Home Security',
+                      'budget_1': '💡 Budgeting',
+                      'budget_2': '💡 Budgeting',
+                      'fna_1': '💼 Financial Needs Analysis',
+                      'fna_2': '💼 Financial Needs Analysis',
+                    };
+                    const interests = [...new Set(
+                      Object.keys(lead)
+                        .filter(k => k.startsWith('interest_') && lead[k] === true)
+                        .map(k => interestMap[k.replace('interest_', '')])
+                        .filter(Boolean)
+                    )];
+                    if (interests.length === 0) return null;
+                    return (
+                      <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        <span style={{ fontSize: 11, color: '#6b8dc4', marginRight: 4 }}>Interested in:</span>
+                        {interests.map(function(interest, i) {
+                          return (
+                            <span key={i} style={{ background: 'rgba(26,111,212,0.1)', color: '#1a6fd4', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, border: '1px solid rgba(26,111,212,0.2)' }}>
+                              {interest}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button className="btn-outline" style={{ fontSize: 11 }} onClick={() => copyContact(lead)}>Copy</button>
