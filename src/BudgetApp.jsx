@@ -1305,8 +1305,8 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
   if(monthlyTotal>=50){
     // Find a savings goal to reference
     const goal=goals&&goals.length>0?goals[0]:null;
-    const goalMsg=goal?' That's enough to fund your '+goal.name+' goal in '+ Math.ceil(Math.max(0,goal.target-goal.saved)/monthlyTotal)+' months!':'';
-    warnings.push({type:'danger',msg:'🚨 You're spending $'+monthlyTotal.toFixed(2)+'/month on subscriptions. That same money earning compound interest over 20 years could grow significantly.'+goalMsg+' Your future self will thank you for redirecting even part of this!'});
+    const goalMsg=goal?' That\'s enough to fund your '+goal.name+' goal in '+ Math.ceil(Math.max(0,goal.target-goal.saved)/monthlyTotal)+' months!':'';
+    warnings.push({type:'danger',msg:'🚨 You\'re spending $'+monthlyTotal.toFixed(2)+'/month on subscriptions. That same money earning compound interest over 20 years could grow significantly.'+goalMsg+' Your future self will thank you for redirecting even part of this!'});
   }
 
   return(
