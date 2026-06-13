@@ -473,8 +473,10 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             <button className="btn-outline" style={{ padding:'5px 10px', fontSize:12 }} onClick={() => setShowAddAccount(false)}>✕</button>
           </div>
         ) : (
-          <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed #c7ddf7', background:'transparent', color:'#6b8dc4', transition:'all 0.2s' }}>+ Add account</button>
-          <button onClick={() => setShowResetAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed rgba(220,38,38,0.3)', background:'transparent', color:'rgba(220,38,38,0.6)', transition:'all 0.2s', marginLeft:'auto' }}>↺ Reset account</button>
+          <>
+            <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed #c7ddf7', background:'transparent', color:'#6b8dc4', transition:'all 0.2s' }}>+ Add account</button>
+            <button onClick={() => setShowResetAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed rgba(220,38,38,0.3)', background:'transparent', color:'rgba(220,38,38,0.6)', transition:'all 0.2s', marginLeft:'auto' }}>↺ Reset account</button>
+          </>
         )}
       </div>
 
