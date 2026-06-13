@@ -433,7 +433,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           ))}
         </div>
         {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} />}
-        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} />}
+        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
         {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} />}
@@ -688,7 +688,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals}){
+function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -801,7 +801,7 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} />
+      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />
     </>
   );
 }
@@ -1274,27 +1274,70 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
   );
 }
 
-function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals}){
-  const [form,setForm]=useState({name:'',amount:'',cycle:'monthly',category:'Streaming'});
+function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase}){
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const todayDay=now.getDate();
+  const [form,setForm]=useState({name:'',amount:'',cycle:'monthly',category:'Streaming',dueDay:'1',autopay:false});
   const [showForm,setShowForm]=useState(false);
   const [err,setErr]=useState({});
+  const [paySubModal,setPaySubModal]=useState(null);
   const CATEGORIES=['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other'];
+  const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
 
   const addSub=()=>{
     const e={};
     if(!form.name.trim())e.name=true;
     if(!form.amount||isNaN(parseFloat(form.amount))||parseFloat(form.amount)<=0)e.amount=true;
     if(Object.keys(e).length){setErr(e);return;}
-    const updated=[...subscriptions,{id:Date.now(),name:form.name.trim(),amount:parseFloat(form.amount),cycle:form.cycle,category:form.category}];
+    const updated=[...subscriptions,{id:Date.now(),name:form.name.trim(),amount:parseFloat(form.amount),cycle:form.cycle,category:form.category,dueDay:parseInt(form.dueDay),autopay:form.autopay,subsPaid:{}}];
     setSubscriptions(updated);
-    setForm({name:'',amount:'',cycle:'monthly',category:'Streaming'});
+    setForm({name:'',amount:'',cycle:'monthly',category:'Streaming',dueDay:'1',autopay:false});
     setErr({});setShowForm(false);
+  };
+
+  const isPaid=sub=>!!(sub.subsPaid&&sub.subsPaid[monthKey]);
+  const paidAt=sub=>{const p=sub.subsPaid&&sub.subsPaid[monthKey];return p?new Date(p.paidAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):null;};
+  const getDueStatus=dueDay=>{if(dueDay<todayDay)return'overdue';if(dueDay-todayDay<=3)return'due-soon';return'upcoming';};
+
+  const handlePaySub=(sub)=>setPaySubModal(sub);
+
+  const handlePaySubConfirm=(selectedAccountKey,deduct)=>{
+    const sub=paySubModal;
+    const key=monthKey;
+    const updated=subscriptions.map(s=>{
+      if(s.id!==sub.id)return s;
+      return{...s,subsPaid:{...(s.subsPaid||{}),[key]:{paidAt:new Date().toISOString()}}};
+    });
+    if(deduct&&accounts&&selectedAccountKey){
+      const targetAcct=accounts[selectedAccountKey];
+      const newTx={id:Date.now(),date:now.toISOString().split('T')[0],desc:sub.name,type:'debit',grp:'Personal',cat:'Subscriptions',amt:sub.amount,note:'Subscription',refNum:''};
+      const updatedTxs=[newTx,...(targetAcct.transactions||[])];
+      updatedTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+      const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:updated},[selectedAccountKey]:{...accounts[selectedAccountKey],transactions:updatedTxs}};
+      setAccounts(updatedAccounts);
+      saveToFirebase(updatedAccounts);
+    } else {
+      setSubscriptions(updated);
+    }
+    setPaySubModal(null);
+  };
+
+  const handleUnpaySub=subId=>{
+    const updated=subscriptions.map(s=>{
+      if(s.id!==subId)return s;
+      const newPaid={...(s.subsPaid||{})};
+      delete newPaid[monthKey];
+      return{...s,subsPaid:newPaid};
+    });
+    setSubscriptions(updated);
   };
 
   const monthlyTotal=subscriptions.reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount/12:sub.amount),0);
   const yearlyTotal=subscriptions.reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount:sub.amount*12),0);
+  const paidCount=subscriptions.filter(s=>isPaid(s)).length;
+  const totalPaid=subscriptions.filter(s=>isPaid(s)).reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount/12:sub.amount),0);
 
-  // Warnings
   const warnings=[];
   if(subscriptions.length>=3&&subscriptions.length<5){
     warnings.push({type:'warning',msg:'You have '+subscriptions.length+' subscriptions totaling $'+monthlyTotal.toFixed(2)+'/month — that\'s $'+yearlyTotal.toFixed(0)+' per year! Small amounts add up fast.'});
@@ -1303,14 +1346,35 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
     warnings.push({type:'danger',msg:'⚠️ '+subscriptions.length+' subscriptions at $'+monthlyTotal.toFixed(2)+'/month. What if you redirected even $30 of that to your emergency fund every month?'});
   }
   if(monthlyTotal>=50){
-    // Find a savings goal to reference
     const goal=goals&&goals.length>0?goals[0]:null;
-    const goalMsg=goal?' That\'s enough to fund your '+goal.name+' goal in '+ Math.ceil(Math.max(0,goal.target-goal.saved)/monthlyTotal)+' months!':'';
+    const goalMsg=goal?' That\'s enough to fund your '+goal.name+' goal in '+Math.ceil(Math.max(0,goal.target-goal.saved)/monthlyTotal)+' months!':'';
     warnings.push({type:'danger',msg:'🚨 You\'re spending $'+monthlyTotal.toFixed(2)+'/month on subscriptions. That same money earning compound interest over 20 years could grow significantly.'+goalMsg+' Your future self will thank you for redirecting even part of this!'});
   }
 
+  const statusColors={
+    paid:{bg:'rgba(22,163,74,0.1)',color:'#16a34a',label:'✓ Paid'},
+    overdue:{bg:'rgba(220,38,38,0.1)',color:'#dc2626',label:'Overdue'},
+    'due-soon':{bg:'rgba(217,119,6,0.1)',color:'#d97706',label:'Due soon'},
+    upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',label:'Upcoming'},
+  };
+
   return(
     <>
+      {paySubModal&&(
+        <div className="modal-overlay" style={{zIndex:3000}}>
+          <div className="modal-box slide-up" style={{maxWidth:420}}>
+            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:36,marginBottom:8}}>📱</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Mark "{paySubModal.name}" as paid</h2>
+              <p style={{fontSize:13,color:'#6b8dc4'}}>${paySubModal.amount.toFixed(2)}</p>
+            </div>
+            {accounts&&(
+              <PaySubAccountSelector accounts={accounts} sub={paySubModal} onConfirm={handlePaySubConfirm} onCancel={()=>setPaySubModal(null)} />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showForm?'1rem':0,flexWrap:'wrap',gap:8}}>
           <div>
@@ -1326,6 +1390,13 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
               <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
               <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
               <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+              <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
+                  <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+                  Autopay
+                </label>
+              </div>
             </div>
             <button className="btn-gold" onClick={addSub}>Save subscription</button>
           </div>
@@ -1336,37 +1407,68 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
         <div key={i} className={'alert-box alert-'+w.type} style={{marginBottom:8}}>{w.msg}</div>
       ))}
 
+      {subscriptions.filter(s=>!isPaid(s)&&getDueStatus(s.dueDay)==='overdue').length>0&&<div className="alert-box alert-danger" style={{marginBottom:8}}>⚠️ <strong>{subscriptions.filter(s=>!isPaid(s)&&getDueStatus(s.dueDay)==='overdue').length} subscription(s) past due</strong></div>}
+      {subscriptions.filter(s=>!isPaid(s)&&getDueStatus(s.dueDay)==='due-soon').length>0&&<div className="alert-box alert-warning" style={{marginBottom:8}}>🔔 <strong>{subscriptions.filter(s=>!isPaid(s)&&getDueStatus(s.dueDay)==='due-soon').length} subscription(s) due within 3 days</strong></div>}
+
       {subscriptions.length>0&&(
         <>
-          <div className="metric-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))',marginBottom:'1rem'}}>
+          <div className="metric-grid" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))',marginBottom:'1rem'}}>
             <div className="metric-card"><div className="lbl">Monthly cost</div><div className="val val-red">${monthlyTotal.toFixed(2)}</div></div>
             <div className="metric-card"><div className="lbl">Yearly cost</div><div className="val" style={{color:'#dc2626'}}>${yearlyTotal.toFixed(0)}</div></div>
-            <div className="metric-card"><div className="lbl">Total subscriptions</div><div className="val val-gold">{subscriptions.length}</div></div>
+            <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">${totalPaid.toFixed(2)}</div></div>
+            <div className="metric-card"><div className="lbl">Paid</div><div className="val val-teal">{paidCount} / {subscriptions.length}</div></div>
           </div>
+
           <div className="card" style={{padding:0,overflow:'hidden'}}>
             <table>
               <thead><tr>
                 <th style={{padding:'12px 16px'}}>Service</th>
                 <th style={{width:90}}>Category</th>
-                <th style={{width:80}}>Cycle</th>
-                <th style={{width:90,textAlign:'right'}}>Amount</th>
-                <th style={{width:100,textAlign:'right'}}>Per month</th>
+                <th style={{width:70,textAlign:'center'}}>Due</th>
+                <th style={{width:80,textAlign:'right'}}>Amount</th>
+                <th style={{width:120,textAlign:'center'}}>Status</th>
+                <th style={{width:90,textAlign:'center'}}>Paid on</th>
                 <th style={{width:40}}></th>
               </tr></thead>
               <tbody>
-                {subscriptions.map(sub=>(
-                  <tr key={sub.id}>
-                    <td style={{padding:'10px 16px',fontWeight:600,fontSize:13,color:'#0f2a5e'}}>{sub.name}</td>
-                    <td style={{fontSize:11,color:'#6b8dc4'}}>{sub.category}</td>
-                    <td><span style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{sub.cycle}</span></td>
-                    <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:'#0f2a5e'}}>${sub.amount.toFixed(2)}</td>
-                    <td style={{textAlign:'right',fontSize:12,color:'#6b8dc4'}}>${(sub.cycle==='yearly'?sub.amount/12:sub.amount).toFixed(2)}</td>
-                    <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setSubscriptions(subscriptions.filter(s=>s.id!==sub.id))}>✕</button></td>
-                  </tr>
-                ))}
+                {subscriptions.map(sub=>{
+                  const paid=isPaid(sub);
+                  const status=paid?'paid':getDueStatus(sub.dueDay);
+                  const sc=statusColors[status];
+                  return(
+                    <tr key={sub.id} style={{opacity:paid?0.75:1}}>
+                      <td style={{padding:'10px 16px'}}>
+                        <div style={{fontWeight:600,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e',textDecoration:paid?'line-through':'none'}}>{sub.name}</div>
+                        <div style={{fontSize:10,color:'#7c3aed',fontWeight:600,marginTop:1}}>{sub.cycle==='yearly'?'📅 YEARLY':'🔄 MONTHLY'}{sub.autopay?' · ⚡ AUTOPAY':''}</div>
+                      </td>
+                      <td style={{fontSize:11,color:'#6b8dc4'}}>{sub.category}</td>
+                      <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(sub.dueDay)}</span></td>
+                      <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${sub.amount.toFixed(2)}</td>
+                      <td style={{textAlign:'center'}}>
+                        {paid?(
+                          <button onClick={()=>handleUnpaySub(sub.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                        ):(
+                          <button onClick={()=>handlePaySub(sub)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                        )}
+                      </td>
+                      <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(sub)||'—'}</td>
+                      <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setSubscriptions(subscriptions.filter(s=>s.id!==sub.id))}>✕</button></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          <div className="card">
+            <div className="card-title">Subscription progress — {now.toLocaleDateString('en-US',{month:'long'})}</div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#6b8dc4',marginBottom:6}}><span>{paidCount} of {subscriptions.length} paid</span><span>${totalPaid.toFixed(2)} of ${monthlyTotal.toFixed(2)}</span></div>
+            <div style={{background:'#e8f1fd',borderRadius:6,height:10,overflow:'hidden'}}>
+              <div style={{height:10,borderRadius:6,width:`${subscriptions.length>0?Math.round((paidCount/subscriptions.length)*100):0}%`,background:paidCount===subscriptions.length?'#16a34a':'linear-gradient(90deg,#7c3aed,#a78bfa)',transition:'width 0.4s ease'}}/>
+            </div>
+            {paidCount===subscriptions.length&&subscriptions.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All subscriptions paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
+          </div>
+
           <div className="tip-box" style={{marginBottom:'1rem'}}>
             💡 <strong>Pay your future self first.</strong> Consider redirecting even one subscription toward your savings goals. Compound interest means money saved today is worth significantly more tomorrow.
           </div>
@@ -1375,6 +1477,33 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
     </>
   );
 }
+
+function PaySubAccountSelector({accounts,sub,onConfirm,onCancel}){
+  const [selectedAccount,setSelectedAccount]=useState(Object.keys(accounts)[0]||'main');
+  const [deduct,setDeduct]=useState(true);
+  return(
+    <>
+      <div style={{marginBottom:16}}>
+        <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Deduct from which account?</label>
+        <select value={selectedAccount} onChange={e=>setSelectedAccount(e.target.value)} style={{marginBottom:10}}>
+          {Object.entries(accounts).map(([key,acct])=><option key={key} value={key}>{acct.name}</option>)}
+        </select>
+        <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
+          <input type="checkbox" checked={deduct} onChange={e=>setDeduct(e.target.checked)} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+          Automatically add debit transaction to this account
+        </label>
+      </div>
+      <div style={{background:'#f0f6ff',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'#2d5a9e'}}>
+        {deduct?`A debit of $${sub.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.`:'Subscription will be marked paid without affecting any account balance.'}
+      </div>
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+        <button className="btn-gold" style={{flex:1}} onClick={()=>onConfirm(selectedAccount,deduct)}>✓ Mark as Paid</button>
+      </div>
+    </>
+  );
+}
+
 
 function exportCSV(transactions,beginBal){
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
