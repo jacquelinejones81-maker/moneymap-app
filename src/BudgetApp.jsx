@@ -1297,7 +1297,7 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
   // Warnings
   const warnings=[];
   if(subscriptions.length>=3&&subscriptions.length<5){
-    warnings.push({type:'warning',msg:'You have '+subscriptions.length+' subscriptions totaling $'+monthlyTotal.toFixed(2)+'/month — that's $'+yearlyTotal.toFixed(0)+' per year! Small amounts add up fast.'});
+    warnings.push({type:'warning',msg:'You have '+subscriptions.length+' subscriptions totaling $'+monthlyTotal.toFixed(2)+'/month — that\'s $'+yearlyTotal.toFixed(0)+' per year! Small amounts add up fast.'});
   }
   if(subscriptions.length>=5){
     warnings.push({type:'danger',msg:'⚠️ '+subscriptions.length+' subscriptions at $'+monthlyTotal.toFixed(2)+'/month. What if you redirected even $30 of that to your emergency fund every month?'});
