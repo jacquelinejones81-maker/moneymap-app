@@ -1455,7 +1455,6 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showForm?'1rem':0,flexWrap:'wrap',gap:8}}>
           <div>
-            <div>
             <div className="card-title" style={{marginBottom:2}}>📱 Subscriptions</div>
             <div style={{fontSize:12,color:'#6b8dc4'}}>Track recurring subscriptions separately from bills</div>
           </div>
