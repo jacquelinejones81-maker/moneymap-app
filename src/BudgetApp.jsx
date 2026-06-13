@@ -192,6 +192,47 @@ function SplitModal({ form, onConfirm, onCancel }) {
   );
 }
 
+
+function ClearBtn({label,onClear,title,message}){
+  const [show,setShow]=useState(false);
+  return(
+    <>
+      {show&&<ClearConfirmModal title={title} message={message} onConfirm={()=>{onClear();setShow(false);}} onCancel={()=>setShow(false)}/>}
+      <button onClick={()=>setShow(true)} style={{background:'rgba(220,38,38,0.08)',color:'#dc2626',border:'1px solid rgba(220,38,38,0.2)',borderRadius:'var(--radius-sm)',padding:'4px 10px',fontSize:11,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>
+        🗑 {label}
+      </button>
+    </>
+  );
+}
+
+
+function ClearConfirmModal({title,message,onConfirm,onCancel}){
+  const [checked,setChecked]=useState(false);
+  return(
+    <div className="modal-overlay" style={{zIndex:4000}}>
+      <div className="modal-box slide-up" style={{maxWidth:420}}>
+        <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
+          <div style={{fontSize:40,marginBottom:10}}>⚠️</div>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:8,color:'#0f2a5e'}}>{title}</h2>
+          <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>{message}</p>
+        </div>
+        <div style={{background:'#f8faff',borderRadius:'var(--radius-md)',padding:'12px 16px',marginBottom:'1.25rem',border:'1px solid #c7ddf7'}}>
+          <label style={{display:'flex',alignItems:'flex-start',gap:10,cursor:'pointer'}}>
+            <input type="checkbox" checked={checked} onChange={e=>setChecked(e.target.checked)} style={{width:16,height:16,flexShrink:0,marginTop:2,accentColor:'#dc2626'}}/>
+            <span style={{fontSize:12,color:'#2d5a9e',lineHeight:1.6}}>Yes, I understand — this cannot be undone.</span>
+          </label>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+          <button onClick={onConfirm} disabled={!checked} style={{flex:1,background:checked?'#dc2626':'rgba(220,38,38,0.3)',color:'#fff',border:'none',borderRadius:'var(--radius-md)',padding:'12px',fontSize:13,fontWeight:700,cursor:checked?'pointer':'not-allowed',fontFamily:'var(--font-display)',transition:'all 0.2s'}}>
+            Yes, clear it
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
@@ -208,6 +249,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [newAccountName, setNewAccountName] = useState('');
   const [loading, setLoading] = useState(true);
   const [payBillModal, setPayBillModal] = useState(null);
+  const [showResetAccount, setShowResetAccount] = useState(false);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false);
   const { showTour, completeTour, resetTour } = useTour();
@@ -375,6 +417,20 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
+      {showResetAccount && (
+        <ClearConfirmModal
+          title={"Reset " + (acct.name || 'Account') + "?"}
+          message="This will wipe ALL transactions, bills, debts, goals, subscriptions, and beginning balance in this account. Other accounts are not affected."
+          onConfirm={() => {
+            const reset = { name: acct.name, transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[] };
+            const updated = { ...accounts, [activeAccount]: reset };
+            setAccounts(updated);
+            saveToFirebase(updated);
+            setShowResetAccount(false);
+          }}
+          onCancel={() => setShowResetAccount(false)}
+        />
+      )}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
 
       {/* Budget Reset Banner */}
@@ -418,6 +474,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </div>
         ) : (
           <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed #c7ddf7', background:'transparent', color:'#6b8dc4', transition:'all 0.2s' }}>+ Add account</button>
+          <button onClick={() => setShowResetAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed rgba(220,38,38,0.3)', background:'transparent', color:'rgba(220,38,38,0.6)', transition:'all 0.2s', marginLeft:'auto' }}>↺ Reset account</button>
         )}
       </div>
 
@@ -559,7 +616,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
                 <span style={{fontSize:12,color:'#6b8dc4',fontWeight:400,marginLeft:8}}>as of {new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
               </div>
             </div>
-            <button className="btn-outline" style={{fontSize:12}} onClick={()=>setBbEdit(true)}>Edit</button>
+            <div style={{display:'flex',gap:6}}>
+              <button className="btn-outline" style={{fontSize:12}} onClick={()=>setBbEdit(true)}>Edit</button>
+              <ClearBtn label="Clear" onClear={()=>setBeginBal({amount:0,date:'',set:false})} title="Clear beginning balance?" message="This will reset your beginning balance to zero." />
+            </div>
           </div>
         )}
         {bbEdit&&(
@@ -628,7 +688,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
 
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem',flexWrap:'wrap',gap:8}}>
-          <div className="card-title" style={{marginBottom:0}}>Register</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div className="card-title" style={{marginBottom:0}}>Register</div>
+            {transactions.length>0&&<ClearBtn label="Clear all" onClear={()=>setTransactions([])} title="Clear all transactions?" message="This will permanently delete all transactions in this account." />}
+          </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
             <input placeholder="🔍 Search transactions..." value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'5px 10px',width:180}}/>
             <select value={filterGrp} onChange={e=>{setFilterGrp(e.target.value);setFilterCat('');}} style={{width:'auto',fontSize:12,padding:'4px 8px'}}>
@@ -727,7 +790,10 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
       {bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='due-soon').length>0&&<div className="alert-box alert-warning" style={{marginBottom:8}}>🔔 <strong>{bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='due-soon').length} bill(s) due within 3 days</strong></div>}
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showForm?'1rem':0}}>
-          <div className="card-title" style={{marginBottom:0}}>Fixed bills</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div className="card-title" style={{marginBottom:0}}>Fixed bills</div>
+            {bills.length>0&&<ClearBtn label="Clear all" onClear={()=>setBills([])} title="Clear all bills?" message="This will permanently delete all fixed bills." />}
+          </div>
           <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowForm(f=>!f)}>{showForm?'✕ Cancel':'+ Add bill'}</button>
         </div>
         {showForm&&(
@@ -890,7 +956,10 @@ function DebtsTab({debts,setDebts}){
         </div>
       </div>
       <div className="card">
-        <div className="card-title">Debt stacking order — avalanche method</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
+          <div className="card-title" style={{marginBottom:0}}>Debt stacking order — avalanche method</div>
+          {sorted.length>0&&<ClearBtn label="Clear all" onClear={()=>setDebts([])} title="Clear all debts?" message="This will permanently delete all debts from your debt stack." />}
+        </div>
         {sorted.length===0?<div className="empty-state">Add your debts above to see the payoff strategy.</div>:(
           <>
             {sorted.map((d,i)=>{
@@ -961,7 +1030,10 @@ function SavingsTab({transactions,goals,setGoals}){
         </div>
       </div>
       <div className="card">
-        <div className="card-title">Your savings goals</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
+          <div className="card-title" style={{marginBottom:0}}>Your savings goals</div>
+          {goals.length>0&&<ClearBtn label="Clear all" onClear={()=>setGoals([])} title="Clear all goals?" message="This will permanently delete all your savings goals." />}
+        </div>
         {goals.length===0?<div className="empty-state">Add a goal above — emergency fund, vacation, down payment…</div>:goals.map(g=>{
           const pct=Math.min(100,Math.round(g.saved/g.target*100));
           const barC=pct>=100?'#16a34a':pct>=50?'#1a6fd4':'#0ea5e9';
@@ -1088,7 +1160,10 @@ function CashTab({transactions,setTransactions}){
         </div>
       )}
       <div className="card">
-        <div className="card-title">Cash purchase history</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
+          <div className="card-title" style={{marginBottom:0}}>Cash purchase history</div>
+          {cashTxs.length>0&&<ClearBtn label="Clear all" onClear={()=>setTransactions(transactions.filter(t=>t.grp!=='Cash Spending'))} title="Clear all cash transactions?" message="This will permanently delete all cash purchase history." />}
+        </div>
         {cashTxs.length===0?<div className="empty-state">No cash purchases logged yet!</div>:(
           <table>
             <thead><tr><th style={{width:70}}>Date</th><th>Description</th><th style={{width:140}}>Category</th><th style={{width:80,textAlign:'right'}}>Amount</th><th style={{width:28}}></th></tr></thead>
@@ -1378,10 +1453,14 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showForm?'1rem':0,flexWrap:'wrap',gap:8}}>
           <div>
+            <div>
             <div className="card-title" style={{marginBottom:2}}>📱 Subscriptions</div>
             <div style={{fontSize:12,color:'#6b8dc4'}}>Track recurring subscriptions separately from bills</div>
           </div>
-          <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowForm(f=>!f)}>{showForm?'✕ Cancel':'+ Add subscription'}</button>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            {subscriptions.length>0&&<ClearBtn label="Clear all" onClear={()=>setSubscriptions([])} title="Clear all subscriptions?" message="This will permanently delete all subscriptions." />}
+            <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowForm(f=>!f)}>{showForm?'✕ Cancel':'+ Add subscription'}</button>
+          </div>
         </div>
         {showForm&&(
           <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
