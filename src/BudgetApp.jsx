@@ -193,6 +193,50 @@ function SplitModal({ form, onConfirm, onCancel }) {
 }
 
 
+function AddToHomeScreenModal({onClose}){
+  return(
+    <div className="modal-overlay" style={{zIndex:2500}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal-box slide-up" style={{maxWidth:460}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.25rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:28}}>📱</span>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:19,color:'#0f2a5e'}}>Add App to Your Phone</h2>
+          </div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'#6b8dc4',fontSize:18,cursor:'pointer'}}>✕</button>
+        </div>
+
+        <div style={{marginBottom:'1.25rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <span style={{fontSize:18}}>🍎</span>
+            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'#0f2a5e'}}>iPhone / Safari</span>
+          </div>
+          <ol style={{paddingLeft:20,margin:0}}>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Safari</strong></li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap the <strong>Share button</strong> (box with arrow ⬆️)</li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8}}>Tap <strong>"Add"</strong> in the top right</li>
+          </ol>
+        </div>
+
+        <div style={{borderTop:'1px solid #e8f1fd',paddingTop:'1.25rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <span style={{fontSize:18}}>🤖</span>
+            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'#0f2a5e'}}>Android / Chrome</span>
+          </div>
+          <ol style={{paddingLeft:20,margin:0}}>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Chrome</strong></li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap the <strong>three dots menu</strong> (top right ⋮)</li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap <strong>"Add to Home screen"</strong></li>
+            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8}}>Tap <strong>"Add"</strong></li>
+          </ol>
+        </div>
+
+        <button className="btn-gold" style={{width:'100%',marginTop:'1.5rem'}} onClick={onClose}>Got it! 👍</button>
+      </div>
+    </div>
+  );
+}
+
 function ClearBtn({label,onClear,title,message}){
   const [show,setShow]=useState(false);
   return(
@@ -250,6 +294,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [loading, setLoading] = useState(true);
   const [payBillModal, setPayBillModal] = useState(null);
   const [showResetAccount, setShowResetAccount] = useState(false);
+  const [showAddToHome, setShowAddToHome] = useState(false);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false);
   const { showTour, completeTour, resetTour } = useTour();
@@ -416,6 +461,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showCashPopup && <CashPopup onClose={closeCashPopup} />}
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
+      {showAddToHome && <AddToHomeScreenModal onClose={() => setShowAddToHome(false)} />}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
       {showResetAccount && (
         <ClearConfirmModal
@@ -452,6 +498,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
           {savedMsg && <span style={{ fontSize:12, color:'#16a34a' }}>✓ {savedMsg}</span>}
+          <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowAddToHome(true)}>📱 Add to Phone</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={resetTour}>🗺 Tour</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => exportCSV(transactions, beginBal)}>⬇ CSV</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={onSignOut}>Sign out</button>
