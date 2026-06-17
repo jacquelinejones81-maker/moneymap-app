@@ -1014,20 +1014,34 @@ function AdvancementLibrary({data,onUpdate,userRole}) {
   </div>;
 }
 
-// ── REFERENCES EDITOR (local state buffer prevents typing lag/loss) ──
+// ── REFERENCES EDITOR (race-condition-proof: local state is the only source of truth while editing) ──
 function RefsEditor({rep,data,onUpdate}) {
-  const liveRep=(data.reps||[]).find(rp=>rp.id===rep.id)||rep;
-  const [localRefs,setLocalRefs]=useState(()=>Array.from({length:5},(_,j)=>({...((liveRep.references||[])[j]||{})})));
+  // Initialize local state ONCE from the rep prop at mount. After this, local state
+  // is the single source of truth for what's displayed — we never read back from
+  // rep/data while the user is actively editing, which is what caused the scrambling.
+  const [localRefs,setLocalRefs]=useState(()=>Array.from({length:5},(_,j)=>({...((rep.references||[])[j]||{})})));
+  const initializedForRepId=useRef(rep.id);
+
+  // Only re-initialize if we've switched to looking at a DIFFERENT rep entirely
+  // (e.g. admin closes one rep's profile and opens another). Never resync on data changes.
   useEffect(()=>{
-    setLocalRefs(Array.from({length:5},(_,j)=>({...((liveRep.references||[])[j]||{})})));
-  },[JSON.stringify(liveRep.references||[])]);
+    if(initializedForRepId.current!==rep.id){
+      setLocalRefs(Array.from({length:5},(_,j)=>({...((rep.references||[])[j]||{})})));
+      initializedForRepId.current=rep.id;
+    }
+  },[rep.id]);
+
   const fmtRefPhone=v=>{const d=v.replace(/\D/g,"").slice(0,10);if(d.length>=7)return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;if(d.length>=4)return `${d.slice(0,3)}-${d.slice(3)}`;return d;};
+
   const updateField=(i,f,val)=>{
-    const newRefs=localRefs.map((r,j)=>j===i?{...r,[f]:f==="phone"?fmtRefPhone(val):val}:r);
-    setLocalRefs(newRefs);
-    const freshRep=(data.reps||[]).find(rp=>rp.id===rep.id)||rep;
-    onUpdate(rep.id,{...freshRep,references:newRefs});
+    setLocalRefs(prev=>{
+      const newRefs=prev.map((r,j)=>j===i?{...r,[f]:f==="phone"?fmtRefPhone(val):val}:r);
+      // Save in the background using the LOCAL state as the base — never the stale rep prop
+      onUpdate(rep.id,{...rep,references:newRefs});
+      return newRefs;
+    });
   };
+
   return <div>{localRefs.map((r,i)=>{const status=r.status||{};const completedCount=REF_STAGES.filter(s=>status[s.k]).length;return <div key={i} style={{borderRadius:8,border:`1px solid ${C.border}`,padding:10,marginBottom:6}}>
     <div style={{fontSize:10,fontWeight:700,color:C.textLight,marginBottom:5}}>Reference #{i+1}</div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
@@ -1244,27 +1258,37 @@ function RepView({rep,data,onUpdate,onUpdateData,readOnly,isOwnView=false}) {
 }
 
 // ── REP PROFILE (trainer/admin view) ──
-// ── ADMIN REFERENCES EDITOR — editable fields + outreach status tracking ──
+// ── ADMIN REFERENCES EDITOR — editable fields + outreach status (race-condition-proof) ──
 function AdminRefsEditor({rep,data,onUpdate}) {
-  const liveRep=(data.reps||[]).find(rp=>rp.id===rep.id)||rep;
-  const [localRefs,setLocalRefs]=useState(()=>Array.from({length:5},(_,j)=>({...((liveRep.references||[])[j]||{})})));
+  const [localRefs,setLocalRefs]=useState(()=>Array.from({length:5},(_,j)=>({...((rep.references||[])[j]||{})})));
+  const initializedForRepId=useRef(rep.id);
+
   useEffect(()=>{
-    setLocalRefs(Array.from({length:5},(_,j)=>({...((liveRep.references||[])[j]||{})})));
-  },[JSON.stringify(liveRep.references||[])]);
+    if(initializedForRepId.current!==rep.id){
+      setLocalRefs(Array.from({length:5},(_,j)=>({...((rep.references||[])[j]||{})})));
+      initializedForRepId.current=rep.id;
+    }
+  },[rep.id]);
+
   const fmtRefPhone=v=>{const d=v.replace(/\D/g,"").slice(0,10);if(d.length>=7)return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;if(d.length>=4)return `${d.slice(0,3)}-${d.slice(3)}`;return d;};
+
   const updateField=(i,f,val)=>{
-    const newRefs=localRefs.map((r,j)=>j===i?{...r,[f]:f==="phone"?fmtRefPhone(val):val}:r);
-    setLocalRefs(newRefs);
-    const freshRep=(data.reps||[]).find(rp=>rp.id===rep.id)||rep;
-    onUpdate(rep.id,{...freshRep,references:newRefs});
+    setLocalRefs(prev=>{
+      const newRefs=prev.map((r,j)=>j===i?{...r,[f]:f==="phone"?fmtRefPhone(val):val}:r);
+      onUpdate(rep.id,{...rep,references:newRefs});
+      return newRefs;
+    });
   };
+
   const toggleStatus=(i,stageKey)=>{
-    const curStatus=localRefs[i].status||{};
-    const newRefs=localRefs.map((r,j)=>j===i?{...r,status:{...curStatus,[stageKey]:!curStatus[stageKey]}}:r);
-    setLocalRefs(newRefs);
-    const freshRep=(data.reps||[]).find(rp=>rp.id===rep.id)||rep;
-    onUpdate(rep.id,{...freshRep,references:newRefs});
+    setLocalRefs(prev=>{
+      const curStatus=prev[i].status||{};
+      const newRefs=prev.map((r,j)=>j===i?{...r,status:{...curStatus,[stageKey]:!curStatus[stageKey]}}:r);
+      onUpdate(rep.id,{...rep,references:newRefs});
+      return newRefs;
+    });
   };
+
   return <div>{localRefs.map((r,i)=>{const status=r.status||{};return <div key={i} style={{borderRadius:8,border:`1px solid ${C.border}`,padding:10,marginBottom:6}}>
     <div style={{fontSize:10,fontWeight:700,color:C.textLight,marginBottom:5}}>Reference #{i+1}</div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:r.name?8:0}}>
