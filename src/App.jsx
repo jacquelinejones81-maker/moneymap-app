@@ -1042,7 +1042,6 @@ function RefsEditor({rep,data,onUpdate}) {
   </div>;})}</div>;
 }
 
-
 function RepView({rep,data,onUpdate,onUpdateData,readOnly,isOwnView=false}) {
   const [tab,setTab]=useState("checklist");
   const [showCelebration,setShowCelebration]=useState(false);
