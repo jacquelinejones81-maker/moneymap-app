@@ -467,9 +467,9 @@ function MetricsBar({transactions,debts,beginBal}){
   return(
     <div className="metric-grid">
       <div className="metric-card"><div className="lbl">Account balance</div><div className={`val ${bal>=0?'val-green':'val-red'}`} style={numStyle}>${Math.abs(bal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-      <div className="metric-card"><div className="lbl">Total debt</div><div className="val val-red" style={numStyle}>${totalDebt.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
-      <div className="metric-card"><div className="lbl">Month income</div><div className={`val ${monthIncome>0?'val-green':'val-red'}`} style={numStyle}>${monthIncome.toFixed(2)}</div></div>
-      <div className="metric-card"><div className="lbl">Month net</div><div className={`val ${net>=0?'val-teal':'val-red'}`} style={numStyle}>{net<0?'-':''}${Math.abs(net).toFixed(2)}</div></div>
+      <div className="metric-card"><div className="lbl">Total debt</div><div className="val val-red" style={numStyle}>${totalDebt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div className="metric-card"><div className="lbl">Month income</div><div className={`val ${monthIncome>0?'val-green':'val-red'}`} style={numStyle}>${monthIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+      <div className="metric-card"><div className="lbl">Month net</div><div className={`val ${net>=0?'val-teal':'val-red'}`} style={numStyle}>{net<0?'-':''}${Math.abs(net).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>
   );
 }
