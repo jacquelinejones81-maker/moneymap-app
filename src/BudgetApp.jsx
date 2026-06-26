@@ -193,6 +193,304 @@ function SplitModal({ form, onConfirm, onCancel }) {
 }
 
 
+function AutocompleteInput({value,onChange,transactions,onSelect,style}){
+  const [suggestions,setSuggestions]=useState([]);
+  const [showSugg,setShowSugg]=useState(false);
+  const [focused,setFocused]=useState(false);
+  const ref=useRef(null);
+
+  useEffect(()=>{
+    if(!value||value.length<2){setSuggestions([]);setShowSugg(false);return;}
+    const lower=value.toLowerCase();
+    const seen=new Set();
+    const matches=transactions
+      .filter(t=>t.desc&&t.desc.toLowerCase().includes(lower))
+      .filter(t=>{if(seen.has(t.desc))return false;seen.add(t.desc);return true;})
+      .slice(0,6)
+      .map(t=>({desc:t.desc,grp:t.grp,cat:t.cat}));
+    setSuggestions(matches);
+    setShowSugg(matches.length>0&&focused);
+  },[value,transactions,focused]);
+
+  useEffect(()=>{
+    const handleClick=e=>{if(ref.current&&!ref.current.contains(e.target))setShowSugg(false);};
+    document.addEventListener('mousedown',handleClick);
+    return()=>document.removeEventListener('mousedown',handleClick);
+  },[]);
+
+  return(
+    <div ref={ref} style={{position:'relative',flex:1}}>
+      <input
+        type="text"
+        placeholder="Description"
+        value={value}
+        onChange={e=>onChange(e.target.value)}
+        onFocus={()=>setFocused(true)}
+        onBlur={()=>setTimeout(()=>setFocused(false),150)}
+        style={{width:'100%',...(style||{})}}
+      />
+      {showSugg&&suggestions.length>0&&(
+        <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 16px rgba(26,111,212,0.12)',zIndex:999,overflow:'hidden',marginTop:2}}>
+          {suggestions.map((s,i)=>(
+            <div key={i} onMouseDown={()=>{onSelect(s);setShowSugg(false);}} style={{padding:'9px 14px',cursor:'pointer',borderBottom:i<suggestions.length-1?'1px solid #e8f1fd':'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:13,color:'#0f2a5e',fontWeight:500}}>{s.desc}</span>
+              {s.cat&&<span style={{fontSize:10,color:'#6b8dc4',background:'#f0f6ff',padding:'2px 8px',borderRadius:8}}>{s.cat}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function CSVImportModal({onImport,onCancel,existingTransactions,accounts,defaultAccount}){
+  const [step,setStep]=useState('upload'); // upload | map | preview | done
+  const [rawRows,setRawRows]=useState([]);
+  const [headers,setHeaders]=useState([]);
+  const [mapping,setMapping]=useState({date:'',description:'',amount:'',debit:'',credit:''});
+  const [mappingType,setMappingType]=useState('single'); // single=one amount col, split=debit+credit cols
+  const [preview,setPreview]=useState([]);
+  const [duplicates,setDuplicates]=useState(0);
+  const [importing,setImporting]=useState(false);
+  const [fileName,setFileName]=useState('');
+  const [selectedAccount,setSelectedAccount]=useState(defaultAccount||Object.keys(accounts||{})[0]||'main');
+
+  const parseCSV=(text)=>{
+    const lines=text.split(/
+?
+/).filter(l=>l.trim());
+    const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+    const rows=lines.slice(1).map(line=>{
+      const cols=[];let cur='';let inQ=false;
+      for(let i=0;i<line.length;i++){
+        if(line[i]==='"'){inQ=!inQ;}
+        else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}
+        else cur+=line[i];
+      }
+      cols.push(cur.trim());
+      return cols;
+    }).filter(r=>r.length>1&&r.some(c=>c.trim()));
+    return{headers,rows};
+  };
+
+  const handleFile=(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    setFileName(file.name);
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      const{headers,rows}=parseCSV(ev.target.result);
+      setHeaders(headers);
+      setRawRows(rows);
+      // Auto-detect common column names
+      const lower=headers.map(h=>h.toLowerCase());
+      const autoMap={date:'',description:'',amount:'',debit:'',credit:''};
+      headers.forEach((h,i)=>{
+        const l=h.toLowerCase();
+        if(l.includes('date'))autoMap.date=h;
+        if(l.includes('desc')||l.includes('memo')||l.includes('narr')||l.includes('payee')||l.includes('transaction'))autoMap.description=h;
+        if(l.includes('amount')&&!l.includes('debit')&&!l.includes('credit'))autoMap.amount=h;
+        if(l.includes('debit')||l.includes('withdrawal'))autoMap.debit=h;
+        if(l.includes('credit')||l.includes('deposit'))autoMap.credit=h;
+      });
+      // Detect if split debit/credit
+      if(autoMap.debit&&autoMap.credit){setMappingType('split');}
+      setMapping(autoMap);
+      setStep('map');
+    };
+    reader.readAsText(file);
+  };
+
+  const buildPreview=()=>{
+    const results=[];
+    rawRows.forEach((row,idx)=>{
+      const getValue=(col)=>{
+        const i=headers.indexOf(col);
+        return i>=0?(row[i]||'').replace(/"/g,'').trim():'';
+      };
+      const dateStr=getValue(mapping.date);
+      const desc=getValue(mapping.description);
+      if(!dateStr||!desc)return;
+      // Parse date
+      let date='';
+      const d=new Date(dateStr);
+      if(!isNaN(d.getTime())){
+        date=d.toISOString().split('T')[0];
+      } else {
+        // Try MM/DD/YYYY
+        const parts=dateStr.split(/[\/\-\.]/);
+        if(parts.length===3){
+          const yr=parts[2].length===4?parts[2]:'20'+parts[2];
+          date=`${yr}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+        }
+      }
+      if(!date)return;
+      let amt=0;let type='debit';
+      if(mappingType==='split'){
+        const deb=parseFloat(getValue(mapping.debit).replace(/[$,]/g,''))||0;
+        const cred=parseFloat(getValue(mapping.credit).replace(/[$,]/g,''))||0;
+        if(cred>0){amt=cred;type='credit';}
+        else if(deb>0){amt=deb;type='debit';}
+        else return;
+      } else {
+        const raw=parseFloat(getValue(mapping.amount).replace(/[$,]/g,''))||0;
+        if(raw===0)return;
+        if(raw<0){amt=Math.abs(raw);type='debit';}
+        else{amt=raw;type='credit';}
+      }
+      // Duplicate check
+      const isDup=existingTransactions.some(t=>t.date===date&&Math.abs(t.amt-amt)<0.01&&t.desc.toLowerCase()===desc.toLowerCase());
+      results.push({id:Date.now()+idx,date,desc,amt,type,grp:'',cat:'',note:'',refNum:'',recurring:'none',isDup});
+    });
+    const dups=results.filter(r=>r.isDup).length;
+    setDuplicates(dups);
+    setPreview(results);
+    setStep('preview');
+  };
+
+  const handleImport=()=>{
+    setImporting(true);
+    const toImport=preview.filter(r=>!r.isDup).map(({isDup,...r})=>r);
+    setTimeout(()=>{
+      onImport(toImport,selectedAccount);
+      setStep('done');
+      setImporting(false);
+    },500);
+  };
+
+  return(
+    <div className="modal-overlay" style={{zIndex:3000}} onClick={e=>e.target===e.currentTarget&&onCancel()}>
+      <div className="modal-box slide-up" style={{maxWidth:580,maxHeight:'85vh',overflow:'auto'}}>
+        
+        {step==='upload'&&(
+          <>
+            <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
+              <div style={{fontSize:40,marginBottom:10}}>📂</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:22,marginBottom:8,color:'#0f2a5e'}}>Import Bank Statement</h2>
+              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>Download your bank statement as a CSV file and upload it here. MoneyMap will automatically read your transactions.</p>
+            </div>
+            <div style={{background:'#f8faff',border:'2px dashed #c7ddf7',borderRadius:'var(--radius-lg)',padding:'2rem',textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:32,marginBottom:8}}>⬆️</div>
+              <label style={{cursor:'pointer'}}>
+                <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'#1a6fd4'}}>Click to select your CSV file</span>
+                <input type="file" accept=".csv" onChange={handleFile} style={{display:'none'}}/>
+              </label>
+              <div style={{fontSize:12,color:'#6b8dc4',marginTop:6}}>Supports CSV files from any bank</div>
+            </div>
+            <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:12,fontWeight:600,color:'#1a6fd4',marginBottom:6}}>💡 How to get your CSV file:</div>
+              <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.8}}>
+                Log into your bank → Statements or Transaction History → Download → Choose CSV format
+              </div>
+            </div>
+            <button className="btn-outline" style={{width:'100%'}} onClick={onCancel}>Cancel</button>
+          </>
+        )}
+
+        {step==='map'&&(
+          <>
+            <div style={{marginBottom:'1.25rem'}}>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Map Your Columns</h2>
+              <p style={{fontSize:13,color:'#6b8dc4'}}>File: <strong>{fileName}</strong> — {rawRows.length} rows found. Tell us which columns contain your data.</p>
+            </div>
+            <div style={{marginBottom:12}}>
+              <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Amount format</label>
+              <div style={{display:'flex',gap:10,marginBottom:12}}>
+                <button onClick={()=>setMappingType('single')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='single'?'#1a6fd4':'#c7ddf7'}`,background:mappingType==='single'?'rgba(26,111,212,0.1)':'transparent',color:mappingType==='single'?'#1a6fd4':'#6b8dc4',cursor:'pointer'}}>
+                  Single amount column
+                </button>
+                <button onClick={()=>setMappingType('split')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='split'?'#1a6fd4':'#c7ddf7'}`,background:mappingType==='split'?'rgba(26,111,212,0.1)':'transparent',color:mappingType==='split'?'#1a6fd4':'#6b8dc4',cursor:'pointer'}}>
+                  Separate debit/credit columns
+                </button>
+              </div>
+            </div>
+            {[
+              {key:'date',label:'Date column'},
+              {key:'description',label:'Description column'},
+              ...(mappingType==='single'?[{key:'amount',label:'Amount column'}]:[{key:'debit',label:'Debit / Withdrawal column'},{key:'credit',label:'Credit / Deposit column'}])
+            ].map(({key,label})=>(
+              <div key={key} style={{marginBottom:10}}>
+                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>{label}</label>
+                <select value={mapping[key]} onChange={e=>setMapping(m=>({...m,[key]:e.target.value}))}>
+                  <option value="">-- Select column --</option>
+                  {headers.map(h=><option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+            ))}
+            <div style={{display:'flex',gap:10,marginTop:'1.25rem'}}>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>setStep('upload')}>← Back</button>
+              <button className="btn-gold" style={{flex:1}} onClick={buildPreview} disabled={!mapping.date||!mapping.description}>
+                Preview Transactions →
+              </button>
+            </div>
+          </>
+        )}
+
+        {step==='preview'&&(
+          <>
+            <div style={{marginBottom:'1rem'}}>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Preview Import</h2>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                <span style={{background:'rgba(22,163,74,0.1)',color:'#16a34a',fontSize:12,fontWeight:600,padding:'3px 10px',borderRadius:10}}>{preview.filter(r=>!r.isDup).length} to import</span>
+                {duplicates>0&&<span style={{background:'rgba(217,119,6,0.1)',color:'#d97706',fontSize:12,fontWeight:600,padding:'3px 10px',borderRadius:10}}>{duplicates} duplicates skipped</span>}
+              </div>
+            </div>
+            <div style={{maxHeight:300,overflow:'auto',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',marginBottom:'1rem'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                <thead><tr style={{position:'sticky',top:0,background:'#f8faff'}}>
+                  <th style={{padding:'8px 10px',textAlign:'left',color:'#6b8dc4',fontWeight:600}}>Date</th>
+                  <th style={{padding:'8px 10px',textAlign:'left',color:'#6b8dc4',fontWeight:600}}>Description</th>
+                  <th style={{padding:'8px 10px',textAlign:'right',color:'#6b8dc4',fontWeight:600}}>Amount</th>
+                  <th style={{padding:'8px 10px',textAlign:'center',color:'#6b8dc4',fontWeight:600}}>Type</th>
+                  <th style={{padding:'8px 10px',textAlign:'center',color:'#6b8dc4',fontWeight:600}}>Status</th>
+                </tr></thead>
+                <tbody>
+                  {preview.map((row,i)=>(
+                    <tr key={i} style={{opacity:row.isDup?0.4:1,background:row.isDup?'#fff8f0':'transparent'}}>
+                      <td style={{padding:'7px 10px',color:'#2d5a9e'}}>{new Date(row.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                      <td style={{padding:'7px 10px',color:'#0f2a5e',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{row.desc}</td>
+                      <td style={{padding:'7px 10px',textAlign:'right',fontWeight:600,color:row.type==='credit'?'#16a34a':'#dc2626'}}>${row.amt.toFixed(2)}</td>
+                      <td style={{padding:'7px 10px',textAlign:'center'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 6px',borderRadius:8,background:row.type==='credit'?'rgba(22,163,74,0.1)':'rgba(220,38,38,0.1)',color:row.type==='credit'?'#16a34a':'#dc2626'}}>{row.type}</span></td>
+                      <td style={{padding:'7px 10px',textAlign:'center'}}>{row.isDup?<span style={{fontSize:10,color:'#d97706',fontWeight:600}}>DUPLICATE</span>:<span style={{fontSize:10,color:'#16a34a',fontWeight:600}}>NEW</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {accounts&&Object.keys(accounts).length>1&&(
+              <div style={{marginBottom:12}}>
+                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Import into which account?</label>
+                <select value={selectedAccount} onChange={e=>setSelectedAccount(e.target.value)}>
+                  {Object.entries(accounts).map(([key,acct])=>(
+                    <option key={key} value={key}>{acct.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>setStep('map')}>← Back</button>
+              <button className="btn-gold" style={{flex:1}} onClick={handleImport} disabled={importing||preview.filter(r=>!r.isDup).length===0}>
+                {importing?'Importing…':'Import '+preview.filter(r=>!r.isDup).length+' Transactions'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step==='done'&&(
+          <div style={{textAlign:'center',padding:'1rem 0'}}>
+            <div style={{fontSize:52,marginBottom:16}}>🎉</div>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'#0f2a5e'}}>Import Complete!</h2>
+            <p style={{fontSize:14,color:'#6b8dc4',lineHeight:1.7,marginBottom:'1.5rem'}}>Your transactions have been imported successfully. Head to the Register tab to assign categories.</p>
+            <button className="btn-gold" style={{width:'100%'}} onClick={onCancel}>Go to my Register 📒</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 function AddToHomeScreenModal({onClose}){
   return(
     <div className="modal-overlay" style={{zIndex:2500}} onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -296,6 +594,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [showResetAccount, setShowResetAccount] = useState(false);
   const [showAddToHome, setShowAddToHome] = useState(false);
   const [showMortgageTip, setShowMortgageTip] = useState(false);
+  const [showCSVImport, setShowCSVImport] = useState(false);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false);
   const { showTour, completeTour, resetTour } = useTour();
@@ -462,6 +761,21 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {showCashPopup && <CashPopup onClose={closeCashPopup} />}
       {showDeleteModal && <DeleteAccountModal lead={lead} onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />}
       {showGoodbye && <GoodbyeModal lead={lead} />}
+      {showCSVImport && <CSVImportModal
+        existingTransactions={accounts[activeAccount]?.transactions||[]}
+        accounts={accounts}
+        defaultAccount={activeAccount}
+        onImport={(newTxs, targetAccountKey)=>{
+          const targetAcct=accounts[targetAccountKey]||accounts[activeAccount];
+          const existing=targetAcct.transactions||[];
+          const updated=[...newTxs,...existing];
+          updated.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+          const updatedAccounts={...accounts,[targetAccountKey]:{...targetAcct,transactions:updated}};
+          setAccounts(updatedAccounts);
+          saveToFirebase(updatedAccounts);
+        }}
+        onCancel={()=>setShowCSVImport(false)}
+      />}
       {showAddToHome && <AddToHomeScreenModal onClose={() => setShowAddToHome(false)} />}
       {showMortgageTip && (
         <div className="modal-overlay" style={{zIndex:2500}} onClick={e=>e.target===e.currentTarget&&setShowMortgageTip(false)}>
@@ -526,6 +840,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
           {savedMsg && <span style={{ fontSize:12, color:'#16a34a' }}>✓ {savedMsg}</span>}
+          <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowCSVImport(true)}>📂 Import CSV</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowAddToHome(true)}>📱 Add to Phone</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={resetTour}>🗺 Tour</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => exportCSV(transactions, beginBal)}>⬇ CSV</button>
@@ -714,7 +1029,15 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
         <div className="card-title">Add transaction</div>
         <div className="form-row r2">
           <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'#dc2626'}:{}}/>
-          <input type="text" placeholder="Description" value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'#dc2626'}:{}}/>
+          <AutocompleteInput
+            value={form.desc}
+            onChange={val=>setForm(f=>({...f,desc:val}))}
+            transactions={transactions}
+            onSelect={suggestion=>{
+              setForm(f=>({...f,desc:suggestion.desc,grp:suggestion.grp||f.grp,cat:suggestion.cat||f.cat}));
+            }}
+            style={err.desc?{borderColor:'#dc2626'}:{}}
+          />
         </div>
         <div className="form-row r4" style={{marginBottom:10}}>
           <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}><option value="debit">Debit</option><option value="credit">Credit</option></select>
