@@ -257,9 +257,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
   const [selectedAccount,setSelectedAccount]=useState(defaultAccount||Object.keys(accounts||{})[0]||'main');
 
   const parseCSV=(text)=>{
-    const lines=text.split(/
-?
-/).filter(l=>l.trim());
+    const lines=text.split(/\r?\n/).filter(l=>l.trim());
     const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
     const rows=lines.slice(1).map(line=>{
       const cols=[];let cur='';let inQ=false;
