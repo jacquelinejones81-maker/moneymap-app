@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+ import React, { useState, useEffect, useRef } from 'react';
 import AppTour, { useTour } from './AppTour';
 import FinancialTipPopup, { RepContactCard } from './FinancialTips';
 import { db } from './firebase';
@@ -246,13 +246,13 @@ function AutocompleteInput({value,onChange,transactions,onSelect,style}){
 
 function DropZone({onFile}){
   const [dragging,setDragging]=useState(false);
-  const inputRef=useRef(null);
+  const id='csv-file-input-'+Math.random().toString(36).slice(2);
 
   const handleDrop=e=>{
     e.preventDefault();
     setDragging(false);
     const file=e.dataTransfer.files[0];
-    if(file&&file.name.endsWith('.csv')){
+    if(file&&(file.name.endsWith('.csv')||file.type==='text/csv')){
       const event={target:{files:[file]}};
       onFile(event);
     } else {
@@ -260,17 +260,18 @@ function DropZone({onFile}){
     }
   };
 
-  const handleDragOver=e=>{e.preventDefault();setDragging(true);};
-  const handleDragLeave=()=>setDragging(false);
+  const handleDragOver=e=>{e.preventDefault();e.stopPropagation();setDragging(true);};
+  const handleDragLeave=e=>{e.preventDefault();setDragging(false);};
 
   return(
-    <div
+    <label
+      htmlFor="csv-upload"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      onClick={()=>inputRef.current?.click()}
       style={{
-        background:dragging?'rgba(26,111,212,0.08)':'#f8faff',
+        display:'block',
+        background:dragging?'rgba(26,111,212,0.1)':'#f8faff',
         border:`2px dashed ${dragging?'#1a6fd4':'#c7ddf7'}`,
         borderRadius:'var(--radius-lg)',
         padding:'2.5rem 2rem',
@@ -286,12 +287,12 @@ function DropZone({onFile}){
         {dragging?'Drop your CSV file here!':'Drag & drop your CSV file here'}
       </div>
       <div style={{fontSize:12,color:'#6b8dc4',marginBottom:10}}>or</div>
-      <div style={{display:'inline-block',background:'linear-gradient(135deg,#1a6fd4,#5ba3f5)',color:'#fff',fontFamily:'var(--font-display)',fontWeight:700,fontSize:12,padding:'8px 20px',borderRadius:'var(--radius-md)'}}>
+      <div style={{display:'inline-block',background:'linear-gradient(135deg,#1a6fd4,#5ba3f5)',color:'#fff',fontFamily:'var(--font-display)',fontWeight:700,fontSize:12,padding:'8px 20px',borderRadius:'var(--radius-md)',pointerEvents:'none'}}>
         Browse files
       </div>
       <div style={{fontSize:11,color:'#6b8dc4',marginTop:10}}>Supports CSV files from any bank</div>
-      <input ref={inputRef} type="file" accept=".csv" onChange={onFile} style={{display:'none'}}/>
-    </div>
+      <input id="csv-upload" type="file" accept=".csv,text/csv" onChange={onFile} style={{display:'none'}}/>
+    </label>
   );
 }
 
