@@ -1032,7 +1032,6 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   const [selectedTxIds,setSelectedTxIds]=useState([]);
   const [moveToAccount,setMoveToAccount]=useState('');
   const [err,setErr]=useState({});
-  const [editingBill,setEditingBill]=useState(null);
   const grpCats=form.grp?GROUPS[form.grp]?.cats||[]:[];
 
   const addTx=()=>{
@@ -1266,6 +1265,7 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
   const [form,setForm]=useState({name:'',amount:'',dueDay:'1',category:'Electric bill',autopay:false});
   const [showForm,setShowForm]=useState(false);
   const [err,setErr]=useState({});
+  const [editingBill,setEditingBill]=useState(null);
   const addBill=()=>{
     const e={};
     if(!form.name.trim())e.name=true;
