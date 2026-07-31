@@ -1872,21 +1872,66 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
 
 function MovePicker({accounts,currentAccount,onMove}){
   const [show,setShow]=useState(false);
+  const [menuPos,setMenuPos]=useState({top:0,left:0,right:'auto'});
+  const btnRef=useRef(null);
+  const menuRef=useRef(null);
   const others=Object.entries(accounts).filter(([k])=>k!==currentAccount);
+
+  useEffect(()=>{
+    if(!show)return;
+    const reposition=()=>{
+      if(!btnRef.current)return;
+      const rect=btnRef.current.getBoundingClientRect();
+      const menuWidth=150;
+      const menuHeight=others.length*36+30;
+      const vw=window.innerWidth;
+      const vh=window.innerHeight;
+      let left=rect.left;
+      let top=rect.bottom+4;
+      // flip right if overflows right edge
+      if(left+menuWidth>vw-8) left=rect.right-menuWidth;
+      // clamp left edge
+      if(left<8) left=8;
+      // flip above if overflows bottom
+      if(top+menuHeight>vh-8) top=rect.top-menuHeight-4;
+      setMenuPos({top,left});
+    };
+    reposition();
+    window.addEventListener('scroll',reposition,true);
+    window.addEventListener('resize',reposition);
+    return()=>{
+      window.removeEventListener('scroll',reposition,true);
+      window.removeEventListener('resize',reposition);
+    };
+  },[show,others.length]);
+
+  useEffect(()=>{
+    if(!show)return;
+    const handleClick=e=>{
+      if(btnRef.current&&btnRef.current.contains(e.target))return;
+      if(menuRef.current&&menuRef.current.contains(e.target))return;
+      setShow(false);
+    };
+    document.addEventListener('mousedown',handleClick);
+    return()=>document.removeEventListener('mousedown',handleClick);
+  },[show]);
+
   if(others.length===0)return null;
+
   if(others.length===1){
     return(
       <button onClick={()=>onMove(others[0][0])} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} title={`Move to ${others[0][1].name}`}>↗</button>
     );
   }
+
   return(
-    <div style={{position:'relative',display:'inline-block'}}>
-      <button onClick={()=>setShow(s=>!s)} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>↗</button>
+    <div style={{display:'inline-block'}}>
+      <button ref={btnRef} onClick={()=>setShow(s=>!s)} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>↗</button>
       {show&&(
-        <div style={{position:'absolute',top:'100%',left:0,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 16px rgba(26,111,212,0.12)',zIndex:999,minWidth:140,marginTop:2}}>
-          <div style={{fontSize:10,color:'#6b8dc4',padding:'6px 10px 4px',fontWeight:600,textTransform:'uppercase'}}>Move to</div>
+        <div ref={menuRef} style={{position:'fixed',top:menuPos.top,left:menuPos.left,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 20px rgba(26,111,212,0.15)',zIndex:9999,minWidth:150,marginTop:0}}>
+          <div style={{fontSize:10,color:'#6b8dc4',padding:'6px 10px 4px',fontWeight:600,textTransform:'uppercase',borderBottom:'1px solid #e8f1fd'}}>Move to</div>
           {others.map(([k,a])=>(
-            <div key={k} onMouseDown={()=>{onMove(k);setShow(false);}} style={{padding:'8px 12px',fontSize:12,color:'#0f2a5e',cursor:'pointer',borderTop:'1px solid #e8f1fd'}} onMouseEnter={e=>e.target.style.background='#f0f6ff'} onMouseLeave={e=>e.target.style.background='transparent'}>
+            <div key={k} onMouseDown={()=>{onMove(k);setShow(false);}} style={{padding:'9px 12px',fontSize:12,color:'#0f2a5e',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='#f0f6ff'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
               {a.name}
             </div>
           ))}
