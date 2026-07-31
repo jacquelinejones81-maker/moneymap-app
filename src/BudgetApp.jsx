@@ -1,4 +1,4 @@
- import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppTour, { useTour } from './AppTour';
 import FinancialTipPopup, { RepContactCard } from './FinancialTips';
 import { db } from './firebase';
@@ -639,6 +639,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [showAddToHome, setShowAddToHome] = useState(false);
   const [showMortgageTip, setShowMortgageTip] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [editingAccountKey, setEditingAccountKey] = useState(null);
+  const [editingAccountName, setEditingAccountName] = useState('');
+  const [deleteAccountKey, setDeleteAccountKey] = useState(null);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false);
   const { showTour, completeTour, resetTour } = useTour();
@@ -742,6 +745,15 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     setActiveAccount(key);
     setNewAccountName('');
     setShowAddAccount(false);
+  };
+
+  const saveAccountRename = () => {
+    if (!editingAccountName.trim()) return;
+    const updated = { ...accounts, [editingAccountKey]: { ...accounts[editingAccountKey], name: editingAccountName.trim() } };
+    setAccounts(updated);
+    saveToFirebase(updated);
+    setEditingAccountKey(null);
+    setEditingAccountName('');
   };
 
   const handlePayBill = (bill) => setPayBillModal(bill);
@@ -896,9 +908,27 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {/* Account tabs */}
       <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.5rem 1.5rem', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
         {Object.entries(accounts).map(([key, acctData]) => (
-          <button key={key} onClick={() => setActiveAccount(key)} style={{ padding:'5px 14px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'#1a6fd4':'#c7ddf7'}`, background: activeAccount===key?'rgba(26,111,212,0.1)':'transparent', color: activeAccount===key?'#1a6fd4':'#6b8dc4', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
-            {acctData.name}
-          </button>
+          <div key={key} style={{ display:'flex', alignItems:'center', gap:2 }}>
+            {editingAccountKey===key ? (
+              <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+                <input value={editingAccountName} onChange={e=>setEditingAccountName(e.target.value)} style={{ padding:'3px 8px', fontSize:12, width:130, borderRadius:20 }} onKeyDown={e=>{if(e.key==='Enter')saveAccountRename();if(e.key==='Escape'){setEditingAccountKey(null);}}} autoFocus />
+                <button className="btn-gold" style={{ padding:'3px 10px', fontSize:11 }} onClick={saveAccountRename}>Save</button>
+                <button className="btn-outline" style={{ padding:'3px 8px', fontSize:11 }} onClick={()=>setEditingAccountKey(null)}>✕</button>
+              </div>
+            ) : (
+              <div style={{ display:'flex', alignItems:'center', gap:2 }}>
+                <button onClick={() => setActiveAccount(key)} style={{ padding:'5px 12px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'#1a6fd4':'#c7ddf7'}`, background: activeAccount===key?'rgba(26,111,212,0.1)':'transparent', color: activeAccount===key?'#1a6fd4':'#6b8dc4', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
+                  {acctData.name}
+                </button>
+                {activeAccount===key && (
+                  <div style={{ display:'flex', gap:2 }}>
+                    <button onClick={()=>{setEditingAccountKey(key);setEditingAccountName(acctData.name);}} title="Rename account" style={{ background:'none', border:'none', color:'#6b8dc4', fontSize:12, cursor:'pointer', padding:'2px 4px' }}>✏️</button>
+                    {key!=='main' && <button onClick={()=>setDeleteAccountKey(key)} title="Delete account" style={{ background:'none', border:'none', color:'rgba(220,38,38,0.5)', fontSize:12, cursor:'pointer', padding:'2px 4px' }}>🗑</button>}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         ))}
         {showAddAccount ? (
           <div style={{ display:'flex', gap:6, alignItems:'center' }}>
@@ -913,6 +943,21 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </>
         )}
       </div>
+      {deleteAccountKey && (
+        <ClearConfirmModal
+          title={`Delete "${accounts[deleteAccountKey]?.name}"?`}
+          message="This will permanently delete this account and ALL its transactions, bills, debts, goals, and subscriptions. This cannot be undone."
+          onConfirm={()=>{
+            const updated={...accounts};
+            delete updated[deleteAccountKey];
+            setAccounts(updated);
+            saveToFirebase(updated);
+            setActiveAccount('main');
+            setDeleteAccountKey(null);
+          }}
+          onCancel={()=>setDeleteAccountKey(null)}
+        />
+      )}
 
       <div style={{ maxWidth:860, margin:'0 auto', padding:'1.25rem 1rem 4rem' }}>
         {lead && lead.referredBy && <RepContactCard repName={lead.referredBy} uid={uid} />}
@@ -925,8 +970,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             </button>
           ))}
         </div>
-        {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} />}
-        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />}
+        {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
         {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} />}
@@ -975,7 +1020,7 @@ function AlertsBar({transactions,budgets}){
   return <div style={{marginBottom:'1rem'}}>{alerts.map((a,i)=><div key={i} className={`alert-box alert-${a.type}`} dangerouslySetInnerHTML={{__html:a.msg}}/>)}</div>;
 }
 
-function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitRequest,onMortgageDetected}){
+function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitRequest,onMortgageDetected,accounts,activeAccount,onMoveTransactions}){
   const emptyForm = {date:new Date().toISOString().split('T')[0],desc:'',type:'debit',grp:'',cat:'',amt:'',note:'',refNum:'',recurring:'none'};
   const [form,setForm]=useState(emptyForm);
   const [bbEdit,setBbEdit]=useState(false);
@@ -984,7 +1029,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   const [filterCat,setFilterCat]=useState('');
   const [search,setSearch]=useState('');
   const [showExtra,setShowExtra]=useState(false);
+  const [selectedTxIds,setSelectedTxIds]=useState([]);
+  const [moveToAccount,setMoveToAccount]=useState('');
   const [err,setErr]=useState({});
+  const [editingBill,setEditingBill]=useState(null);
   const grpCats=form.grp?GROUPS[form.grp]?.cats||[]:[];
 
   const addTx=()=>{
@@ -1132,9 +1180,20 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
 
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem',flexWrap:'wrap',gap:8}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
             <div className="card-title" style={{marginBottom:0}}>Register</div>
             {transactions.length>0&&<ClearBtn label="Clear all" onClear={()=>setTransactions([])} title="Clear all transactions?" message="This will permanently delete all transactions in this account." />}
+            {selectedTxIds.length>0&&accounts&&Object.keys(accounts).length>1&&(
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <span style={{fontSize:11,color:'#1a6fd4',fontWeight:600}}>{selectedTxIds.length} selected</span>
+                <select value={moveToAccount} onChange={e=>setMoveToAccount(e.target.value)} style={{fontSize:11,padding:'3px 8px',width:'auto'}}>
+                  <option value="">Move to...</option>
+                  {Object.entries(accounts).filter(([k])=>k!==activeAccount).map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
+                </select>
+                {moveToAccount&&<button className="btn-gold" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>{onMoveTransactions(selectedTxIds,moveToAccount);setSelectedTxIds([]);setMoveToAccount('');}}>Move</button>}
+                <button className="btn-outline" style={{fontSize:11,padding:'4px 8px'}} onClick={()=>{setSelectedTxIds([]);setMoveToAccount('');}}>Cancel</button>
+              </div>
+            )}
           </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
             <input placeholder="🔍 Search transactions..." value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'5px 10px',width:180}}/>
@@ -1150,6 +1209,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
         </div>
         <table>
           <thead><tr>
+            <th style={{width:28}}><input type="checkbox" onChange={e=>{if(e.target.checked)setSelectedTxIds(filtered.map(t=>t.id));else setSelectedTxIds([]);}} style={{accentColor:'#1a6fd4',width:13,height:13}}/></th>
             <th style={{width:64}}>Date</th>
             <th>Description</th>
             <th style={{width:100}}>Category</th>
@@ -1171,7 +1231,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
               const bal=bals[t.id];
               const ci=ALL_CATS[t.cat]||{color:'#6b7280',bg:'rgba(107,114,128,0.1)'};
               return(
-                <tr key={t.id}>
+                <tr key={t.id} style={{background:selectedTxIds.includes(t.id)?'rgba(26,111,212,0.06)':''}}>
+                  <td style={{width:28,textAlign:'center'}}>
+                    <input type="checkbox" checked={selectedTxIds.includes(t.id)} onChange={e=>{if(e.target.checked)setSelectedTxIds(s=>[...s,t.id]);else setSelectedTxIds(s=>s.filter(id=>id!==t.id));}} style={{accentColor:'#1a6fd4',width:13,height:13}}/>
+                  </td>
                   <td style={{fontSize:11,whiteSpace:'nowrap'}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
                   <td>
                     <div style={{fontSize:12}}>{t.desc}</div>
@@ -1195,7 +1258,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase}){
+function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -1293,7 +1356,13 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
                       )}
                     </td>
                     <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(bill.id)||'—'}</td>
-                    <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setBills(bills.filter(b=>b.id!==bill.id))}>✕</button></td>
+                    <td style={{textAlign:'center'}}>
+                      <div style={{display:'flex',gap:4,justifyContent:'center'}}>
+                        <button onClick={()=>setEditingBill(bill)} style={{background:'rgba(26,111,212,0.1)',color:'#1a6fd4',border:'1px solid rgba(26,111,212,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
+                        {accounts&&Object.keys(accounts).filter(k=>k!==activeAccount).length>0&&<MovePicker accounts={accounts} currentAccount={activeAccount} onMove={(targetKey)=>onMoveBill&&onMoveBill(bill,targetKey)} />}
+                        <button className="btn-danger" onClick={()=>setBills(bills.filter(b=>b.id!==bill.id))}>✕</button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -1301,6 +1370,14 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
           </table>
         )}
       </div>
+      {editingBill&&(
+        <div className="modal-overlay" style={{zIndex:3000}}>
+          <div className="modal-box slide-up" style={{maxWidth:480}}>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'#0f2a5e'}}>✏️ Edit Bill</h2>
+            <EditBillForm bill={editingBill} billCats={BILL_CATS} onSave={(updated)=>{setBills(bills.map(b=>b.id===updated.id?updated:b));setEditingBill(null);}} onCancel={()=>setEditingBill(null)} />
+          </div>
+        </div>
+      )}
       {bills.length>0&&(
         <div className="card">
           <div className="card-title">Monthly bill progress</div>
@@ -1311,7 +1388,7 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />
+      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
     </>
   );
 }
@@ -1793,7 +1870,84 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
   );
 }
 
-function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase}){
+function MovePicker({accounts,currentAccount,onMove}){
+  const [show,setShow]=useState(false);
+  const others=Object.entries(accounts).filter(([k])=>k!==currentAccount);
+  if(others.length===0)return null;
+  if(others.length===1){
+    return(
+      <button onClick={()=>onMove(others[0][0])} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} title={`Move to ${others[0][1].name}`}>↗</button>
+    );
+  }
+  return(
+    <div style={{position:'relative',display:'inline-block'}}>
+      <button onClick={()=>setShow(s=>!s)} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>↗</button>
+      {show&&(
+        <div style={{position:'absolute',top:'100%',left:0,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 16px rgba(26,111,212,0.12)',zIndex:999,minWidth:140,marginTop:2}}>
+          <div style={{fontSize:10,color:'#6b8dc4',padding:'6px 10px 4px',fontWeight:600,textTransform:'uppercase'}}>Move to</div>
+          {others.map(([k,a])=>(
+            <div key={k} onMouseDown={()=>{onMove(k);setShow(false);}} style={{padding:'8px 12px',fontSize:12,color:'#0f2a5e',cursor:'pointer',borderTop:'1px solid #e8f1fd'}} onMouseEnter={e=>e.target.style.background='#f0f6ff'} onMouseLeave={e=>e.target.style.background='transparent'}>
+              {a.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function EditBillForm({bill,billCats,onSave,onCancel}){
+  const [form,setForm]=useState({...bill});
+  const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Bill name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{billCats.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+      </div>
+      <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:16,fontSize:13,color:'#2d5a9e'}}>
+        <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+        This bill is on autopay
+      </label>
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+        <button className="btn-gold" style={{flex:1}} onClick={()=>onSave(form)}>Save changes</button>
+      </div>
+    </div>
+  );
+}
+
+function EditSubForm({sub,categories,onSave,onCancel}){
+  const [form,setForm]=useState({...sub});
+  const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Service name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay||1} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+        <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
+          <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
+            <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+            Autopay
+          </label>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+        <button className="btn-gold" style={{flex:1}} onClick={()=>onSave(form)}>Save changes</button>
+      </div>
+    </div>
+  );
+}
+
+
+function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveSubscription}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -1801,6 +1955,7 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
   const [showForm,setShowForm]=useState(false);
   const [err,setErr]=useState({});
   const [paySubModal,setPaySubModal]=useState(null);
+  const [editingSub,setEditingSub]=useState(null);
   const CATEGORIES=['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other'];
   const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
 
@@ -1879,6 +2034,14 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
 
   return(
     <>
+      {editingSub&&(
+        <div className="modal-overlay" style={{zIndex:3000}}>
+          <div className="modal-box slide-up" style={{maxWidth:480}}>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'#0f2a5e'}}>✏️ Edit Subscription</h2>
+            <EditSubForm sub={editingSub} categories={['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other']} onSave={(updated)=>{setSubscriptions(subscriptions.map(s=>s.id===updated.id?updated:s));setEditingSub(null);}} onCancel={()=>setEditingSub(null)} />
+          </div>
+        </div>
+      )}
       {paySubModal&&(
         <div className="modal-overlay" style={{zIndex:3000}}>
           <div className="modal-box slide-up" style={{maxWidth:420}}>
@@ -1974,7 +2137,13 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
                         )}
                       </td>
                       <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(sub)||'—'}</td>
-                      <td style={{textAlign:'center'}}><button className="btn-danger" onClick={()=>setSubscriptions(subscriptions.filter(s=>s.id!==sub.id))}>✕</button></td>
+                      <td style={{textAlign:'center'}}>
+                        <div style={{display:'flex',gap:4,justifyContent:'center'}}>
+                          <button onClick={()=>setEditingSub(sub)} style={{background:'rgba(26,111,212,0.1)',color:'#1a6fd4',border:'1px solid rgba(26,111,212,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
+                          {accounts&&Object.keys(accounts).filter(k=>k!==activeAccount).length>0&&<MovePicker accounts={accounts} currentAccount={activeAccount} onMove={(targetKey)=>onMoveSubscription&&onMoveSubscription(sub,targetKey)} />}
+                          <button className="btn-danger" onClick={()=>setSubscriptions(subscriptions.filter(s=>s.id!==sub.id))}>✕</button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
