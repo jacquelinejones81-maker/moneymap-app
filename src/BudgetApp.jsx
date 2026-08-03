@@ -2980,6 +2980,111 @@ function CalendarTab({bills,billsPaid,subscriptions}){
 }
 
 // ── Net Worth Tab ──────────────────────────────────────────────
+function NetWorthExplainer(){
+  const [open,setOpen]=useState(false);
+  return(
+    <div className="card" style={{marginBottom:'1rem',overflow:'hidden'}}>
+      <button onClick={()=>setOpen(o=>!o)} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',background:'none',border:'none',cursor:'pointer',padding:0,textAlign:'left'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:20}}>💡</span>
+          <div>
+            <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>What counts toward my net worth?</div>
+            <div style={{fontSize:11,color:'#6b8dc4'}}>Tap to {open?'hide':'learn more'}</div>
+          </div>
+        </div>
+        <span style={{fontSize:16,color:'#6b8dc4',transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.2s'}}>▼</span>
+      </button>
+
+      {open&&(
+        <div style={{borderTop:'1px solid #e8f1fd',marginTop:'1rem',paddingTop:'1rem'}}>
+
+          {/* Formula */}
+          <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem',textAlign:'center'}}>
+            <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'#0f2a5e',marginBottom:4}}>
+              Net Worth = Total Assets − Total Liabilities
+            </div>
+            <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.6}}>
+              A <strong style={{color:'#16a34a'}}>positive number</strong> means you own more than you owe ✅<br/>
+              A <strong style={{color:'#dc2626'}}>negative number</strong> is common early in life — the goal is to grow it over time 📈
+            </div>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
+
+            {/* Assets */}
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:'#16a34a',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:10,display:'flex',alignItems:'center',gap:6}}>
+                <span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>
+                Assets — Things You OWN
+              </div>
+              {[
+                {icon:'🏠',label:'Home',desc:'Current market value — not what you paid'},
+                {icon:'🚗',label:'Vehicles',desc:'Current value (check Kelley Blue Book)'},
+                {icon:'💰',label:'Checking & Savings',desc:'Current account balances'},
+                {icon:'📈',label:'Retirement Accounts',desc:'401k, IRA, Roth IRA — yes, these count even if you cannot touch them yet!'},
+                {icon:'💼',label:'Investment Accounts',desc:'Stocks, mutual funds, brokerage accounts'},
+                {icon:'🏢',label:'Other Real Estate',desc:'Rental properties, land'},
+                {icon:'💍',label:'Valuables',desc:'Jewelry, art, or collectibles with real market value'},
+              ].map((item,i)=>(
+                <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{item.icon}</span>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#0f2a5e'}}>{item.label}</div>
+                    <div style={{fontSize:11,color:'#6b8dc4',lineHeight:1.4}}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Liabilities */}
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:'#dc2626',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:10,display:'flex',alignItems:'center',gap:6}}>
+                <span style={{width:8,height:8,borderRadius:'50%',background:'#dc2626',display:'inline-block'}}/>
+                Liabilities — Things You OWE
+              </div>
+              {[
+                {icon:'🏠',label:'Mortgage Balance',desc:'What you still owe on your home — not the full value'},
+                {icon:'🚗',label:'Auto Loans',desc:'Remaining balance on each vehicle loan'},
+                {icon:'💳',label:'Credit Card Balances',desc:'Total owed across all cards'},
+                {icon:'🎓',label:'Student Loans',desc:'Total remaining balance'},
+                {icon:'🏥',label:'Medical Debt',desc:'Any outstanding medical bills'},
+                {icon:'👤',label:'Personal Loans',desc:'Any money borrowed from lenders'},
+                {icon:'📦',label:'Other Debts',desc:'Any other money you legally owe'},
+              ].map((item,i)=>(
+                <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{item.icon}</span>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#0f2a5e'}}>{item.label}</div>
+                    <div style={{fontSize:11,color:'#6b8dc4',lineHeight:1.4}}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tips */}
+          <div style={{background:'rgba(217,119,6,0.06)',border:'1px solid rgba(217,119,6,0.2)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginTop:'1rem'}}>
+            <div style={{fontSize:12,fontWeight:600,color:'#d97706',marginBottom:6}}>📌 Important reminders</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {[
+                'Only enter the NAME of your accounts — never enter account numbers, passwords, or routing numbers.',
+                'Use estimated current market values for assets — not what you originally paid.',
+                'Update your values monthly to track your net worth growth over time.',
+                'A negative net worth early in life is normal — most people start there. The goal is a growing trend.',
+              ].map((tip,i)=>(
+                <div key={i} style={{fontSize:11,color:'#2d5a9e',lineHeight:1.5,display:'flex',gap:6}}>
+                  <span style={{color:'#d97706',flexShrink:0}}>•</span>{tip}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,networthHistory,setNetworthHistory,savingsRateGoal,setSavingsRateGoal,goals}){
   const [assetForm,setAssetForm]=useState({name:'',value:'',category:'Home'});
   const [liabForm,setLiabForm]=useState({name:'',balance:'',category:'Mortgage'});
@@ -3026,6 +3131,9 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
 
   return(
     <>
+      {/* Net Worth Explainer */}
+      <NetWorthExplainer />
+
       {/* Net Worth Summary */}
       <div className="card" style={{background:netWorth>=0?'linear-gradient(135deg,rgba(22,163,74,0.08),rgba(22,163,74,0.03))':'linear-gradient(135deg,rgba(220,38,38,0.08),rgba(220,38,38,0.03))'}}>
         <div style={{textAlign:'center',padding:'1rem 0'}}>
