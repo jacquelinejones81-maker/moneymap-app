@@ -280,7 +280,7 @@ const KNOWN_SUBSCRIPTIONS = [
   // Fitness
   {keywords:['peloton'],name:'Peloton',category:'Fitness'},
   {keywords:['planet fitness','planetfitness'],name:'Planet Fitness',category:'Fitness'},
-  {keywords:['gold's gym','golds gym','goldsgym'],name:"Gold's Gym",category:'Fitness'},
+  {keywords:["gold's gym",'golds gym','goldsgym'],name:"Gold's Gym",category:'Fitness'},
   {keywords:['anytime fitness','anytimefitness'],name:'Anytime Fitness',category:'Fitness'},
   {keywords:['beachbody'],name:'Beachbody',category:'Fitness'},
   {keywords:['myfitnesspal'],name:'MyFitnessPal',category:'Fitness'},
@@ -401,7 +401,7 @@ const KNOWN_SUBSCRIPTIONS = [
   {keywords:['daily burn','dailyburn'],name:'Daily Burn',category:'Fitness'},
   // Shopping & Boxes
   {keywords:['walmart plus','walmart+'],name:'Walmart+',category:'Other'},
-  {keywords:['sams club','sam's club'],name:"Sam's Club",category:'Other'},
+  {keywords:['sams club',"sam's club"],name:"Sam's Club",category:'Other'},
   {keywords:['fabfitfun'],name:'FabFitFun',category:'Other'},
   {keywords:['thrive market','thrivemarket'],name:'Thrive Market',category:'Other'},
   {keywords:['sunbasket'],name:'Sunbasket',category:'Food / Delivery'},
