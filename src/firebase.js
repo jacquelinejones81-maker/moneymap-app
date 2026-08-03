@@ -3,12 +3,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_MM_API_KEY,
-  authDomain: `${import.meta.env.VITE_MM_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_MM_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_MM_PROJECT_ID}.firebasestorage.app`,
-  messagingSenderId: import.meta.env.VITE_MM_SENDER_ID,
-  appId: import.meta.env.VITE_MM_APP_ID,
+  apiKey: "AIzaSyC2x67g3-vOvcPtRQqK5Nln4Er_CD26Ytc",
+  authDomain: "moneymap-app-4da40.firebaseapp.com",
+  projectId: "moneymap-app-4da40",
+  storageBucket: "moneymap-app-4da40.firebasestorage.app",
+  messagingSenderId: "273747664106",
+  appId: "1:273747664106:web:40f852da95597ad06a4b93"
 };
 
 const app = initializeApp(firebaseConfig);
