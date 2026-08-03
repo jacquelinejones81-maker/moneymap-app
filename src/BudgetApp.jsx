@@ -347,7 +347,257 @@ const KNOWN_SUBSCRIPTIONS = [
   {keywords:['stitch fix','stitchfix'],name:'Stitch Fix',category:'Other'},
   {keywords:['birchbox'],name:'Birchbox',category:'Other'},
   {keywords:['ipsy'],name:'IPSY',category:'Other'},
+  // Hurdlr
+  {keywords:['hurdlr'],name:'Hurdlr',category:'Software'},
+  // AI Tools
+  {keywords:['gemini','gemini advanced'],name:'Gemini Advanced',category:'Software'},
+  {keywords:['copilot pro','copilot'],name:'Copilot Pro',category:'Software'},
+  {keywords:['jasper','jasper ai'],name:'Jasper AI',category:'Software'},
+  {keywords:['copy.ai','copyai'],name:'Copy.ai',category:'Software'},
+  {keywords:['perplexity'],name:'Perplexity AI',category:'Software'},
+  {keywords:['runway','runwayml'],name:'Runway ML',category:'Software'},
+  {keywords:['elevenlabs'],name:'ElevenLabs',category:'Software'},
+  {keywords:['synthesia'],name:'Synthesia',category:'Software'},
+  // Social & Content
+  {keywords:['youtubetv','youtube tv'],name:'YouTube TV',category:'Streaming'},
+  {keywords:['substack'],name:'Substack',category:'News'},
+  {keywords:['medium'],name:'Medium',category:'News'},
+  {keywords:['beehiiv'],name:'Beehiiv',category:'Software'},
+  {keywords:['x premium','twitter blue','twitter'],name:'X Premium',category:'Software'},
+  // Business Tools
+  {keywords:['hubspot'],name:'HubSpot',category:'Software'},
+  {keywords:['mailchimp'],name:'Mailchimp',category:'Software'},
+  {keywords:['activecampaign'],name:'ActiveCampaign',category:'Software'},
+  {keywords:['gohighlevel','highlevel','go high level'],name:'GoHighLevel',category:'Software'},
+  {keywords:['constant contact','constantcontact'],name:'Constant Contact',category:'Software'},
+  {keywords:['convertkit'],name:'ConvertKit',category:'Software'},
+  {keywords:['klaviyo'],name:'Klaviyo',category:'Software'},
+  {keywords:['calendly'],name:'Calendly',category:'Software'},
+  {keywords:['hootsuite'],name:'Hootsuite',category:'Software'},
+  {keywords:['buffer'],name:'Buffer',category:'Software'},
+  {keywords:['zapier'],name:'Zapier',category:'Software'},
+  {keywords:['monday.com','monday com'],name:'Monday.com',category:'Software'},
+  {keywords:['asana'],name:'Asana',category:'Software'},
+  {keywords:['clickup'],name:'ClickUp',category:'Software'},
+  {keywords:['freshbooks'],name:'FreshBooks',category:'Software'},
+  {keywords:['gusto'],name:'Gusto',category:'Software'},
+  {keywords:['docusign'],name:'DocuSign',category:'Software'},
+  // Photo & Design
+  {keywords:['lightroom','adobe lightroom'],name:'Adobe Lightroom',category:'Software'},
+  {keywords:['shutterstock'],name:'Shutterstock',category:'Software'},
+  {keywords:['envato'],name:'Envato',category:'Software'},
+  {keywords:['picmonkey'],name:'PicMonkey',category:'Software'},
+  {keywords:['visme'],name:'Visme',category:'Software'},
+  // Education
+  {keywords:['udemy'],name:'Udemy',category:'Education'},
+  {keywords:['linkedin learning'],name:'LinkedIn Learning',category:'Education'},
+  {keywords:['rosetta stone','rosettastone'],name:'Rosetta Stone',category:'Education'},
+  {keywords:['chegg'],name:'Chegg',category:'Education'},
+  {keywords:['italki'],name:'iTalki',category:'Education'},
+  // Health & Wellness
+  {keywords:['teladoc'],name:'Teladoc',category:'Fitness'},
+  {keywords:['mdlive'],name:'MDLive',category:'Fitness'},
+  {keywords:['weight watchers','weightwatchers','ww.com'],name:'WW (Weight Watchers)',category:'Fitness'},
+  {keywords:['daily burn','dailyburn'],name:'Daily Burn',category:'Fitness'},
+  // Shopping & Boxes
+  {keywords:['walmart plus','walmart+'],name:'Walmart+',category:'Other'},
+  {keywords:['sams club','sam's club'],name:"Sam's Club",category:'Other'},
+  {keywords:['fabfitfun'],name:'FabFitFun',category:'Other'},
+  {keywords:['thrive market','thrivemarket'],name:'Thrive Market',category:'Other'},
+  {keywords:['sunbasket'],name:'Sunbasket',category:'Food / Delivery'},
+  {keywords:['green chef','greenchef'],name:'Green Chef',category:'Food / Delivery'},
+  {keywords:['gobble'],name:'Gobble',category:'Food / Delivery'},
+  // Entertainment
+  {keywords:['crunchyroll'],name:'Crunchyroll',category:'Streaming'},
+  {keywords:['shudder'],name:'Shudder',category:'Streaming'},
+  {keywords:['britbox'],name:'BritBox',category:'Streaming'},
+  {keywords:['acorn tv','acorntv'],name:'Acorn TV',category:'Streaming'},
+  {keywords:['amc+','amc plus'],name:'AMC+',category:'Streaming'},
+  {keywords:['mubi'],name:'Mubi',category:'Streaming'},
+  // Finance
+  {keywords:['ynab','you need a budget'],name:'YNAB',category:'Software'},
+  {keywords:['acorns'],name:'Acorns',category:'Software'},
+  {keywords:['robinhood gold'],name:'Robinhood Gold',category:'Software'},
+  // Communication
+  {keywords:['google workspace','gsuite','g suite'],name:'Google Workspace',category:'Software'},
+  {keywords:['grasshopper'],name:'Grasshopper',category:'Software'},
+  {keywords:['ringcentral'],name:'RingCentral',category:'Software'},
+  {keywords:['openphone'],name:'OpenPhone',category:'Software'},
+  {keywords:['nextiva'],name:'Nextiva',category:'Software'},
+  {keywords:['magicjack'],name:'MagicJack',category:'Software'},
+  {keywords:['ooma'],name:'Ooma',category:'Software'},
+  // Security & Privacy
+  {keywords:['bitdefender'],name:'Bitdefender',category:'Software'},
+  {keywords:['malwarebytes'],name:'Malwarebytes',category:'Software'},
+  // Auto & Travel
+  {keywords:['onstar'],name:'OnStar',category:'Other'},
+  {keywords:['aaa'],name:'AAA',category:'Other'},
+  {keywords:['clear'],name:'CLEAR',category:'Other'},
+  {keywords:['tripit'],name:'TripIt Pro',category:'Other'},
 ];
+
+// ── Known Fixed Bills Database ────────────────────────────────
+const KNOWN_FIXED_BILLS = [
+  // Mortgage
+  {keywords:['us bank mortgage','usbank mortgage','us bank home'],name:'US Bank Mortgage',category:'Mortgage / rent'},
+  {keywords:['rocket mortgage','quicken loans'],name:'Rocket Mortgage',category:'Mortgage / rent'},
+  {keywords:['mr cooper','nationstar'],name:'Mr. Cooper Mortgage',category:'Mortgage / rent'},
+  {keywords:['wells fargo home','wells fargo mortgage'],name:'Wells Fargo Mortgage',category:'Mortgage / rent'},
+  {keywords:['chase mortgage','jpmorgan mortgage'],name:'Chase Mortgage',category:'Mortgage / rent'},
+  {keywords:['loandepot'],name:'LoanDepot',category:'Mortgage / rent'},
+  {keywords:['freedom mortgage'],name:'Freedom Mortgage',category:'Mortgage / rent'},
+  {keywords:['pennymac'],name:'PennyMac',category:'Mortgage / rent'},
+  {keywords:['caliber home'],name:'Caliber Home Loans',category:'Mortgage / rent'},
+  {keywords:['newrez'],name:'NewRez Mortgage',category:'Mortgage / rent'},
+  {keywords:['phh mortgage'],name:'PHH Mortgage',category:'Mortgage / rent'},
+  // Electric
+  {keywords:['evergy'],name:'Evergy Electric',category:'Electric bill'},
+  {keywords:['duke energy'],name:'Duke Energy',category:'Electric bill'},
+  {keywords:['comed'],name:'ComEd Electric',category:'Electric bill'},
+  {keywords:['georgia power'],name:'Georgia Power',category:'Electric bill'},
+  {keywords:['dominion energy'],name:'Dominion Energy',category:'Electric bill'},
+  {keywords:['xcel energy'],name:'Xcel Energy',category:'Electric bill'},
+  {keywords:['fpl','florida power'],name:'FPL Electric',category:'Electric bill'},
+  {keywords:['entergy'],name:'Entergy',category:'Electric bill'},
+  {keywords:['aep','american electric power'],name:'AEP Electric',category:'Electric bill'},
+  {keywords:['ameren'],name:'Ameren Electric',category:'Electric bill'},
+  {keywords:['eversource'],name:'Eversource Energy',category:'Electric bill'},
+  {keywords:['national grid'],name:'National Grid',category:'Electric bill'},
+  {keywords:['pge','pg&e','pacific gas'],name:'PG&E',category:'Electric bill'},
+  {keywords:['puget sound energy'],name:'Puget Sound Energy',category:'Electric bill'},
+  {keywords:['srp','salt river project'],name:'SRP Electric',category:'Electric bill'},
+  // Gas/Heat
+  {keywords:['atmos energy','atmos'],name:'Atmos Energy',category:'Gas / heat bill'},
+  {keywords:['spire gas','spire mo'],name:'Spire Gas',category:'Gas / heat bill'},
+  {keywords:['centerpoint','center point'],name:'CenterPoint Energy',category:'Gas / heat bill'},
+  {keywords:['peoples gas','peoples natural'],name:'Peoples Gas',category:'Gas / heat bill'},
+  {keywords:['nicor gas','nicor'],name:'Nicor Gas',category:'Gas / heat bill'},
+  {keywords:['laclede gas'],name:'Laclede Gas',category:'Gas / heat bill'},
+  {keywords:['southwest gas'],name:'Southwest Gas',category:'Gas / heat bill'},
+  // Internet
+  {keywords:['google fiber','googlefiber'],name:'Google Fiber',category:'Internet'},
+  {keywords:['xfinity','comcast'],name:'Xfinity/Comcast',category:'Internet'},
+  {keywords:['spectrum','charter'],name:'Spectrum Internet',category:'Internet'},
+  {keywords:['att fiber','at&t fiber','att internet'],name:'AT&T Fiber',category:'Internet'},
+  {keywords:['cox communications','cox cable'],name:'Cox Internet',category:'Internet'},
+  {keywords:['centurylink','lumen'],name:'CenturyLink',category:'Internet'},
+  {keywords:['wow internet','wowway'],name:'WOW Internet',category:'Internet'},
+  {keywords:['mediacom'],name:'Mediacom',category:'Internet'},
+  {keywords:['starlink'],name:'Starlink',category:'Internet'},
+  {keywords:['earthlink'],name:'EarthLink',category:'Internet'},
+  {keywords:['hughesnet'],name:'HughesNet',category:'Internet'},
+  // Phone
+  {keywords:['at&t','att wireless','att mobility'],name:'AT&T Wireless',category:'Phone bill'},
+  {keywords:['verizon wireless','verizon'],name:'Verizon Wireless',category:'Phone bill'},
+  {keywords:['t-mobile','tmobile'],name:'T-Mobile',category:'Phone bill'},
+  {keywords:['metro pcs','metropcs','metro by t'],name:'Metro PCS',category:'Phone bill'},
+  {keywords:['cricket wireless','cricket'],name:'Cricket Wireless',category:'Phone bill'},
+  {keywords:['boost mobile','boostmobile'],name:'Boost Mobile',category:'Phone bill'},
+  {keywords:['us cellular','uscellular'],name:'US Cellular',category:'Phone bill'},
+  {keywords:['consumer cellular'],name:'Consumer Cellular',category:'Phone bill'},
+  {keywords:['mint mobile','mintmobile'],name:'Mint Mobile',category:'Phone bill'},
+  // Auto Loans
+  {keywords:['toyota financial','toyota motor credit'],name:'Toyota Financial',category:'Car payment'},
+  {keywords:['honda financial','american honda finance'],name:'Honda Financial',category:'Car payment'},
+  {keywords:['ford credit','ford motor credit'],name:'Ford Motor Credit',category:'Car payment'},
+  {keywords:['gm financial','gmfinancial'],name:'GM Financial',category:'Car payment'},
+  {keywords:['ally auto','ally financial'],name:'Ally Auto',category:'Car payment'},
+  {keywords:['capital one auto'],name:'Capital One Auto',category:'Car payment'},
+  {keywords:['chrysler capital'],name:'Chrysler Capital',category:'Car payment'},
+  {keywords:['hyundai motor finance'],name:'Hyundai Motor Finance',category:'Car payment'},
+  {keywords:['kia motors finance','kia finance'],name:'Kia Motors Finance',category:'Car payment'},
+  {keywords:['nissan motor','nmac'],name:'Nissan Motor Finance',category:'Car payment'},
+  {keywords:['subaru motors','subaru finance'],name:'Subaru Motors Finance',category:'Car payment'},
+  {keywords:['carmax auto'],name:'CarMax Auto Finance',category:'Car payment'},
+  {keywords:['community america','communityamerica'],name:'Community America Auto',category:'Car payment'},
+  // Student Loans
+  {keywords:['navient'],name:'Navient Student Loan',category:'Student loan'},
+  {keywords:['sallie mae','salliemae'],name:'Sallie Mae',category:'Student loan'},
+  {keywords:['nelnet'],name:'Nelnet Student Loan',category:'Student loan'},
+  {keywords:['fedloan','fed loan'],name:'FedLoan Servicing',category:'Student loan'},
+  {keywords:['mohela'],name:'MOHELA Student Loan',category:'Student loan'},
+  {keywords:['edfinancial'],name:'EdFinancial',category:'Student loan'},
+  {keywords:['great lakes','greatlakes'],name:'Great Lakes Loans',category:'Student loan'},
+  // Credit Cards
+  {keywords:['chase card','chase sapphire','chase freedom'],name:'Chase Credit Card',category:'Credit card payment'},
+  {keywords:['bank of america card','bofa card'],name:'Bank of America Card',category:'Credit card payment'},
+  {keywords:['citi card','citibank card','citicard'],name:'Citi Credit Card',category:'Credit card payment'},
+  {keywords:['capital one card','capital one payment'],name:'Capital One Card',category:'Credit card payment'},
+  {keywords:['discover card','discover payment'],name:'Discover Card',category:'Credit card payment'},
+  {keywords:['american express','amex'],name:'American Express',category:'Credit card payment'},
+  {keywords:['synchrony','synchrony bank'],name:'Synchrony Bank',category:'Credit card payment'},
+  {keywords:['barclays'],name:'Barclays Card',category:'Credit card payment'},
+  {keywords:['wells fargo card','wells fargo visa'],name:'Wells Fargo Card',category:'Credit card payment'},
+  {keywords:['community america credit','communityamerica credit'],name:'Community America Credit Card',category:'Credit card payment'},
+  // Insurance
+  {keywords:['primerica life','primerica insurance'],name:'Primerica Life Insurance',category:'Life insurance'},
+  {keywords:['primerica invest','primerica financial'],name:'Primerica Investments',category:'Other insurance'},
+  {keywords:['state farm'],name:'State Farm Insurance',category:'Auto insurance'},
+  {keywords:['allstate'],name:'Allstate Insurance',category:'Auto insurance'},
+  {keywords:['geico'],name:'Geico Insurance',category:'Auto insurance'},
+  {keywords:['progressive'],name:'Progressive Insurance',category:'Auto insurance'},
+  {keywords:['usaa'],name:'USAA Insurance',category:'Auto insurance'},
+  {keywords:['farmers insurance','farmers'],name:'Farmers Insurance',category:'Auto insurance'},
+  {keywords:['liberty mutual'],name:'Liberty Mutual',category:'Auto insurance'},
+  {keywords:['nationwide'],name:'Nationwide Insurance',category:'Auto insurance'},
+  {keywords:['travelers'],name:'Travelers Insurance',category:'Auto insurance'},
+  {keywords:['erie insurance'],name:'Erie Insurance',category:'Auto insurance'},
+  {keywords:['metlife'],name:'MetLife Insurance',category:'Life insurance'},
+  {keywords:['new york life','newyorklife'],name:'New York Life',category:'Life insurance'},
+  {keywords:['northwestern mutual'],name:'Northwestern Mutual',category:'Life insurance'},
+  {keywords:['aflac'],name:'Aflac Insurance',category:'Health insurance'},
+  {keywords:['cigna'],name:'Cigna Health',category:'Health insurance'},
+  {keywords:['unitedhealth','united health','uhc'],name:'UnitedHealth',category:'Health insurance'},
+  {keywords:['anthem'],name:'Anthem Health',category:'Health insurance'},
+  {keywords:['blue cross','bluecross','bcbs'],name:'Blue Cross Blue Shield',category:'Health insurance'},
+  {keywords:['humana'],name:'Humana',category:'Health insurance'},
+  {keywords:['aetna'],name:'Aetna Health',category:'Health insurance'},
+  // Government/Tax
+  {keywords:['irs','internal revenue'],name:'IRS Payment',category:'Other'},
+  {keywords:['state tax','dept of revenue','department of revenue'],name:'State Tax Payment',category:'Other'},
+  {keywords:['county tax','property tax'],name:'Property Tax',category:'Other'},
+  // Water
+  {keywords:['kansas city water','kc water'],name:'Kansas City Water',category:'Water bill'},
+  {keywords:['city utilities','city water','municipal water'],name:'City Water Utility',category:'Water bill'},
+  {keywords:['water department','water dept'],name:'Water Department',category:'Water bill'},
+  // HOA
+  {keywords:['hoa','homeowners association','community management','property management'],name:'HOA Payment',category:'HOA fee'},
+  // Childcare
+  {keywords:['kindercare','kinder care'],name:'KinderCare',category:'Childcare / daycare'},
+  {keywords:['bright horizons','brighthorizons'],name:'Bright Horizons',category:'Childcare / daycare'},
+  {keywords:['la petite','lapetite'],name:'La Petite Academy',category:'Childcare / daycare'},
+  {keywords:['primrose school','primrose'],name:'Primrose Schools',category:'Childcare / daycare'},
+  // Gym/Fitness memberships (fixed)
+  {keywords:['ymca','the y'],name:'YMCA',category:'Gym membership'},
+  {keywords:['lifetime fitness','life time'],name:'Life Time Fitness',category:'Gym membership'},
+];
+
+function detectFixedBills(transactions){
+  const found=[];
+  const seen=new Set();
+  transactions.forEach(tx=>{
+    if(tx.type!=='debit')return;
+    const desc=(tx.desc||'').toLowerCase();
+    KNOWN_FIXED_BILLS.forEach(bill=>{
+      const match=bill.keywords.some(kw=>desc.includes(kw.toLowerCase()));
+      if(match&&!seen.has(bill.name)){
+        seen.add(bill.name);
+        found.push({
+          id:Date.now()+Math.random(),
+          name:bill.name,
+          amount:tx.amt,
+          dueDay:new Date(tx.date+'T00:00:00').getDate()||1,
+          category:bill.category,
+          autopay:false,
+          createdAt:new Date().toISOString(),
+          detected:true,
+        });
+      }
+    });
+  });
+  return found;
+}
+
 
 function detectSubscriptions(transactions){
   const found=[];
@@ -430,8 +680,8 @@ function DropZone({onFile}){
 }
 
 
-function CSVImportModal({onImport,onCancel,existingTransactions,accounts,defaultAccount,onAddSubscriptions}){
-  const [step,setStep]=useState('upload'); // upload | map | preview | subs | done
+function CSVImportModal({onImport,onCancel,existingTransactions,accounts,defaultAccount,onAddSubscriptions,onAddFixedBills}){
+  const [step,setStep]=useState('upload'); // upload | map | preview | subs | bills | done
   const [rawRows,setRawRows]=useState([]);
   const [headers,setHeaders]=useState([]);
   const [mapping,setMapping]=useState({date:'',description:'',amount:'',debit:'',credit:''});
@@ -444,6 +694,9 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
   const [detectedSubs,setDetectedSubs]=useState([]);
   const [selectedSubIds,setSelectedSubIds]=useState([]);
   const [subTargetAccount,setSubTargetAccount]=useState(defaultAccount||'main');
+  const [detectedBills,setDetectedBills]=useState([]);
+  const [selectedBillIds,setSelectedBillIds]=useState([]);
+  const [billTargetAccount,setBillTargetAccount]=useState(defaultAccount||'main');
 
   const parseCSV=(text)=>{
     const lines=text.split(/\r?\n/).filter(l=>l.trim());
@@ -542,13 +795,23 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
     setTimeout(()=>{
       onImport(toImport,selectedAccount);
       // Detect subscriptions from imported transactions
-      const detected=detectSubscriptions(toImport);
-      if(detected.length>0){
-        setDetectedSubs(detected);
-        setSelectedSubIds(detected.map(s=>s.id));
+      const detectedS=detectSubscriptions(toImport);
+      const detectedB=detectFixedBills(toImport);
+      if(detectedS.length>0){
+        setDetectedSubs(detectedS);
+        setSelectedSubIds(detectedS.map(s=>s.id));
         setSubTargetAccount(selectedAccount||defaultAccount||'main');
+        setDetectedBills(detectedB);
+        setSelectedBillIds(detectedB.map(b=>b.id));
+        setBillTargetAccount(selectedAccount||defaultAccount||'main');
         setImporting(false);
         setStep('subs');
+      } else if(detectedB.length>0){
+        setDetectedBills(detectedB);
+        setSelectedBillIds(detectedB.map(b=>b.id));
+        setBillTargetAccount(selectedAccount||defaultAccount||'main');
+        setImporting(false);
+        setStep('bills');
       } else {
         setStep('done');
         setImporting(false);
@@ -701,13 +964,59 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
               </div>
             )}
             <div style={{display:'flex',gap:10}}>
-              <button className="btn-outline" style={{flex:1}} onClick={()=>setStep('done')}>Skip</button>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>{if(detectedBills.length>0)setStep('bills');else setStep('done');}}>Skip</button>
               <button className="btn-gold" style={{flex:1,background:'linear-gradient(135deg,#7c3aed,#a78bfa)'}} onClick={()=>{
                 const toAdd=detectedSubs.filter(s=>selectedSubIds.includes(s.id)).map(({detected,...s})=>s);
                 onAddSubscriptions&&onAddSubscriptions(toAdd,subTargetAccount||selectedAccount);
-                setStep('done');
+                if(detectedBills.length>0) setStep('bills');
+                else setStep('done');
               }}>
                 Add {selectedSubIds.length} Subscription{selectedSubIds.length!==1?'s':''}
+              </button>
+            </div>
+          </>
+        )}
+        {step==='bills'&&(
+          <>
+            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:40,marginBottom:10}}>🗓</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Fixed Bills Detected!</h2>
+              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>We found <strong style={{color:'#1a6fd4'}}>{detectedBills.length} possible fixed bill{detectedBills.length!==1?'s':''}</strong> in your import. Select which ones to add to your Bills tab.</p>
+            </div>
+            <div style={{maxHeight:280,overflow:'auto',marginBottom:'1rem'}}>
+              {detectedBills.map(bill=>(
+                <div key={bill.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedBillIds.includes(bill.id)?'rgba(26,111,212,0.06)':'#f8faff',border:`1px solid ${selectedBillIds.includes(bill.id)?'rgba(26,111,212,0.2)':'#c7ddf7'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedBillIds(s=>s.includes(bill.id)?s.filter(i=>i!==bill.id):[...s,bill.id])}>
+                  <input type="checkbox" checked={selectedBillIds.includes(bill.id)} onChange={()=>{}} style={{width:15,height:15,accentColor:'#1a6fd4',flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#0f2a5e'}}>{bill.name}</div>
+                    <div style={{fontSize:11,color:'#6b8dc4'}}>{bill.category} · due {bill.dueDay}{['th','st','nd','rd'][bill.dueDay%10]||'th'}</div>
+                  </div>
+                  <div style={{fontWeight:700,fontSize:13,color:'#1a6fd4',flexShrink:0}}>${bill.amount.toFixed(2)}/mo</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:10}}>
+              <button className="btn-outline" style={{fontSize:11,flex:1}} onClick={()=>setSelectedBillIds(detectedBills.map(b=>b.id))}>Select all</button>
+              <button className="btn-outline" style={{fontSize:11,flex:1}} onClick={()=>setSelectedBillIds([])}>Deselect all</button>
+            </div>
+            {accounts&&Object.keys(accounts).length>1&&(
+              <div style={{marginBottom:12}}>
+                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Add bills to which account?</label>
+                <select value={billTargetAccount} onChange={e=>setBillTargetAccount(e.target.value)}>
+                  {Object.entries(accounts).map(([key,acct])=>(
+                    <option key={key} value={key}>{acct.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>setStep('done')}>Skip</button>
+              <button className="btn-gold" style={{flex:1}} onClick={()=>{
+                const toAdd=detectedBills.filter(b=>selectedBillIds.includes(b.id)).map(({detected,...b})=>b);
+                onAddFixedBills&&onAddFixedBills(toAdd,billTargetAccount||selectedAccount);
+                setStep('done');
+              }}>
+                Add {selectedBillIds.length} Bill{selectedBillIds.length!==1?'s':''}
               </button>
             </div>
           </>
@@ -1026,6 +1335,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           const targetAcct=accounts[targetAccountKey]||accounts[activeAccount];
           const existingSubs=targetAcct.subscriptions||[];
           const updated={...accounts,[targetAccountKey]:{...targetAcct,subscriptions:[...existingSubs,...newSubs]}};
+          setAccounts(updated);
+          saveToFirebase(updated);
+        }}
+        onAddFixedBills={(newBills, targetAccountKey)=>{
+          const targetAcct=accounts[targetAccountKey]||accounts[activeAccount];
+          const existingBills=targetAcct.bills||[];
+          const updated={...accounts,[targetAccountKey]:{...targetAcct,bills:[...existingBills,...newBills]}};
           setAccounts(updated);
           saveToFirebase(updated);
         }}
@@ -1490,6 +1806,12 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
         <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">${totalPaid.toFixed(2)}</div></div>
         <div className="metric-card"><div className="lbl">Still owed</div><div className={`val ${totalUnpaid>0?'val-red':'val-green'}`}>${totalUnpaid.toFixed(2)}</div></div>
         <div className="metric-card"><div className="lbl">Bills paid</div><div className="val val-teal">{paidCount} / {bills.length}</div></div>
+      </div>
+      <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
+        <span style={{fontSize:18,flexShrink:0}}>💡</span>
+        <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.5}}>
+          <strong>Did you know?</strong> You can import your bank statement to automatically detect your fixed bills and subscriptions. Click <strong>📂 Import CSV</strong> in the header to get started!
+        </div>
       </div>
       {bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='overdue').length>0&&<div className="alert-box alert-danger" style={{marginBottom:8}}>⚠️ <strong>{bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='overdue').length} bill(s) past due</strong></div>}
       {bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='due-soon').length>0&&<div className="alert-box alert-warning" style={{marginBottom:8}}>🔔 <strong>{bills.filter(b=>!isPaid(b.id)&&getDueStatus(b.dueDay)==='due-soon').length} bill(s) due within 3 days</strong></div>}
