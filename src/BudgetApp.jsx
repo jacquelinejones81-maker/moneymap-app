@@ -244,6 +244,139 @@ function AutocompleteInput({value,onChange,transactions,onSelect,style}){
 }
 
 
+// ── Known Subscription Services Database ─────────────────────
+const KNOWN_SUBSCRIPTIONS = [
+  // Streaming
+  {keywords:['netflix'],name:'Netflix',category:'Streaming'},
+  {keywords:['hulu'],name:'Hulu',category:'Streaming'},
+  {keywords:['disney','disneyplus','disney+'],name:'Disney+',category:'Streaming'},
+  {keywords:['hbo','max','hbomax'],name:'HBO Max',category:'Streaming'},
+  {keywords:['peacock'],name:'Peacock',category:'Streaming'},
+  {keywords:['paramount','paramount+'],name:'Paramount+',category:'Streaming'},
+  {keywords:['appletv','apple tv'],name:'Apple TV+',category:'Streaming'},
+  {keywords:['youtube premium','youtubepremium'],name:'YouTube Premium',category:'Streaming'},
+  {keywords:['espn','espn+'],name:'ESPN+',category:'Streaming'},
+  {keywords:['fubo','fubotv'],name:'FuboTV',category:'Streaming'},
+  {keywords:['sling'],name:'Sling TV',category:'Streaming'},
+  {keywords:['discovery+','discoveryplus'],name:'Discovery+',category:'Streaming'},
+  {keywords:['showtime'],name:'Showtime',category:'Streaming'},
+  {keywords:['starz'],name:'Starz',category:'Streaming'},
+  // Music
+  {keywords:['spotify'],name:'Spotify',category:'Music'},
+  {keywords:['apple music','applemusic'],name:'Apple Music',category:'Music'},
+  {keywords:['tidal'],name:'Tidal',category:'Music'},
+  {keywords:['pandora'],name:'Pandora',category:'Music'},
+  {keywords:['amazon music','amazonmusic'],name:'Amazon Music',category:'Music'},
+  {keywords:['siriusxm','sirius xm'],name:'SiriusXM',category:'Music'},
+  {keywords:['deezer'],name:'Deezer',category:'Music'},
+  {keywords:['soundcloud'],name:'SoundCloud',category:'Music'},
+  // Gaming
+  {keywords:['xbox','xboxgamepass','xbox game pass'],name:'Xbox Game Pass',category:'Gaming'},
+  {keywords:['playstation','psplus','ps plus','playstation plus'],name:'PlayStation Plus',category:'Gaming'},
+  {keywords:['nintendo','nintendo online'],name:'Nintendo Online',category:'Gaming'},
+  {keywords:['ea play','eaplay'],name:'EA Play',category:'Gaming'},
+  {keywords:['steam'],name:'Steam',category:'Gaming'},
+  {keywords:['twitch'],name:'Twitch',category:'Gaming'},
+  // Fitness
+  {keywords:['peloton'],name:'Peloton',category:'Fitness'},
+  {keywords:['planet fitness','planetfitness'],name:'Planet Fitness',category:'Fitness'},
+  {keywords:['gold's gym','golds gym','goldsgym'],name:"Gold's Gym",category:'Fitness'},
+  {keywords:['anytime fitness','anytimefitness'],name:'Anytime Fitness',category:'Fitness'},
+  {keywords:['beachbody'],name:'Beachbody',category:'Fitness'},
+  {keywords:['myfitnesspal'],name:'MyFitnessPal',category:'Fitness'},
+  {keywords:['noom'],name:'Noom',category:'Fitness'},
+  {keywords:['fitbit'],name:'Fitbit Premium',category:'Fitness'},
+  {keywords:['crunch'],name:'Crunch Fitness',category:'Fitness'},
+  {keywords:['la fitness','lafitness'],name:'LA Fitness',category:'Fitness'},
+  {keywords:['equinox'],name:'Equinox',category:'Fitness'},
+  // Software & Productivity
+  {keywords:['adobe','adobe creative','adobe cc'],name:'Adobe Creative Cloud',category:'Software'},
+  {keywords:['microsoft 365','microsoft365','office 365','office365'],name:'Microsoft 365',category:'Software'},
+  {keywords:['dropbox'],name:'Dropbox',category:'Software'},
+  {keywords:['google one','googleone'],name:'Google One',category:'Software'},
+  {keywords:['icloud'],name:'iCloud Storage',category:'Software'},
+  {keywords:['canva'],name:'Canva',category:'Software'},
+  {keywords:['zoom'],name:'Zoom',category:'Software'},
+  {keywords:['slack'],name:'Slack',category:'Software'},
+  {keywords:['notion'],name:'Notion',category:'Software'},
+  {keywords:['grammarly'],name:'Grammarly',category:'Software'},
+  {keywords:['lastpass'],name:'LastPass',category:'Software'},
+  {keywords:['1password'],name:'1Password',category:'Software'},
+  {keywords:['nordvpn','nord vpn'],name:'NordVPN',category:'Software'},
+  {keywords:['expressvpn','express vpn'],name:'ExpressVPN',category:'Software'},
+  {keywords:['quickbooks'],name:'QuickBooks',category:'Software'},
+  // Food & Delivery
+  {keywords:['doordash','door dash'],name:'DoorDash',category:'Food / Delivery'},
+  {keywords:['hellofresh','hello fresh'],name:'HelloFresh',category:'Food / Delivery'},
+  {keywords:['instacart'],name:'Instacart',category:'Food / Delivery'},
+  {keywords:['factor','factor75'],name:'Factor Meals',category:'Food / Delivery'},
+  {keywords:['every plate','everyplate'],name:'Every Plate',category:'Food / Delivery'},
+  {keywords:['blue apron','blueapron'],name:'Blue Apron',category:'Food / Delivery'},
+  {keywords:['freshly'],name:'Freshly',category:'Food / Delivery'},
+  {keywords:['grubhub'],name:'Grubhub',category:'Food / Delivery'},
+  {keywords:['ubereats','uber eats'],name:'Uber Eats',category:'Food / Delivery'},
+  // News & Education
+  {keywords:['new york times','nytimes','nyt'],name:'New York Times',category:'News'},
+  {keywords:['washington post','washpost'],name:'Washington Post',category:'News'},
+  {keywords:['wall street journal','wsj'],name:'Wall Street Journal',category:'News'},
+  {keywords:['duolingo'],name:'Duolingo',category:'Education'},
+  {keywords:['masterclass'],name:'MasterClass',category:'Education'},
+  {keywords:['skillshare'],name:'Skillshare',category:'Education'},
+  {keywords:['coursera'],name:'Coursera',category:'Education'},
+  {keywords:['audible'],name:'Audible',category:'Education'},
+  {keywords:['scribd'],name:'Scribd',category:'Education'},
+  {keywords:['headspace'],name:'Headspace',category:'Education'},
+  {keywords:['calm'],name:'Calm',category:'Education'},
+  {keywords:['babbel'],name:'Babbel',category:'Education'},
+  // Identity & Security
+  {keywords:['lifelock','life lock'],name:'LifeLock',category:'Other'},
+  {keywords:['identity guard','identityguard'],name:'Identity Guard',category:'Other'},
+  {keywords:['aura'],name:'Aura',category:'Other'},
+  {keywords:['norton'],name:'Norton Security',category:'Other'},
+  {keywords:['mcafee'],name:'McAfee',category:'Other'},
+  {keywords:['experian'],name:'Experian',category:'Other'},
+  // Shopping & Other
+  {keywords:['amazon prime','amazon.com','amazonprime'],name:'Amazon Prime',category:'Other'},
+  {keywords:['linkedin','linkedin premium'],name:'LinkedIn Premium',category:'Other'},
+  {keywords:['chatgpt','openai'],name:'ChatGPT Plus',category:'Software'},
+  {keywords:['midjourney'],name:'Midjourney',category:'Software'},
+  {keywords:['claude','anthropic'],name:'Claude AI',category:'Software'},
+  {keywords:['patreon'],name:'Patreon',category:'Other'},
+  {keywords:['onlyfans'],name:'OnlyFans',category:'Other'},
+  {keywords:['bumble','tinder','match.com','eharmony'],name:'Dating App',category:'Other'},
+  {keywords:['stitch fix','stitchfix'],name:'Stitch Fix',category:'Other'},
+  {keywords:['birchbox'],name:'Birchbox',category:'Other'},
+  {keywords:['ipsy'],name:'IPSY',category:'Other'},
+];
+
+function detectSubscriptions(transactions){
+  const found=[];
+  const seen=new Set();
+  transactions.forEach(tx=>{
+    if(tx.type!=='debit')return;
+    const desc=(tx.desc||'').toLowerCase();
+    KNOWN_SUBSCRIPTIONS.forEach(sub=>{
+      const match=sub.keywords.some(kw=>desc.includes(kw.toLowerCase()));
+      if(match&&!seen.has(sub.name)){
+        seen.add(sub.name);
+        found.push({
+          id:Date.now()+Math.random(),
+          name:sub.name,
+          amount:tx.amt,
+          cycle:'monthly',
+          category:sub.category,
+          dueDay:new Date(tx.date+'T00:00:00').getDate()||1,
+          autopay:true,
+          subsPaid:{},
+          detected:true,
+        });
+      }
+    });
+  });
+  return found;
+}
+
+
 function DropZone({onFile}){
   const [dragging,setDragging]=useState(false);
   const id='csv-file-input-'+Math.random().toString(36).slice(2);
@@ -297,8 +430,8 @@ function DropZone({onFile}){
 }
 
 
-function CSVImportModal({onImport,onCancel,existingTransactions,accounts,defaultAccount}){
-  const [step,setStep]=useState('upload'); // upload | map | preview | done
+function CSVImportModal({onImport,onCancel,existingTransactions,accounts,defaultAccount,onAddSubscriptions}){
+  const [step,setStep]=useState('upload'); // upload | map | preview | subs | done
   const [rawRows,setRawRows]=useState([]);
   const [headers,setHeaders]=useState([]);
   const [mapping,setMapping]=useState({date:'',description:'',amount:'',debit:'',credit:''});
@@ -308,6 +441,9 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
   const [importing,setImporting]=useState(false);
   const [fileName,setFileName]=useState('');
   const [selectedAccount,setSelectedAccount]=useState(defaultAccount||Object.keys(accounts||{})[0]||'main');
+  const [detectedSubs,setDetectedSubs]=useState([]);
+  const [selectedSubIds,setSelectedSubIds]=useState([]);
+  const [subTargetAccount,setSubTargetAccount]=useState(defaultAccount||'main');
 
   const parseCSV=(text)=>{
     const lines=text.split(/\r?\n/).filter(l=>l.trim());
@@ -405,8 +541,18 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
     const toImport=preview.filter(r=>!r.isDup).map(({isDup,...r})=>r);
     setTimeout(()=>{
       onImport(toImport,selectedAccount);
-      setStep('done');
-      setImporting(false);
+      // Detect subscriptions from imported transactions
+      const detected=detectSubscriptions(toImport);
+      if(detected.length>0){
+        setDetectedSubs(detected);
+        setSelectedSubIds(detected.map(s=>s.id));
+        setSubTargetAccount(selectedAccount||defaultAccount||'main');
+        setImporting(false);
+        setStep('subs');
+      } else {
+        setStep('done');
+        setImporting(false);
+      }
     },500);
   };
 
@@ -521,6 +667,51 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
           </>
         )}
 
+        {step==='subs'&&(
+          <>
+            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:40,marginBottom:10}}>📱</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Subscriptions Detected!</h2>
+              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>We found <strong style={{color:'#7c3aed'}}>{detectedSubs.length} possible subscription{detectedSubs.length!==1?'s':''}</strong> in your import. Select which ones to add to your Subscriptions tab.</p>
+            </div>
+            <div style={{maxHeight:280,overflow:'auto',marginBottom:'1rem'}}>
+              {detectedSubs.map(sub=>(
+                <div key={sub.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.06)':'#f8faff',border:`1px solid ${selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.2)':'#c7ddf7'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedSubIds(s=>s.includes(sub.id)?s.filter(i=>i!==sub.id):[...s,sub.id])}>
+                  <input type="checkbox" checked={selectedSubIds.includes(sub.id)} onChange={()=>{}} style={{width:15,height:15,accentColor:'#7c3aed',flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#0f2a5e'}}>{sub.name}</div>
+                    <div style={{fontSize:11,color:'#6b8dc4'}}>{sub.category} · due {sub.dueDay}{['th','st','nd','rd'][sub.dueDay%10]||'th'} · ⚡ Autopay</div>
+                  </div>
+                  <div style={{fontWeight:700,fontSize:13,color:'#7c3aed',flexShrink:0}}>${sub.amount.toFixed(2)}/mo</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:10}}>
+              <button className="btn-outline" style={{fontSize:11,flex:1}} onClick={()=>{setSelectedSubIds(detectedSubs.map(s=>s.id));}}>Select all</button>
+              <button className="btn-outline" style={{fontSize:11,flex:1}} onClick={()=>setSelectedSubIds([])}>Deselect all</button>
+            </div>
+            {accounts&&Object.keys(accounts).length>1&&(
+              <div style={{marginBottom:12}}>
+                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Add subscriptions to which account?</label>
+                <select value={subTargetAccount} onChange={e=>setSubTargetAccount(e.target.value)}>
+                  {Object.entries(accounts).map(([key,acct])=>(
+                    <option key={key} value={key}>{acct.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>setStep('done')}>Skip</button>
+              <button className="btn-gold" style={{flex:1,background:'linear-gradient(135deg,#7c3aed,#a78bfa)'}} onClick={()=>{
+                const toAdd=detectedSubs.filter(s=>selectedSubIds.includes(s.id)).map(({detected,...s})=>s);
+                onAddSubscriptions&&onAddSubscriptions(toAdd,subTargetAccount||selectedAccount);
+                setStep('done');
+              }}>
+                Add {selectedSubIds.length} Subscription{selectedSubIds.length!==1?'s':''}
+              </button>
+            </div>
+          </>
+        )}
         {step==='done'&&(
           <div style={{textAlign:'center',padding:'1rem 0'}}>
             <div style={{fontSize:52,marginBottom:16}}>🎉</div>
@@ -831,6 +1022,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           saveToFirebase(updatedAccounts);
         }}
         onCancel={()=>setShowCSVImport(false)}
+        onAddSubscriptions={(newSubs, targetAccountKey)=>{
+          const targetAcct=accounts[targetAccountKey]||accounts[activeAccount];
+          const existingSubs=targetAcct.subscriptions||[];
+          const updated={...accounts,[targetAccountKey]:{...targetAcct,subscriptions:[...existingSubs,...newSubs]}};
+          setAccounts(updated);
+          saveToFirebase(updated);
+        }}
       />}
       {showAddToHome && <AddToHomeScreenModal onClose={() => setShowAddToHome(false)} />}
       {showMortgageTip && (
