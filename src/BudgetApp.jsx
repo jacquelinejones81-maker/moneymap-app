@@ -1122,7 +1122,7 @@ function ClearConfirmModal({title,message,onConfirm,onCancel}){
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
-  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[] } });
+  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[] } });
   const [activeTab, setActiveTab] = useState('register');
   const [periodMode, setPeriodMode] = useState('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -1139,6 +1139,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [showAddToHome, setShowAddToHome] = useState(false);
   const [showMortgageTip, setShowMortgageTip] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [milestone, setMilestone] = useState(null);
   const [editingAccountKey, setEditingAccountKey] = useState(null);
   const [editingAccountName, setEditingAccountName] = useState('');
   const [deleteAccountKey, setDeleteAccountKey] = useState(null);
@@ -1203,7 +1205,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   };
 
   const acct = accounts[activeAccount] || accounts.main;
-  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, subscriptions } = acct;
+  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, subscriptions, assets, liabilities, savingsRateGoal, networthHistory } = acct;
 
   const txs = v => updateAccount('transactions', v);
   const dbs = v => updateAccount('debts', v);
@@ -1214,6 +1216,10 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const bps = v => updateAccount('billsPaid', v);
   const eps = v => updateAccount('extraPayment', v);
   const subs = v => updateAccount('subscriptions', v);
+  const setAssets = v => updateAccount('assets', v);
+  const setLiabilities = v => updateAccount('liabilities', v);
+  const setSavingsRateGoal = v => updateAccount('savingsRateGoal', v);
+  const setNetworthHistory = v => updateAccount('networthHistory', v);
 
   useEffect(() => {
     const videoId = getYouTubeId(WELCOME_VIDEO_ID);
@@ -1239,7 +1245,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const addNewAccount = () => {
     if (!newAccountName.trim()) return;
     const key = `account_${Date.now()}`;
-    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[] } };
+    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[] } };
     setAccounts(updated);
     saveToFirebase(updated);
     setActiveAccount(key);
@@ -1292,12 +1298,14 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const tabs = [
     {id:'register',label:'Register',icon:'📒'},
     {id:'bills',label:'Bills',icon:'🗓'},
+    {id:'calendar',label:'Calendar',icon:'📅'},
     {id:'budgets',label:'Budgets',icon:'🎯'},
     {id:'debts',label:'Debt Stack',icon:'📉'},
     {id:'savings',label:'Savings',icon:'🐷'},
     {id:'cash',label:'Cash',icon:'💵'},
     {id:'timeline',label:'Payoff',icon:'⏱'},
     {id:'spending',label:'Spending',icon:'📊'},
+    {id:'networth',label:'Net Worth',icon:'💎'},
   ];
 
   if (loading) return (
@@ -1389,6 +1397,19 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           onCancel={() => setShowResetAccount(false)}
         />
       )}
+      {showTransfer && <TransferModal accounts={accounts} onTransfer={(fromKey,toKey,amt,desc)=>{
+        const now=new Date();
+        const date=now.toISOString().split('T')[0];
+        const fromTx={id:Date.now(),date,desc:`Transfer to ${accounts[toKey].name}: ${desc}`,type:'debit',grp:'Other',cat:'Other',amt,note:'Transfer',refNum:''};
+        const toTx={id:Date.now()+1,date,desc:`Transfer from ${accounts[fromKey].name}: ${desc}`,type:'credit',grp:'Other',cat:'Other',amt,note:'Transfer',refNum:''};
+        const fromTxs=[fromTx,...(accounts[fromKey].transactions||[])];
+        const toTxs=[toTx,...(accounts[toKey].transactions||[])];
+        fromTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+        toTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+        const updated={...accounts,[fromKey]:{...accounts[fromKey],transactions:fromTxs},[toKey]:{...accounts[toKey],transactions:toTxs}};
+        setAccounts(updated);saveToFirebase(updated);setShowTransfer(false);
+      }} onCancel={()=>setShowTransfer(false)} />}
+      {milestone && <MilestoneModal milestone={milestone} onClose={()=>setMilestone(null)} />}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
 
       {/* Budget Reset Banner */}
@@ -1411,6 +1432,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
           {savedMsg && <span style={{ fontSize:12, color:'#16a34a' }}>✓ {savedMsg}</span>}
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowCSVImport(true)}>📂 Import CSV</button>
+          {Object.keys(accounts).length>1 && <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowTransfer(true)}>🔄 Transfer</button>}
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowAddToHome(true)}>📱 Add to Phone</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={resetTour}>🗺 Tour</button>
           <button className="btn-outline" style={{ fontSize:11 }} onClick={() => exportCSV(transactions, beginBal)}>⬇ CSV</button>
@@ -1488,9 +1510,11 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
-        {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} />}
+        {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} onMilestone={setMilestone} />}
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
+        {activeTab==='calendar' && <CalendarTab bills={bills} billsPaid={billsPaid} subscriptions={subscriptions} />}
+        {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
       </div>
     </div>
@@ -2035,7 +2059,7 @@ function DebtsTab({debts,setDebts}){
   );
 }
 
-function SavingsTab({transactions,goals,setGoals}){
+function SavingsTab({transactions,goals,setGoals,onMilestone}){
   const [form,setForm]=useState({name:'',target:'',saved:''});
   const n=new Date();const m=n.getMonth();const y=n.getFullYear();
   const savTxs=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.grp==='Savings'&&t.type==='debit'&&d.getMonth()===m&&d.getFullYear()===y;});
@@ -2090,7 +2114,14 @@ function SavingsTab({transactions,goals,setGoals}){
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
                 <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:barC}}>{pct}%</div>
-                <input type="number" defaultValue={g.saved} min="0" step="10" style={{width:80,fontSize:12,padding:'3px 8px',marginTop:4}} onBlur={e=>{const updated=goals.map(x=>x.id===g.id?{...x,saved:Math.max(0,parseFloat(e.target.value)||0)}:x);setGoals(updated);}} title="Update saved amount"/>
+                <input type="number" defaultValue={g.saved} min="0" step="10" style={{width:80,fontSize:12,padding:'3px 8px',marginTop:4}} onBlur={e=>{
+                const newSaved=Math.max(0,parseFloat(e.target.value)||0);
+                const updated=goals.map(x=>x.id===g.id?{...x,saved:newSaved}:x);
+                setGoals(updated);
+                if(newSaved>=g.target&&g.saved<g.target&&onMilestone){
+                  onMilestone({icon:'🏆',title:`${g.name} Complete!`,message:`Amazing! You hit your $${g.target.toLocaleString()} goal. Your future self thanks you! 🎉`});
+                }
+              }} title="Update saved amount"/>
                 <button className="btn-danger" style={{display:'block',marginTop:4,width:'100%'}} onClick={()=>setGoals(goals.filter(x=>x.id!==g.id))}>✕</button>
               </div>
             </div>
@@ -2756,6 +2787,376 @@ function PaySubAccountSelector({accounts,sub,onConfirm,onCancel}){
         <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
         <button className="btn-gold" style={{flex:1}} onClick={()=>onConfirm(selectedAccount,deduct)}>✓ Mark as Paid</button>
       </div>
+    </>
+  );
+}
+
+
+// ── Milestone Modal ───────────────────────────────────────────
+function MilestoneModal({milestone,onClose}){
+  useEffect(()=>{
+    const t=setTimeout(onClose,5000);
+    return()=>clearTimeout(t);
+  },[]);
+  return(
+    <div className="modal-overlay" style={{zIndex:4000,background:'rgba(15,42,94,0.3)'}} onClick={onClose}>
+      <div className="slide-up" style={{background:'linear-gradient(135deg,#1a6fd4,#5ba3f5)',borderRadius:'var(--radius-xl)',padding:'2.5rem 2rem',maxWidth:400,width:'100%',textAlign:'center',boxShadow:'0 20px 60px rgba(26,111,212,0.3)'}}>
+        <div style={{fontSize:64,marginBottom:16}}>{milestone.icon}</div>
+        <h2 style={{fontFamily:'var(--font-display)',fontSize:24,fontWeight:800,color:'#fff',marginBottom:10,lineHeight:1.2}}>{milestone.title}</h2>
+        <p style={{fontSize:14,color:'rgba(255,255,255,0.85)',lineHeight:1.6,marginBottom:16}}>{milestone.message}</p>
+        <button onClick={onClose} style={{background:'rgba(255,255,255,0.2)',color:'#fff',border:'1px solid rgba(255,255,255,0.4)',borderRadius:'var(--radius-md)',padding:'10px 24px',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'var(--font-display)'}}>
+          Keep going! 💪
+        </button>
+        <p style={{fontSize:11,color:'rgba(255,255,255,0.5)',marginTop:12}}>Auto-closes in 5 seconds</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Transfer Modal ─────────────────────────────────────────────
+function TransferModal({accounts,onTransfer,onCancel}){
+  const accountList=Object.entries(accounts);
+  const [fromKey,setFromKey]=useState(accountList[0]?.[0]||'main');
+  const [toKey,setToKey]=useState(accountList[1]?.[0]||'main');
+  const [amt,setAmt]=useState('');
+  const [desc,setDesc]=useState('Account transfer');
+  const [err,setErr]=useState('');
+  const handleTransfer=()=>{
+    if(fromKey===toKey){setErr('Cannot transfer to the same account.');return;}
+    if(!amt||isNaN(parseFloat(amt))||parseFloat(amt)<=0){setErr('Enter a valid amount.');return;}
+    onTransfer(fromKey,toKey,parseFloat(amt),desc);
+  };
+  return(
+    <div className="modal-overlay" style={{zIndex:3000}}>
+      <div className="modal-box slide-up" style={{maxWidth:420}}>
+        <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+          <div style={{fontSize:36,marginBottom:8}}>🔄</div>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Transfer Between Accounts</h2>
+          <p style={{fontSize:12,color:'#6b8dc4'}}>This moves money between your accounts without affecting your income or expense totals.</p>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>From account</label>
+          <select value={fromKey} onChange={e=>setFromKey(e.target.value)}>
+            {accountList.map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
+          </select>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>To account</label>
+          <select value={toKey} onChange={e=>setToKey(e.target.value)}>
+            {accountList.map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
+          </select>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Amount</label>
+          <input type="number" placeholder="$0.00" min="0" step="0.01" value={amt} onChange={e=>{setAmt(e.target.value);setErr('');}}/>
+        </div>
+        <div style={{marginBottom:16}}>
+          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Description (optional)</label>
+          <input placeholder="Account transfer" value={desc} onChange={e=>setDesc(e.target.value)}/>
+        </div>
+        {err&&<div className="alert-box alert-danger" style={{marginBottom:12}}>{err}</div>}
+        <div style={{background:'#f0f6ff',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'#2d5a9e'}}>
+          A debit will be logged in <strong>{accounts[fromKey]?.name}</strong> and a credit in <strong>{accounts[toKey]?.name}</strong>.
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+          <button className="btn-gold" style={{flex:1}} onClick={handleTransfer}>🔄 Transfer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Calendar Tab ───────────────────────────────────────────────
+function CalendarTab({bills,billsPaid,subscriptions}){
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=now.getMonth();
+  const monthKey=`${year}-${String(month+1).padStart(2,'0')}`;
+  const todayDay=now.getDate();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const firstDay=new Date(year,month,1).getDay();
+  const monthName=now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
+  const isPaid=(id,type)=>{
+    if(type==='bill') return !!billsPaid[`${monthKey}_${id}`];
+    const sub=subscriptions.find(s=>s.id===id);
+    return !!(sub&&sub.subsPaid&&sub.subsPaid[monthKey]);
+  };
+
+  // Build day map
+  const dayMap={};
+  bills.forEach(b=>{
+    const d=b.dueDay;
+    if(!dayMap[d])dayMap[d]=[];
+    const paid=isPaid(b.id,'bill');
+    const diff=d-todayDay;
+    const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
+    dayMap[d].push({name:b.name,amount:b.amount,status,type:'bill'});
+  });
+  subscriptions.forEach(s=>{
+    const d=s.dueDay||1;
+    if(!dayMap[d])dayMap[d]=[];
+    const paid=isPaid(s.id,'sub');
+    const diff=d-todayDay;
+    const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
+    dayMap[d].push({name:s.name,amount:s.amount,status,type:'sub'});
+  });
+
+  const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'#c7ddf7'}};
+
+  const totalDue=bills.length+subscriptions.length;
+  const totalPaid=[...bills,...subscriptions].filter((_,i)=>i<bills.length?isPaid(bills[i].id,'bill'):isPaid(subscriptions[i-bills.length].id,'sub')).length;
+
+  return(
+    <>
+      <div className="metric-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
+        <div className="metric-card"><div className="lbl">Total bills & subs</div><div className="val val-gold">{totalDue}</div></div>
+        <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">{bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length}</div></div>
+        <div className="metric-card"><div className="lbl">Still due</div><div className="val val-red">{totalDue-(bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length)}</div></div>
+      </div>
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
+          <div className="card-title" style={{marginBottom:0}}>📅 {monthName}</div>
+          <div style={{display:'flex',gap:10,fontSize:11}}>
+            <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>Paid</span>
+            <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#d97706',display:'inline-block'}}/>Due soon</span>
+            <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#dc2626',display:'inline-block'}}/>Overdue</span>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:8}}>
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d} style={{textAlign:'center',fontSize:10,color:'#6b8dc4',fontWeight:600,padding:'4px 0'}}>{d}</div>)}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
+          {Array.from({length:firstDay}).map((_,i)=><div key={`empty-${i}`}/>)}
+          {Array.from({length:daysInMonth}).map((_,i)=>{
+            const day=i+1;
+            const items=dayMap[day]||[];
+            const isToday=day===todayDay;
+            const hasOverdue=items.some(it=>it.status==='overdue');
+            const hasDueSoon=items.some(it=>it.status==='due-soon');
+            const allPaid=items.length>0&&items.every(it=>it.status==='paid');
+            const bgColor=items.length===0?'transparent':allPaid?'rgba(22,163,74,0.06)':hasOverdue?'rgba(220,38,38,0.06)':hasDueSoon?'rgba(217,119,6,0.06)':'rgba(26,111,212,0.04)';
+            return(
+              <div key={day} style={{minHeight:60,border:`1px solid ${isToday?'#1a6fd4':'#e8f1fd'}`,borderRadius:'var(--radius-sm)',padding:'4px',background:bgColor,position:'relative'}}>
+                <div style={{fontSize:11,fontWeight:isToday?700:400,color:isToday?'#1a6fd4':'#6b8dc4',marginBottom:2}}>{day}</div>
+                {items.map((item,idx)=>{
+                  const sc=statusColors[item.status];
+                  return(
+                    <div key={idx} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden'}} title={`${item.name} - $${item.amount.toFixed(2)}`}>
+                      <div style={{fontSize:9,color:sc.color,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.name}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-title">All bills this month</div>
+        {[...bills.map(b=>({...b,itemType:'bill'})),...subscriptions.map(s=>({...s,itemType:'sub'}))].sort((a,b)=>a.dueDay-b.dueDay).map((item,i)=>{
+          const paid=isPaid(item.id,item.itemType);
+          const diff=item.dueDay-todayDay;
+          const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
+          const sc=statusColors[status];
+          const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
+          return(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#0f2a5e'}}>{item.name}</div>
+                <div style={{fontSize:11,color:'#6b8dc4'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':'Fixed bill'}</div>
+              </div>
+              <div style={{fontWeight:700,color:'#0f2a5e'}}>${item.amount.toFixed(2)}</div>
+              <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status.charAt(0).toUpperCase()+status.slice(1)}</span>
+            </div>
+          );
+        })}
+        {bills.length===0&&subscriptions.length===0&&<div className="empty-state">No bills or subscriptions added yet.</div>}
+      </div>
+    </>
+  );
+}
+
+// ── Net Worth Tab ──────────────────────────────────────────────
+function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,networthHistory,setNetworthHistory,savingsRateGoal,setSavingsRateGoal,goals}){
+  const [assetForm,setAssetForm]=useState({name:'',value:'',category:'Home'});
+  const [liabForm,setLiabForm]=useState({name:'',balance:'',category:'Mortgage'});
+  const [showAssetForm,setShowAssetForm]=useState(false);
+  const [showLiabForm,setShowLiabForm]=useState(false);
+  const ASSET_CATS=['Home','Vehicle','Savings Account','Checking Account','Retirement Account','Investment','Other Asset'];
+  const LIAB_CATS=['Mortgage','Car Loan','Credit Card','Student Loan','Personal Loan','Medical Debt','Other Liability'];
+
+  const totalAssets=assets.reduce((s,a)=>s+a.value,0);
+  const totalLiabilities=liabilities.reduce((s,l)=>s+l.balance,0);
+  const netWorth=totalAssets-totalLiabilities;
+
+  const addAsset=()=>{
+    if(!assetForm.name.trim()||!assetForm.value||isNaN(parseFloat(assetForm.value)))return;
+    setAssets([...assets,{id:Date.now(),name:assetForm.name.trim(),value:parseFloat(assetForm.value),category:assetForm.category}]);
+    setAssetForm({name:'',value:'',category:'Home'});
+    setShowAssetForm(false);
+  };
+
+  const addLiability=()=>{
+    if(!liabForm.name.trim()||!liabForm.balance||isNaN(parseFloat(liabForm.balance)))return;
+    setLiabilities([...liabilities,{id:Date.now(),name:liabForm.name.trim(),balance:parseFloat(liabForm.balance),category:liabForm.category}]);
+    setLiabForm({name:'',balance:'',category:'Mortgage'});
+    setShowLiabForm(false);
+  };
+
+  // Savings rate
+  const now=new Date();const m=now.getMonth();const y=now.getFullYear();
+  const monthIncome=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='credit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
+  const monthSavings=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.grp==='Savings'&&t.type==='debit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
+  const actualRate=monthIncome>0?Math.min(100,(monthSavings/monthIncome)*100):0;
+  const progress=Math.min(100,(actualRate/savingsRateGoal)*100);
+  const ringColor=progress>=100?'#16a34a':progress>=50?'#1a6fd4':'#d97706';
+  const circumference=2*Math.PI*40;
+  const dashOffset=circumference*(1-progress/100);
+
+  // Financial milestones check
+  const completedGoals=goals.filter(g=>g.saved>=g.target);
+
+  const assetsByCategory={};
+  assets.forEach(a=>{if(!assetsByCategory[a.category])assetsByCategory[a.category]=[];assetsByCategory[a.category].push(a);});
+  const liabsByCategory={};
+  liabilities.forEach(l=>{if(!liabsByCategory[l.category])liabsByCategory[l.category]=[];liabsByCategory[l.category].push(l);});
+
+  return(
+    <>
+      {/* Net Worth Summary */}
+      <div className="card" style={{background:netWorth>=0?'linear-gradient(135deg,rgba(22,163,74,0.08),rgba(22,163,74,0.03))':'linear-gradient(135deg,rgba(220,38,38,0.08),rgba(220,38,38,0.03))'}}>
+        <div style={{textAlign:'center',padding:'1rem 0'}}>
+          <div style={{fontSize:13,color:'#6b8dc4',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>Total Net Worth</div>
+          <div style={{fontFamily:'var(--font-display)',fontSize:40,fontWeight:800,color:netWorth>=0?'#16a34a':'#dc2626'}}>
+            {netWorth<0?'-':''}${Math.abs(netWorth).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}
+          </div>
+          <div style={{display:'flex',justifyContent:'center',gap:24,marginTop:12}}>
+            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'#6b8dc4'}}>Total Assets</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#16a34a'}}>${totalAssets.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+            <div style={{width:1,background:'#e8f1fd'}}/>
+            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'#6b8dc4'}}>Total Liabilities</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#dc2626'}}>${totalLiabilities.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Savings Rate Goal Ring */}
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',gap:'1.5rem',flexWrap:'wrap'}}>
+          <div style={{flexShrink:0}}>
+            <svg width={100} height={100} viewBox="0 0 100 100">
+              <circle cx={50} cy={50} r={40} fill="none" stroke="#e8f1fd" strokeWidth={10}/>
+              <circle cx={50} cy={50} r={40} fill="none" stroke={ringColor} strokeWidth={10} strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 50 50)" style={{transition:'stroke-dashoffset 0.6s ease'}}/>
+              <text x={50} y={46} textAnchor="middle" style={{fontSize:14,fontWeight:800,fill:ringColor,fontFamily:'var(--font-display)'}}>{actualRate.toFixed(0)}%</text>
+              <text x={50} y={60} textAnchor="middle" style={{fontSize:9,fill:'#6b8dc4'}}>of {savingsRateGoal}% goal</text>
+            </svg>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div className="card-title" style={{marginBottom:4}}>💡 Savings Rate Goal</div>
+            <p style={{fontSize:12,color:'#6b8dc4',lineHeight:1.6,marginBottom:10}}>
+              {actualRate>=savingsRateGoal?`🎉 You hit your ${savingsRateGoal}% savings goal this month!`:actualRate>0?`You're saving ${actualRate.toFixed(1)}% of income. Keep going to reach your ${savingsRateGoal}% goal!`:'No savings logged this month yet.'}
+            </p>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <label style={{fontSize:12,color:'#6b8dc4',whiteSpace:'nowrap'}}>Goal:</label>
+              <input type="number" value={savingsRateGoal} min="1" max="100" step="1" onChange={e=>setSavingsRateGoal(parseFloat(e.target.value)||20)} style={{width:70}}/>
+              <span style={{fontSize:12,color:'#6b8dc4'}}>% of income</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Assets */}
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showAssetForm?'1rem':0}}>
+          <div className="card-title" style={{marginBottom:0}}>✅ Assets</div>
+          <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowAssetForm(f=>!f)}>{showAssetForm?'✕ Cancel':'+ Add asset'}</button>
+        </div>
+        {showAssetForm&&(
+          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Asset name</label><input placeholder="e.g. Primary Home, Toyota Camry" value={assetForm.name} onChange={e=>setAssetForm(f=>({...f,name:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Estimated value</label><input type="number" placeholder="$0" min="0" step="100" value={assetForm.value} onChange={e=>setAssetForm(f=>({...f,value:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={assetForm.category} onChange={e=>setAssetForm(f=>({...f,category:e.target.value}))}>{ASSET_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+            </div>
+            <div className="tip-box" style={{marginBottom:10,fontSize:11}}>💡 Only enter the asset name — never enter account numbers or sensitive details.</div>
+            <button className="btn-gold" onClick={addAsset}>Save asset</button>
+          </div>
+        )}
+        {assets.length>0&&(
+          <div style={{marginTop:showAssetForm?0:'0.5rem'}}>
+            {Object.entries(assetsByCategory).map(([cat,items])=>(
+              <div key={cat} style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:'#16a34a',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{cat}</div>
+                {items.map(a=>(
+                  <div key={a.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+                    <span style={{fontSize:13,color:'#0f2a5e'}}>{a.name}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <input type="number" defaultValue={a.value} min="0" step="100" style={{width:110,fontSize:12,textAlign:'right'}} onBlur={e=>setAssets(assets.map(x=>x.id===a.id?{...x,value:parseFloat(e.target.value)||0}:x))} title="Update value"/>
+                      <button className="btn-danger" onClick={()=>setAssets(assets.filter(x=>x.id!==a.id))}>✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+        {assets.length===0&&!showAssetForm&&<div className="empty-state">Add your assets — home, vehicles, savings accounts, retirement funds.</div>}
+      </div>
+
+      {/* Liabilities */}
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showLiabForm?'1rem':0}}>
+          <div className="card-title" style={{marginBottom:0}}>❌ Liabilities</div>
+          <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowLiabForm(f=>!f)}>{showLiabForm?'✕ Cancel':'+ Add liability'}</button>
+        </div>
+        {showLiabForm&&(
+          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Liability name</label><input placeholder="e.g. Home Mortgage, Car Loan" value={liabForm.name} onChange={e=>setLiabForm(f=>({...f,name:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Current balance</label><input type="number" placeholder="$0" min="0" step="100" value={liabForm.balance} onChange={e=>setLiabForm(f=>({...f,balance:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={liabForm.category} onChange={e=>setLiabForm(f=>({...f,category:e.target.value}))}>{LIAB_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+            </div>
+            <div className="tip-box" style={{marginBottom:10,fontSize:11}}>💡 Only enter the liability name and balance — never enter account numbers.</div>
+            <button className="btn-gold" onClick={addLiability}>Save liability</button>
+          </div>
+        )}
+        {liabilities.length>0&&(
+          <div style={{marginTop:showLiabForm?0:'0.5rem'}}>
+            {Object.entries(liabsByCategory).map(([cat,items])=>(
+              <div key={cat} style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:'#dc2626',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{cat}</div>
+                {items.map(l=>(
+                  <div key={l.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+                    <span style={{fontSize:13,color:'#0f2a5e'}}>{l.name}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <input type="number" defaultValue={l.balance} min="0" step="100" style={{width:110,fontSize:12,textAlign:'right'}} onBlur={e=>setLiabilities(liabilities.map(x=>x.id===l.id?{...x,balance:parseFloat(e.target.value)||0}:x))} title="Update balance"/>
+                      <button className="btn-danger" onClick={()=>setLiabilities(liabilities.filter(x=>x.id!==l.id))}>✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+        {liabilities.length===0&&!showLiabForm&&<div className="empty-state">Add your liabilities — mortgage, car loans, credit card balances.</div>}
+      </div>
+
+      {/* Milestones */}
+      {completedGoals.length>0&&(
+        <div className="card" style={{background:'linear-gradient(135deg,rgba(26,111,212,0.06),rgba(26,111,212,0.02))'}}>
+          <div className="card-title">🎉 Financial Milestones Reached</div>
+          {completedGoals.map(g=>(
+            <div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+              <span style={{fontSize:24}}>🏆</span>
+              <div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#1a6fd4'}}>{g.name} — Complete!</div>
+                <div style={{fontSize:11,color:'#6b8dc4'}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0})} saved · Goal reached 🎯</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
