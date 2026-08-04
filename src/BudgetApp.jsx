@@ -6,7 +6,7 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const GROUPS = {
   'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
-  'Housing':      { color:'#1a6fd4', bg:'rgba(26,111,212,0.1)', cats:['Mortgage / rent','Electric bill','Water bill','Gas / heat bill','Internet','Cable / streaming','Phone bill','HOA fee','Home repair','Other housing'] },
+  'Housing':      { color:'var(--green)', bg:'var(--green-light)', cats:['Mortgage / rent','Electric bill','Water bill','Gas / heat bill','Internet','Cable / streaming','Phone bill','HOA fee','Home repair','Other housing'] },
   'Insurance':    { color:'#7c3aed', bg:'rgba(124,58,237,0.1)', cats:['Auto insurance','Life insurance','Health insurance','Dental / vision','Home / renters ins.','Other insurance'] },
   'Transportation':{ color:'#d97706', bg:'rgba(217,119,6,0.1)', cats:['Car payment','Gas / fuel','Car repair / maintenance','Parking / tolls','Public transit','Rideshare','Registration / tags','Other transport'] },
   'Food':         { color:'#059669', bg:'rgba(5,150,105,0.1)', cats:['Groceries','Restaurants / dining out','Fast food','Coffee shops','Other food'] },
@@ -15,7 +15,7 @@ const GROUPS = {
   'Kids & Family':{ color:'#16a34a', bg:'rgba(22,163,74,0.1)', cats:['Childcare / daycare','School tuition','School supplies','Kids activities','Baby supplies','Other family'] },
   'Personal':     { color:'#6b7280', bg:'rgba(107,114,128,0.1)', cats:['Clothing','Haircut / grooming','Subscriptions','Gifts','Charity / donations','Other personal'] },
   'Entertainment':{ color:'#ea580c', bg:'rgba(234,88,12,0.1)', cats:['Movies / events','Hobbies','Vacation / travel','Dining / nightlife','Books / games','Other entertainment'] },
-  'Savings':      { color:'#1a6fd4', bg:'rgba(26,111,212,0.1)', cats:['Emergency fund','Retirement (401k/IRA)','Investment','Savings account','Other savings'] },
+  'Savings':      { color:'var(--green)', bg:'var(--green-light)', cats:['Emergency fund','Retirement (401k/IRA)','Investment','Savings account','Other savings'] },
   'Cash Spending':{ color:'#0ea5e9', bg:'rgba(14,165,233,0.1)', cats:['Cash - Groceries','Cash - Fast food','Cash - Restaurants','Cash - Gas / fuel','Cash - Coffee','Cash - Hair / grooming','Cash - Clothing','Cash - Entertainment','Cash - Kids','Cash - Household','Cash - Tips','Cash - Other'] },
   'Other':        { color:'#6b7280', bg:'rgba(107,114,128,0.1)', cats:['Miscellaneous','Cash withdrawal','Other'] }
 };
@@ -38,8 +38,8 @@ function WelcomeVideoModal({ lead, onClose }) {
     <div className="modal-overlay" style={{ zIndex:2000 }} onClick={e => e.target===e.currentTarget&&onClose()}>
       <div className="slide-up" style={{ background:'#fff', border:'1px solid var(--navy-border)', borderRadius:'var(--radius-xl)', padding:'2rem', maxWidth:620, width:'100%' }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:6, color:'#0f2a5e' }}>A personal note for you, {firstName} 👋</h2>
-          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.6 }}>Before you dive in — take 2 minutes to watch this.</p>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:6, color:'var(--text-primary)' }}>A personal note for you, {firstName} 👋</h2>
+          <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.6 }}>Before you dive in — take 2 minutes to watch this.</p>
         </div>
         <div style={{ position:'relative', paddingBottom:'56.25%', height:0, borderRadius:'var(--radius-lg)', overflow:'hidden', border:'1px solid var(--navy-border)', marginBottom:'1.25rem' }}>
           <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`} title="Welcome to MoneyMap" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none' }} />
@@ -61,13 +61,13 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
       <div className="modal-box slide-up" style={{ maxWidth:460 }}>
         <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
           <div style={{ fontSize:44, marginBottom:12 }}>⚠️</div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, marginBottom:8, color:'#0f2a5e' }}>Cancel your account?</h2>
-          <p style={{ fontSize:13, color:'#6b8dc4', lineHeight:1.7 }}>Are you sure you want to cancel, {firstName}? <strong style={{ color:'#0f2a5e' }}>This cannot be undone.</strong></p>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, marginBottom:8, color:'var(--text-primary)' }}>Cancel your account?</h2>
+          <p style={{ fontSize:13, color:'var(--text-muted)', lineHeight:1.7 }}>Are you sure you want to cancel, {firstName}? <strong style={{ color:'var(--text-primary)' }}>This cannot be undone.</strong></p>
         </div>
-        <div style={{ background:'#f8faff', borderRadius:'var(--radius-md)', padding:'12px 16px', marginBottom:'1.25rem' }}>
+        <div style={{ background:'#fafaf8', borderRadius:'var(--radius-md)', padding:'12px 16px', marginBottom:'1.25rem' }}>
           <label style={{ display:'flex', alignItems:'flex-start', gap:10, cursor:'pointer' }}>
             <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} style={{ width:16, height:16, flexShrink:0, marginTop:2, accentColor:'#dc2626' }} />
-            <span style={{ fontSize:12, color:'#6b8dc4', lineHeight:1.6 }}>Yes, I understand — permanently cancel my account and remove all my data.</span>
+            <span style={{ fontSize:12, color:'var(--text-muted)', lineHeight:1.6 }}>Yes, I understand — permanently cancel my account and remove all my data.</span>
           </label>
         </div>
         <div style={{ display:'flex', gap:10 }}>
@@ -87,12 +87,12 @@ function GoodbyeModal({ lead }) {
     <div className="modal-overlay" style={{ zIndex:3000 }}>
       <div className="modal-box slide-up" style={{ maxWidth:460, textAlign:'center' }}>
         <div style={{ fontSize:52, marginBottom:16 }}>👋</div>
-        <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10, color:'#0f2a5e' }}>Take care, {firstName}!</h2>
-        <p style={{ fontSize:14, color:'#6b8dc4', lineHeight:1.7, marginBottom:16 }}>Your account has been cancelled.</p>
-        <div style={{ background:'rgba(26,111,212,0.06)', border:'1px solid rgba(26,111,212,0.2)', borderRadius:'var(--radius-md)', padding:'14px 16px', marginBottom:16 }}>
-          <p style={{ fontSize:13, color:'#2d5a9e', lineHeight:1.6 }}>💙 You're always welcome back. Just sign up again — it's always free.</p>
+        <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10, color:'var(--text-primary)' }}>Take care, {firstName}!</h2>
+        <p style={{ fontSize:14, color:'var(--text-muted)', lineHeight:1.7, marginBottom:16 }}>Your account has been cancelled.</p>
+        <div style={{ background:'var(--green-light)', border:'1px solid var(--green-mid)', borderRadius:'var(--radius-md)', padding:'14px 16px', marginBottom:16 }}>
+          <p style={{ fontSize:13, color:'var(--slate)', lineHeight:1.6 }}>💙 You're always welcome back. Just sign up again — it's always free.</p>
         </div>
-        <p style={{ fontSize:12, color:'#6b8dc4' }}>Redirecting you in a moment…</p>
+        <p style={{ fontSize:12, color:'var(--text-muted)' }}>Redirecting you in a moment…</p>
       </div>
     </div>
   );
@@ -106,22 +106,22 @@ function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
       <div className="modal-box slide-up" style={{ maxWidth:420 }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
           <div style={{ fontSize:36, marginBottom:8 }}>💳</div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:6, color:'#0f2a5e' }}>Mark "{bill.name}" as paid</h2>
-          <p style={{ fontSize:13, color:'#6b8dc4' }}>${bill.amount.toFixed(2)}</p>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:6, color:'var(--text-primary)' }}>Mark "{bill.name}" as paid</h2>
+          <p style={{ fontSize:13, color:'var(--text-muted)' }}>${bill.amount.toFixed(2)}</p>
         </div>
         <div style={{ marginBottom:16 }}>
-          <label style={{ fontSize:12, color:'#6b8dc4', display:'block', marginBottom:6, fontWeight:500 }}>Deduct from which account?</label>
+          <label style={{ fontSize:12, color:'var(--text-muted)', display:'block', marginBottom:6, fontWeight:500 }}>Deduct from which account?</label>
           <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)} style={{ marginBottom:10 }}>
             {Object.entries(accounts).map(([key, acct]) => (
               <option key={key} value={key}>{acct.name}</option>
             ))}
           </select>
-          <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, color:'#2d5a9e' }}>
-            <input type="checkbox" checked={deductFromAccount} onChange={e => setDeductFromAccount(e.target.checked)} style={{ width:15, height:15, accentColor:'#1a6fd4' }} />
+          <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, color:'var(--slate)' }}>
+            <input type="checkbox" checked={deductFromAccount} onChange={e => setDeductFromAccount(e.target.checked)} style={{ width:15, height:15, accentColor:'var(--green)' }} />
             Automatically add debit transaction to this account
           </label>
         </div>
-        <div style={{ background:'#f0f6ff', borderRadius:'var(--radius-md)', padding:'10px 14px', marginBottom:16, fontSize:12, color:'#2d5a9e' }}>
+        <div style={{ background:'var(--bg)', borderRadius:'var(--radius-md)', padding:'10px 14px', marginBottom:16, fontSize:12, color:'var(--slate)' }}>
           {deductFromAccount ? `A debit of $${bill.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.` : 'Bill will be marked paid without affecting any account balance.'}
         </div>
         <div style={{ display:'flex', gap:10 }}>
@@ -162,11 +162,11 @@ function SplitModal({ form, onConfirm, onCancel }) {
       <div className="modal-box slide-up" style={{ maxWidth:520 }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
           <div style={{ fontSize:32, marginBottom:8 }}>✂️</div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:4, color:'#0f2a5e' }}>Split Transaction</h2>
-          <p style={{ fontSize:13, color:'#6b8dc4' }}>Total: ${original.toFixed(2)} — Remaining: <strong style={{ color: Math.abs(remaining) < 0.01 ? '#16a34a' : '#dc2626' }}>${remaining.toFixed(2)}</strong></p>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:20, marginBottom:4, color:'var(--text-primary)' }}>Split Transaction</h2>
+          <p style={{ fontSize:13, color:'var(--text-muted)' }}>Total: ${original.toFixed(2)} — Remaining: <strong style={{ color: Math.abs(remaining) < 0.01 ? '#16a34a' : '#dc2626' }}>${remaining.toFixed(2)}</strong></p>
         </div>
         {splits.map((sp, i) => (
-          <div key={i} style={{ background:'#f8faff', borderRadius:'var(--radius-md)', padding:'12px', marginBottom:8, border:'1px solid #c7ddf7' }}>
+          <div key={i} style={{ background:'#fafaf8', borderRadius:'var(--radius-md)', padding:'12px', marginBottom:8, border:'1px solid var(--border)' }}>
             <div style={{ display:'flex', gap:8, marginBottom:6, flexWrap:'wrap' }}>
               <select value={sp.grp} onChange={e => updateSplit(i, 'grp', e.target.value)} style={{ flex:1, minWidth:120 }}>
                 <option value="">-- Group --</option>
@@ -230,11 +230,11 @@ function AutocompleteInput({value,onChange,transactions,onSelect,style}){
         style={{width:'100%',...(style||{})}}
       />
       {showSugg&&suggestions.length>0&&(
-        <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 16px rgba(26,111,212,0.12)',zIndex:999,overflow:'hidden',marginTop:2}}>
+        <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--radius-md)',boxShadow:'0 4px 16px var(--green-light)',zIndex:999,overflow:'hidden',marginTop:2}}>
           {suggestions.map((s,i)=>(
-            <div key={i} onMouseDown={()=>{onSelect(s);setShowSugg(false);}} style={{padding:'9px 14px',cursor:'pointer',borderBottom:i<suggestions.length-1?'1px solid #e8f1fd':'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:13,color:'#0f2a5e',fontWeight:500}}>{s.desc}</span>
-              {s.cat&&<span style={{fontSize:10,color:'#6b8dc4',background:'#f0f6ff',padding:'2px 8px',borderRadius:8}}>{s.cat}</span>}
+            <div key={i} onMouseDown={()=>{onSelect(s);setShowSugg(false);}} style={{padding:'9px 14px',cursor:'pointer',borderBottom:i<suggestions.length-1?'1px solid var(--border-light)':'none',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:13,color:'var(--text-primary)',fontWeight:500}}>{s.desc}</span>
+              {s.cat&&<span style={{fontSize:10,color:'var(--text-muted)',background:'var(--bg)',padding:'2px 8px',borderRadius:8}}>{s.cat}</span>}
             </div>
           ))}
         </div>
@@ -654,8 +654,8 @@ function DropZone({onFile}){
       onDragLeave={handleDragLeave}
       style={{
         display:'block',
-        background:dragging?'rgba(26,111,212,0.1)':'#f8faff',
-        border:`2px dashed ${dragging?'#1a6fd4':'#c7ddf7'}`,
+        background:dragging?'var(--green-light)':'#f8faff',
+        border:`2px dashed ${dragging?'var(--green)':'var(--border)'}`,
         borderRadius:'var(--radius-lg)',
         padding:'2.5rem 2rem',
         textAlign:'center',
@@ -666,14 +666,14 @@ function DropZone({onFile}){
       }}
     >
       <div style={{fontSize:40,marginBottom:10}}>{dragging?'📂':'⬆️'}</div>
-      <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'#1a6fd4',marginBottom:6}}>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:15,color:'var(--green)',marginBottom:6}}>
         {dragging?'Drop your CSV file here!':'Drag & drop your CSV file here'}
       </div>
-      <div style={{fontSize:12,color:'#6b8dc4',marginBottom:10}}>or</div>
-      <div style={{display:'inline-block',background:'linear-gradient(135deg,#1a6fd4,#5ba3f5)',color:'#fff',fontFamily:'var(--font-display)',fontWeight:700,fontSize:12,padding:'8px 20px',borderRadius:'var(--radius-md)',pointerEvents:'none'}}>
+      <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:10}}>or</div>
+      <div style={{display:'inline-block',background:'var(--green)',color:'#fff',fontFamily:'var(--font-display)',fontWeight:700,fontSize:12,padding:'8px 20px',borderRadius:'var(--radius-md)',pointerEvents:'none'}}>
         Browse files
       </div>
-      <div style={{fontSize:11,color:'#6b8dc4',marginTop:10}}>Supports CSV files from any bank</div>
+      <div style={{fontSize:11,color:'var(--text-muted)',marginTop:10}}>Supports CSV files from any bank</div>
       <input id="csv-upload" type="file" accept=".csv,text/csv" onChange={onFile} style={{display:'none'}}/>
     </label>
   );
@@ -827,13 +827,13 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
           <>
             <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
               <div style={{fontSize:40,marginBottom:10}}>📂</div>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:22,marginBottom:8,color:'#0f2a5e'}}>Import Bank Statement</h2>
-              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>Download your bank statement as a CSV file and upload it here. MoneyMap will automatically read your transactions.</p>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:22,marginBottom:8,color:'var(--text-primary)'}}>Import Bank Statement</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>Download your bank statement as a CSV file and upload it here. MoneyMap will automatically read your transactions.</p>
             </div>
             <DropZone onFile={handleFile} />
-            <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem'}}>
-              <div style={{fontSize:12,fontWeight:600,color:'#1a6fd4',marginBottom:6}}>💡 How to get your CSV file:</div>
-              <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.8}}>
+            <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:12,fontWeight:600,color:'var(--green)',marginBottom:6}}>💡 How to get your CSV file:</div>
+              <div style={{fontSize:12,color:'var(--slate)',lineHeight:1.8}}>
                 Log into your bank → Statements or Transaction History → Download → Choose CSV format
               </div>
             </div>
@@ -844,16 +844,16 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
         {step==='map'&&(
           <>
             <div style={{marginBottom:'1.25rem'}}>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Map Your Columns</h2>
-              <p style={{fontSize:13,color:'#6b8dc4'}}>File: <strong>{fileName}</strong> — {rawRows.length} rows found. Tell us which columns contain your data.</p>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Map Your Columns</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)'}}>File: <strong>{fileName}</strong> — {rawRows.length} rows found. Tell us which columns contain your data.</p>
             </div>
             <div style={{marginBottom:12}}>
-              <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Amount format</label>
+              <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>Amount format</label>
               <div style={{display:'flex',gap:10,marginBottom:12}}>
-                <button onClick={()=>setMappingType('single')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='single'?'#1a6fd4':'#c7ddf7'}`,background:mappingType==='single'?'rgba(26,111,212,0.1)':'transparent',color:mappingType==='single'?'#1a6fd4':'#6b8dc4',cursor:'pointer'}}>
+                <button onClick={()=>setMappingType('single')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='single'?'var(--green)':'var(--border)'}`,background:mappingType==='single'?'var(--green-light)':'transparent',color:mappingType==='single'?'var(--green)':'var(--text-muted)',cursor:'pointer'}}>
                   Single amount column
                 </button>
-                <button onClick={()=>setMappingType('split')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='split'?'#1a6fd4':'#c7ddf7'}`,background:mappingType==='split'?'rgba(26,111,212,0.1)':'transparent',color:mappingType==='split'?'#1a6fd4':'#6b8dc4',cursor:'pointer'}}>
+                <button onClick={()=>setMappingType('split')} style={{flex:1,padding:'8px',fontSize:12,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${mappingType==='split'?'var(--green)':'var(--border)'}`,background:mappingType==='split'?'var(--green-light)':'transparent',color:mappingType==='split'?'var(--green)':'var(--text-muted)',cursor:'pointer'}}>
                   Separate debit/credit columns
                 </button>
               </div>
@@ -864,7 +864,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
               ...(mappingType==='single'?[{key:'amount',label:'Amount column'}]:[{key:'debit',label:'Debit / Withdrawal column'},{key:'credit',label:'Credit / Deposit column'}])
             ].map(({key,label})=>(
               <div key={key} style={{marginBottom:10}}>
-                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>{label}</label>
+                <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>{label}</label>
                 <select value={mapping[key]} onChange={e=>setMapping(m=>({...m,[key]:e.target.value}))}>
                   <option value="">-- Select column --</option>
                   {headers.map(h=><option key={h} value={h}>{h}</option>)}
@@ -883,26 +883,26 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
         {step==='preview'&&(
           <>
             <div style={{marginBottom:'1rem'}}>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Preview Import</h2>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Preview Import</h2>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <span style={{background:'rgba(22,163,74,0.1)',color:'#16a34a',fontSize:12,fontWeight:600,padding:'3px 10px',borderRadius:10}}>{preview.filter(r=>!r.isDup).length} to import</span>
                 {duplicates>0&&<span style={{background:'rgba(217,119,6,0.1)',color:'#d97706',fontSize:12,fontWeight:600,padding:'3px 10px',borderRadius:10}}>{duplicates} duplicates skipped</span>}
               </div>
             </div>
-            <div style={{maxHeight:300,overflow:'auto',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',marginBottom:'1rem'}}>
+            <div style={{maxHeight:300,overflow:'auto',border:'1px solid var(--border)',borderRadius:'var(--radius-md)',marginBottom:'1rem'}}>
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-                <thead><tr style={{position:'sticky',top:0,background:'#f8faff'}}>
-                  <th style={{padding:'8px 10px',textAlign:'left',color:'#6b8dc4',fontWeight:600}}>Date</th>
-                  <th style={{padding:'8px 10px',textAlign:'left',color:'#6b8dc4',fontWeight:600}}>Description</th>
-                  <th style={{padding:'8px 10px',textAlign:'right',color:'#6b8dc4',fontWeight:600}}>Amount</th>
-                  <th style={{padding:'8px 10px',textAlign:'center',color:'#6b8dc4',fontWeight:600}}>Type</th>
-                  <th style={{padding:'8px 10px',textAlign:'center',color:'#6b8dc4',fontWeight:600}}>Status</th>
+                <thead><tr style={{position:'sticky',top:0,background:'#fafaf8'}}>
+                  <th style={{padding:'8px 10px',textAlign:'left',color:'var(--text-muted)',fontWeight:600}}>Date</th>
+                  <th style={{padding:'8px 10px',textAlign:'left',color:'var(--text-muted)',fontWeight:600}}>Description</th>
+                  <th style={{padding:'8px 10px',textAlign:'right',color:'var(--text-muted)',fontWeight:600}}>Amount</th>
+                  <th style={{padding:'8px 10px',textAlign:'center',color:'var(--text-muted)',fontWeight:600}}>Type</th>
+                  <th style={{padding:'8px 10px',textAlign:'center',color:'var(--text-muted)',fontWeight:600}}>Status</th>
                 </tr></thead>
                 <tbody>
                   {preview.map((row,i)=>(
                     <tr key={i} style={{opacity:row.isDup?0.4:1,background:row.isDup?'#fff8f0':'transparent'}}>
-                      <td style={{padding:'7px 10px',color:'#2d5a9e'}}>{new Date(row.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-                      <td style={{padding:'7px 10px',color:'#0f2a5e',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{row.desc}</td>
+                      <td style={{padding:'7px 10px',color:'var(--slate)'}}>{new Date(row.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                      <td style={{padding:'7px 10px',color:'var(--text-primary)',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{row.desc}</td>
                       <td style={{padding:'7px 10px',textAlign:'right',fontWeight:600,color:row.type==='credit'?'#16a34a':'#dc2626'}}>${row.amt.toFixed(2)}</td>
                       <td style={{padding:'7px 10px',textAlign:'center'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 6px',borderRadius:8,background:row.type==='credit'?'rgba(22,163,74,0.1)':'rgba(220,38,38,0.1)',color:row.type==='credit'?'#16a34a':'#dc2626'}}>{row.type}</span></td>
                       <td style={{padding:'7px 10px',textAlign:'center'}}>{row.isDup?<span style={{fontSize:10,color:'#d97706',fontWeight:600}}>DUPLICATE</span>:<span style={{fontSize:10,color:'#16a34a',fontWeight:600}}>NEW</span>}</td>
@@ -913,7 +913,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
             </div>
             {accounts&&Object.keys(accounts).length>1&&(
               <div style={{marginBottom:12}}>
-                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Import into which account?</label>
+                <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:6,fontWeight:500}}>Import into which account?</label>
                 <select value={selectedAccount} onChange={e=>setSelectedAccount(e.target.value)}>
                   {Object.entries(accounts).map(([key,acct])=>(
                     <option key={key} value={key}>{acct.name}</option>
@@ -934,16 +934,16 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
           <>
             <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
               <div style={{fontSize:40,marginBottom:10}}>📱</div>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Subscriptions Detected!</h2>
-              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>We found <strong style={{color:'#7c3aed'}}>{detectedSubs.length} possible subscription{detectedSubs.length!==1?'s':''}</strong> in your import. Select which ones to add to your Subscriptions tab.</p>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Subscriptions Detected!</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>We found <strong style={{color:'#7c3aed'}}>{detectedSubs.length} possible subscription{detectedSubs.length!==1?'s':''}</strong> in your import. Select which ones to add to your Subscriptions tab.</p>
             </div>
             <div style={{maxHeight:280,overflow:'auto',marginBottom:'1rem'}}>
               {detectedSubs.map(sub=>(
-                <div key={sub.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.06)':'#f8faff',border:`1px solid ${selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.2)':'#c7ddf7'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedSubIds(s=>s.includes(sub.id)?s.filter(i=>i!==sub.id):[...s,sub.id])}>
+                <div key={sub.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.06)':'#f8faff',border:`1px solid ${selectedSubIds.includes(sub.id)?'rgba(124,58,237,0.2)':'var(--border)'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedSubIds(s=>s.includes(sub.id)?s.filter(i=>i!==sub.id):[...s,sub.id])}>
                   <input type="checkbox" checked={selectedSubIds.includes(sub.id)} onChange={()=>{}} style={{width:15,height:15,accentColor:'#7c3aed',flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#0f2a5e'}}>{sub.name}</div>
-                    <div style={{fontSize:11,color:'#6b8dc4'}}>{sub.category} · due {sub.dueDay}{['th','st','nd','rd'][sub.dueDay%10]||'th'} · ⚡ Autopay</div>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>{sub.name}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)'}}>{sub.category} · due {sub.dueDay}{['th','st','nd','rd'][sub.dueDay%10]||'th'} · ⚡ Autopay</div>
                   </div>
                   <div style={{fontWeight:700,fontSize:13,color:'#7c3aed',flexShrink:0}}>${sub.amount.toFixed(2)}/mo</div>
                 </div>
@@ -955,7 +955,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
             </div>
             {accounts&&Object.keys(accounts).length>1&&(
               <div style={{marginBottom:12}}>
-                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Add subscriptions to which account?</label>
+                <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:6,fontWeight:500}}>Add subscriptions to which account?</label>
                 <select value={subTargetAccount} onChange={e=>setSubTargetAccount(e.target.value)}>
                   {Object.entries(accounts).map(([key,acct])=>(
                     <option key={key} value={key}>{acct.name}</option>
@@ -980,18 +980,18 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
           <>
             <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
               <div style={{fontSize:40,marginBottom:10}}>🗓</div>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Fixed Bills Detected!</h2>
-              <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>We found <strong style={{color:'#1a6fd4'}}>{detectedBills.length} possible fixed bill{detectedBills.length!==1?'s':''}</strong> in your import. Select which ones to add to your Bills tab.</p>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Fixed Bills Detected!</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>We found <strong style={{color:'var(--green)'}}>{detectedBills.length} possible fixed bill{detectedBills.length!==1?'s':''}</strong> in your import. Select which ones to add to your Bills tab.</p>
             </div>
             <div style={{maxHeight:280,overflow:'auto',marginBottom:'1rem'}}>
               {detectedBills.map(bill=>(
-                <div key={bill.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedBillIds.includes(bill.id)?'rgba(26,111,212,0.06)':'#f8faff',border:`1px solid ${selectedBillIds.includes(bill.id)?'rgba(26,111,212,0.2)':'#c7ddf7'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedBillIds(s=>s.includes(bill.id)?s.filter(i=>i!==bill.id):[...s,bill.id])}>
-                  <input type="checkbox" checked={selectedBillIds.includes(bill.id)} onChange={()=>{}} style={{width:15,height:15,accentColor:'#1a6fd4',flexShrink:0}}/>
+                <div key={bill.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:selectedBillIds.includes(bill.id)?'var(--green-light)':'#f8faff',border:`1px solid ${selectedBillIds.includes(bill.id)?'var(--green-mid)':'var(--border)'}`,borderRadius:'var(--radius-md)',marginBottom:6,cursor:'pointer'}} onClick={()=>setSelectedBillIds(s=>s.includes(bill.id)?s.filter(i=>i!==bill.id):[...s,bill.id])}>
+                  <input type="checkbox" checked={selectedBillIds.includes(bill.id)} onChange={()=>{}} style={{width:15,height:15,accentColor:'var(--green)',flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#0f2a5e'}}>{bill.name}</div>
-                    <div style={{fontSize:11,color:'#6b8dc4'}}>{bill.category} · due {bill.dueDay}{['th','st','nd','rd'][bill.dueDay%10]||'th'}</div>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>{bill.name}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)'}}>{bill.category} · due {bill.dueDay}{['th','st','nd','rd'][bill.dueDay%10]||'th'}</div>
                   </div>
-                  <div style={{fontWeight:700,fontSize:13,color:'#1a6fd4',flexShrink:0}}>${bill.amount.toFixed(2)}/mo</div>
+                  <div style={{fontWeight:700,fontSize:13,color:'var(--green)',flexShrink:0}}>${bill.amount.toFixed(2)}/mo</div>
                 </div>
               ))}
             </div>
@@ -1001,7 +1001,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
             </div>
             {accounts&&Object.keys(accounts).length>1&&(
               <div style={{marginBottom:12}}>
-                <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Add bills to which account?</label>
+                <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:6,fontWeight:500}}>Add bills to which account?</label>
                 <select value={billTargetAccount} onChange={e=>setBillTargetAccount(e.target.value)}>
                   {Object.entries(accounts).map(([key,acct])=>(
                     <option key={key} value={key}>{acct.name}</option>
@@ -1024,8 +1024,8 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
         {step==='done'&&(
           <div style={{textAlign:'center',padding:'1rem 0'}}>
             <div style={{fontSize:52,marginBottom:16}}>🎉</div>
-            <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'#0f2a5e'}}>Import Complete!</h2>
-            <p style={{fontSize:14,color:'#6b8dc4',lineHeight:1.7,marginBottom:'1.5rem'}}>Your transactions have been imported successfully. Head to the Register tab to assign categories.</p>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'var(--text-primary)'}}>Import Complete!</h2>
+            <p style={{fontSize:14,color:'var(--text-muted)',lineHeight:1.7,marginBottom:'1.5rem'}}>Your transactions have been imported successfully. Head to the Register tab to assign categories.</p>
             <button className="btn-gold" style={{width:'100%'}} onClick={onCancel}>Go to my Register 📒</button>
           </div>
         )}
@@ -1042,34 +1042,34 @@ function AddToHomeScreenModal({onClose}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.25rem'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <span style={{fontSize:28}}>📱</span>
-            <h2 style={{fontFamily:'var(--font-display)',fontSize:19,color:'#0f2a5e'}}>Add App to Your Phone</h2>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:19,color:'var(--text-primary)'}}>Add App to Your Phone</h2>
           </div>
-          <button onClick={onClose} style={{background:'none',border:'none',color:'#6b8dc4',fontSize:18,cursor:'pointer'}}>✕</button>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'var(--text-muted)',fontSize:18,cursor:'pointer'}}>✕</button>
         </div>
 
         <div style={{marginBottom:'1.25rem'}}>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
             <span style={{fontSize:18}}>🍎</span>
-            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'#0f2a5e'}}>iPhone / Safari</span>
+            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'var(--text-primary)'}}>iPhone / Safari</span>
           </div>
           <ol style={{paddingLeft:20,margin:0}}>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Safari</strong></li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap the <strong>Share button</strong> (box with arrow ⬆️)</li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8}}>Tap <strong>"Add"</strong> in the top right</li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Safari</strong></li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Tap the <strong>Share button</strong> (box with arrow ⬆️)</li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8}}>Tap <strong>"Add"</strong> in the top right</li>
           </ol>
         </div>
 
-        <div style={{borderTop:'1px solid #e8f1fd',paddingTop:'1.25rem'}}>
+        <div style={{borderTop:'1px solid var(--border-light)',paddingTop:'1.25rem'}}>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
             <span style={{fontSize:18}}>🤖</span>
-            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'#0f2a5e'}}>Android / Chrome</span>
+            <span style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:14,color:'var(--text-primary)'}}>Android / Chrome</span>
           </div>
           <ol style={{paddingLeft:20,margin:0}}>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Chrome</strong></li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap the <strong>three dots menu</strong> (top right ⋮)</li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8,marginBottom:4}}>Tap <strong>"Add to Home screen"</strong></li>
-            <li style={{fontSize:13,color:'#2d5a9e',lineHeight:1.8}}>Tap <strong>"Add"</strong></li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Open this app in <strong>Chrome</strong></li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Tap the <strong>three dots menu</strong> (top right ⋮)</li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8,marginBottom:4}}>Tap <strong>"Add to Home screen"</strong></li>
+            <li style={{fontSize:13,color:'var(--slate)',lineHeight:1.8}}>Tap <strong>"Add"</strong></li>
           </ol>
         </div>
 
@@ -1099,13 +1099,13 @@ function ClearConfirmModal({title,message,onConfirm,onCancel}){
       <div className="modal-box slide-up" style={{maxWidth:420}}>
         <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
           <div style={{fontSize:40,marginBottom:10}}>⚠️</div>
-          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:8,color:'#0f2a5e'}}>{title}</h2>
-          <p style={{fontSize:13,color:'#6b8dc4',lineHeight:1.6}}>{message}</p>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:8,color:'var(--text-primary)'}}>{title}</h2>
+          <p style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>{message}</p>
         </div>
-        <div style={{background:'#f8faff',borderRadius:'var(--radius-md)',padding:'12px 16px',marginBottom:'1.25rem',border:'1px solid #c7ddf7'}}>
+        <div style={{background:'#fafaf8',borderRadius:'var(--radius-md)',padding:'12px 16px',marginBottom:'1.25rem',border:'1px solid var(--border)'}}>
           <label style={{display:'flex',alignItems:'flex-start',gap:10,cursor:'pointer'}}>
             <input type="checkbox" checked={checked} onChange={e=>setChecked(e.target.checked)} style={{width:16,height:16,flexShrink:0,marginTop:2,accentColor:'#dc2626'}}/>
-            <span style={{fontSize:12,color:'#2d5a9e',lineHeight:1.6}}>Yes, I understand — this cannot be undone.</span>
+            <span style={{fontSize:12,color:'var(--slate)',lineHeight:1.6}}>Yes, I understand — this cannot be undone.</span>
           </label>
         </div>
         <div style={{display:'flex',gap:10}}>
@@ -1140,6 +1140,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [showMortgageTip, setShowMortgageTip] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showMobileMore, setShowMobileMore] = useState(false);
   const [milestone, setMilestone] = useState(null);
   const [editingAccountKey, setEditingAccountKey] = useState(null);
   const [editingAccountName, setEditingAccountName] = useState('');
@@ -1309,16 +1310,16 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   ];
 
   if (loading) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f0f6ff' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg)' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, color:'#1a6fd4', marginBottom:8 }}>MoneyMap</div>
-        <div style={{ fontSize:13, color:'#6b8dc4' }}>Loading your data…</div>
+        <div style={{ fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, color:'var(--green)', marginBottom:8 }}>MoneyMap</div>
+        <div style={{ fontSize:13, color:'var(--text-muted)' }}>Loading your data…</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight:'100vh', background:'#f0f6ff' }}>
+    <div style={{ minHeight:'100vh', background:'var(--bg)', display:'flex' }}>
       {showTour && <AppTour onComplete={completeTour} />}
       <FinancialTipPopup uid={uid} lead={lead} onTabSwitch={handleTabSwitch} />
       {showVideo && <WelcomeVideoModal lead={lead} onClose={closeVideo} />}
@@ -1363,15 +1364,15 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
               <span style={{fontSize:32,flexShrink:0}}>🏠</span>
               <div>
                 <div style={{fontSize:11,fontWeight:700,color:'#059669',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>Mortgage Tip</div>
-                <h2 style={{fontFamily:'var(--font-display)',fontSize:18,color:'#0f2a5e',lineHeight:1.3}}>Pay extra toward your mortgage principal</h2>
+                <h2 style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--text-primary)',lineHeight:1.3}}>Pay extra toward your mortgage principal</h2>
               </div>
             </div>
-            <p style={{fontSize:13,color:'#2d5a9e',lineHeight:1.7,marginBottom:'1rem'}}>
+            <p style={{fontSize:13,color:'var(--slate)',lineHeight:1.7,marginBottom:'1rem'}}>
               Even an extra <strong style={{color:'#059669'}}>$100/month</strong> on a 30-year mortgage can cut <strong style={{color:'#059669'}}>4-6 years</strong> off your payoff timeline and save tens of thousands in interest.
             </p>
             <div style={{background:'rgba(5,150,105,0.06)',border:'1px solid rgba(5,150,105,0.2)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem'}}>
               <div style={{fontSize:12,color:'#059669',fontWeight:600,marginBottom:4}}>💡 Pro tip</div>
-              <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.6}}>Make sure extra payments go toward <strong>principal</strong> — not next month's payment. Check with your lender to confirm how to designate extra payments correctly.</div>
+              <div style={{fontSize:12,color:'var(--slate)',lineHeight:1.6}}>Make sure extra payments go toward <strong>principal</strong> — not next month's payment. Check with your lender to confirm how to designate extra payments correctly.</div>
             </div>
             <div style={{display:'flex',gap:10}}>
               <button className="btn-gold" style={{flex:1,background:'linear-gradient(135deg,#059669,#34d399)'}} onClick={()=>{setShowMortgageTip(false);setActiveTab('timeline');}}>
@@ -1414,35 +1415,61 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
 
       {/* Budget Reset Banner */}
       {budgetResetBanner && (
-        <div style={{ background:'linear-gradient(135deg, #1a6fd4, #5ba3f5)', padding:'12px 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+        <div style={{ background:'linear-gradient(135deg, var(--green), #5ba3f5)', padding:'12px 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
           <div style={{ fontSize:13, color:'#fff', fontWeight:500 }}>🎯 New month! Would you like to carry over last month's budget limits?</div>
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => dismissBudgetBanner(true)} style={{ background:'#fff', color:'#1a6fd4', border:'none', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Yes, carry over</button>
+            <button onClick={() => dismissBudgetBanner(true)} style={{ background:'#fff', color:'var(--green)', border:'none', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Yes, carry over</button>
             <button onClick={() => dismissBudgetBanner(false)} style={{ background:'rgba(255,255,255,0.2)', color:'#fff', border:'1px solid rgba(255,255,255,0.4)', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:600, cursor:'pointer' }}>Dismiss</button>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.875rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8, boxShadow:'0 2px 8px rgba(26,111,212,0.08)' }}>
-        <div>
-          <div style={{ fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'#1a6fd4' }}>MoneyMap</div>
-          <div style={{ fontSize:12, color:'#6b8dc4' }}>Welcome back, {firstName} 👋</div>
+      <div className="sidebar">
+        <div className="sidebar-logo">Money<span>Map</span></div>
+        <div className="sidebar-section-label">Main</div>
+        {[{id:'register',label:'Register',icon:'📒'},{id:'bills',label:'Bills',icon:'🗓'},{id:'calendar',label:'Calendar',icon:'📅'},{id:'budgets',label:'Budgets',icon:'🎯'},{id:'spending',label:'Spending',icon:'📊'}].map(t=>(
+          <button key={t.id} className={`nav-item${activeTab===t.id?' active':''}`} onClick={()=>handleTabSwitch(t.id)}>
+            <span className="nav-icon">{t.icon}</span>{t.label}
+          </button>
+        ))}
+        <div className="sidebar-divider"/>
+        <div className="sidebar-section-label">Plan</div>
+        {[{id:'debts',label:'Debt Stack',icon:'📉'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'savings',label:'Savings',icon:'🐷'},{id:'networth',label:'Net Worth',icon:'💎'}].map(t=>(
+          <button key={t.id} className={`nav-item${activeTab===t.id?' active':''}`} onClick={()=>handleTabSwitch(t.id)}>
+            <span className="nav-icon">{t.icon}</span>{t.label}
+          </button>
+        ))}
+        <div className="sidebar-divider"/>
+        <div className="sidebar-section-label">Other</div>
+        {[{id:'cash',label:'Cash',icon:'💵'}].map(t=>(
+          <button key={t.id} className={`nav-item${activeTab===t.id?' active':''}`} onClick={()=>handleTabSwitch(t.id)}>
+            <span className="nav-icon">{t.icon}</span>{t.label}
+          </button>
+        ))}
+        <div className="sidebar-spacer"/>
+        <div className="sidebar-bottom">
+          <button className="nav-item" onClick={()=>setShowAddToHome(true)}><span className="nav-icon">📱</span>Add to phone</button>
+          <button className="nav-item" onClick={resetTour}><span className="nav-icon">🗺</span>Tour</button>
+          <button className="nav-item" style={{color:'var(--text-muted)',fontSize:12}}><span className="nav-icon">👤</span>{firstName}</button>
         </div>
-        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
-          {savedMsg && <span style={{ fontSize:12, color:'#16a34a' }}>✓ {savedMsg}</span>}
-          <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowCSVImport(true)}>📂 Import CSV</button>
-          {Object.keys(accounts).length>1 && <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowTransfer(true)}>🔄 Transfer</button>}
-          <button className="btn-outline" style={{ fontSize:11 }} onClick={() => setShowAddToHome(true)}>📱 Add to Phone</button>
-          <button className="btn-outline" style={{ fontSize:11 }} onClick={resetTour}>🗺 Tour</button>
-          <button className="btn-outline" style={{ fontSize:11 }} onClick={() => exportCSV(transactions, beginBal)}>⬇ CSV</button>
-          <button className="btn-outline" style={{ fontSize:11 }} onClick={onSignOut}>Sign out</button>
-          <button onClick={() => setShowDeleteModal(true)} style={{ background:'none', border:'none', color:'#6b8dc4', fontSize:11, cursor:'pointer', textDecoration:'underline' }}>Cancel account</button>
+      </div>
+      <div className="main-content">
+      <div className="topbar">
+        <div className="topbar-left">
+          {savedMsg && <span style={{fontSize:12,color:'var(--green)',fontWeight:500}}>✓ {savedMsg}</span>}
+        </div>
+        <div className="topbar-right">
+          <button className="btn-outline" style={{fontSize:11}} onClick={()=>setShowCSVImport(true)}>📂 Import CSV</button>
+          {Object.keys(accounts).length>1 && <button className="btn-outline" style={{fontSize:11}} onClick={()=>setShowTransfer(true)}>🔄 Transfer</button>}
+          <button className="btn-outline" style={{fontSize:11}} onClick={()=>exportCSV(transactions,beginBal)}>⬇ CSV</button>
+          <button className="btn-outline" style={{fontSize:11}} onClick={onSignOut}>Sign out</button>
+          <button onClick={()=>setShowDeleteModal(true)} style={{background:'none',border:'none',color:'var(--text-muted)',fontSize:11,cursor:'pointer',textDecoration:'underline'}}>Cancel account</button>
         </div>
       </div>
 
       {/* Account tabs */}
-      <div style={{ background:'#fff', borderBottom:'1px solid #c7ddf7', padding:'0.5rem 1.5rem', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+      <div style={{ background:'#fff', borderBottom:'1px solid var(--border)', padding:'8px 20px', display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
         {Object.entries(accounts).map(([key, acctData]) => (
           <div key={key} style={{ display:'flex', alignItems:'center', gap:2 }}>
             {editingAccountKey===key ? (
@@ -1453,12 +1480,12 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
               </div>
             ) : (
               <div style={{ display:'flex', alignItems:'center', gap:2 }}>
-                <button onClick={() => setActiveAccount(key)} style={{ padding:'5px 12px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'#1a6fd4':'#c7ddf7'}`, background: activeAccount===key?'rgba(26,111,212,0.1)':'transparent', color: activeAccount===key?'#1a6fd4':'#6b8dc4', fontFamily:'var(--font-display)', transition:'all 0.2s' }}>
+                <button onClick={() => setActiveAccount(key)} style={{ padding:'5px 12px', fontSize:12, fontWeight:600, borderRadius:20, cursor:'pointer', border:`1px solid ${activeAccount===key?'var(--green)':'var(--border)'}`, background:activeAccount===key?'var(--green-light)':'transparent', color:activeAccount===key?'var(--green)':'var(--text-muted)', transition:'all 0.2s' }}>
                   {acctData.name}
                 </button>
                 {activeAccount===key && (
                   <div style={{ display:'flex', gap:2 }}>
-                    <button onClick={()=>{setEditingAccountKey(key);setEditingAccountName(acctData.name);}} title="Rename account" style={{ background:'none', border:'none', color:'#6b8dc4', fontSize:12, cursor:'pointer', padding:'2px 4px' }}>✏️</button>
+                    <button onClick={()=>{setEditingAccountKey(key);setEditingAccountName(acctData.name);}} title="Rename account" style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', padding:'2px 4px' }}>✏️</button>
                     {key!=='main' && <button onClick={()=>setDeleteAccountKey(key)} title="Delete account" style={{ background:'none', border:'none', color:'rgba(220,38,38,0.5)', fontSize:12, cursor:'pointer', padding:'2px 4px' }}>🗑</button>}
                   </div>
                 )}
@@ -1474,8 +1501,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </div>
         ) : (
           <>
-            <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed #c7ddf7', background:'transparent', color:'#6b8dc4', transition:'all 0.2s' }}>+ Add account</button>
-            <button onClick={() => setShowResetAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed rgba(220,38,38,0.3)', background:'transparent', color:'rgba(220,38,38,0.6)', transition:'all 0.2s', marginLeft:'auto' }}>↺ Reset account</button>
+            <button onClick={() => setShowAddAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)' }}>+ Add account</button>
+            <button onClick={() => setShowResetAccount(true)} style={{ padding:'5px 12px', fontSize:11, borderRadius:20, cursor:'pointer', background:'transparent', border:'1px solid rgba(184,48,48,0.25)', color:'var(--red)', marginLeft:'auto' }}>↺ Reset account</button>
           </>
         )}
       </div>
@@ -1495,17 +1522,29 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         />
       )}
 
-      <div style={{ maxWidth:860, margin:'0 auto', padding:'1.25rem 1rem 4rem' }}>
+      <div className="page-content">
         {lead && lead.referredBy && <RepContactCard repName={lead.referredBy} uid={uid} />}
         <MetricsBar transactions={transactions} debts={debts} beginBal={beginBal} />
         <AlertsBar transactions={transactions} budgets={budgets} />
-        <div className="tabs">
-          {tabs.map(t => (
-            <button key={t.id} className={`tab ${activeTab===t.id?'active':''}`} onClick={() => handleTabSwitch(t.id)}>
-              <span style={{ marginRight:4 }}>{t.icon}</span>{t.label}
+        <div className="mobile-bottom-nav">
+          {[{id:'register',label:'Register',icon:'📒'},{id:'bills',label:'Bills',icon:'🗓'},{id:'budgets',label:'Budgets',icon:'🎯'},{id:'debts',label:'Debt Stack',icon:'📉'},{id:'savings',label:'Savings',icon:'🐷'}].map(t=>(
+            <button key={t.id} className={`mobile-nav-btn${activeTab===t.id?' active':''}`} onClick={()=>handleTabSwitch(t.id)}>
+              <span className="ico">{t.icon}</span>{t.label}
             </button>
           ))}
+          <button className={`mobile-nav-btn${['calendar','spending','cash','timeline','networth'].includes(activeTab)?' active':''}`} onClick={()=>setShowMobileMore(s=>!s)}>
+            <span className="ico">⋯</span>More
+          </button>
         </div>
+        {showMobileMore&&(
+          <div className="mobile-more-menu">
+            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'tour',label:'Tour',icon:'🗺'}].map(t=>(
+              <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
+                <span className="ico">{t.icon}</span>{t.label}
+              </button>
+            ))}
+          </div>
+        )}
         {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
@@ -1516,6 +1555,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='calendar' && <CalendarTab bills={bills} billsPaid={billsPaid} subscriptions={subscriptions} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
+      </div>
+    </div>
       </div>
     </div>
   );
@@ -1623,18 +1664,18 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
         {!beginBal.set?(
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,padding:'4px 0'}}>
             <div>
-              <div style={{fontSize:13,fontWeight:600,color:'#1a6fd4'}}>💰 Set beginning balance</div>
-              <div style={{fontSize:12,color:'#6b8dc4'}}>Enter your account balance before tracking starts</div>
+              <div style={{fontSize:13,fontWeight:600,color:'var(--green)'}}>💰 Set beginning balance</div>
+              <div style={{fontSize:12,color:'var(--text-muted)'}}>Enter your account balance before tracking starts</div>
             </div>
             <button className="btn-gold" style={{fontSize:12,padding:'8px 16px'}} onClick={()=>setBbEdit(true)}>Set balance</button>
           </div>
         ):(
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
             <div>
-              <div style={{fontSize:12,color:'#6b8dc4',marginBottom:2}}>Beginning balance</div>
-              <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:700,color:'#1a6fd4'}}>
+              <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:2}}>Beginning balance</div>
+              <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:700,color:'var(--green)'}}>
                 ${beginBal.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
-                <span style={{fontSize:12,color:'#6b8dc4',fontWeight:400,marginLeft:8}}>as of {new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                <span style={{fontSize:12,color:'var(--text-muted)',fontWeight:400,marginLeft:8}}>as of {new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
               </div>
             </div>
             <div style={{display:'flex',gap:6}}>
@@ -1644,7 +1685,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
           </div>
         )}
         {bbEdit&&(
-          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid #c7ddf7'}}>
+          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--border)'}}>
             <div className="form-row r3">
               <input type="date" value={bbForm.date} onChange={e=>setBbForm(f=>({...f,date:e.target.value}))}/>
               <input type="number" value={bbForm.amount} placeholder="Starting balance ($)" step="0.01" onChange={e=>setBbForm(f=>({...f,amount:e.target.value}))}/>
@@ -1686,19 +1727,19 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
         </button>
 
         {showExtra&&(
-          <div style={{background:'#f8faff',borderRadius:'var(--radius-md)',padding:'12px',marginBottom:10,border:'1px solid #c7ddf7'}}>
+          <div style={{background:'#fafaf8',borderRadius:'var(--radius-md)',padding:'12px',marginBottom:10,border:'1px solid var(--border)'}}>
             <div className="form-row r2" style={{marginBottom:8}}>
               <div>
-                <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Note (optional)</label>
+                <label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Note (optional)</label>
                 <input placeholder="e.g. split with spouse, reimbursable..." value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))}/>
               </div>
               <div>
-                <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Confirmation / Ref #</label>
+                <label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Confirmation / Ref #</label>
                 <input placeholder="e.g. TXN123456" value={form.refNum} onChange={e=>setForm(f=>({...f,refNum:e.target.value}))}/>
               </div>
             </div>
             <div>
-              <label style={{fontSize:11,color:'#6b8dc4',display:'block',marginBottom:3}}>Recurring</label>
+              <label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Recurring</label>
               <select value={form.recurring} onChange={e=>setForm(f=>({...f,recurring:e.target.value}))} style={{maxWidth:200}}>
                 <option value="none">Not recurring</option>
                 <option value="weekly">Weekly</option>
@@ -1722,7 +1763,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
             {transactions.length>0&&<ClearBtn label="Clear all" onClear={()=>setTransactions([])} title="Clear all transactions?" message="This will permanently delete all transactions in this account." />}
             {selectedTxIds.length>0&&accounts&&Object.keys(accounts).length>1&&(
               <div style={{display:'flex',alignItems:'center',gap:6}}>
-                <span style={{fontSize:11,color:'#1a6fd4',fontWeight:600}}>{selectedTxIds.length} selected</span>
+                <span style={{fontSize:11,color:'var(--green)',fontWeight:600}}>{selectedTxIds.length} selected</span>
                 <select value={moveToAccount} onChange={e=>setMoveToAccount(e.target.value)} style={{fontSize:11,padding:'3px 8px',width:'auto'}}>
                   <option value="">Move to...</option>
                   {Object.entries(accounts).filter(([k])=>k!==activeAccount).map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
@@ -1746,7 +1787,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
         </div>
         <table>
           <thead><tr>
-            <th style={{width:28}}><input type="checkbox" onChange={e=>{if(e.target.checked)setSelectedTxIds(filtered.map(t=>t.id));else setSelectedTxIds([]);}} style={{accentColor:'#1a6fd4',width:13,height:13}}/></th>
+            <th style={{width:28}}><input type="checkbox" onChange={e=>{if(e.target.checked)setSelectedTxIds(filtered.map(t=>t.id));else setSelectedTxIds([]);}} style={{accentColor:'var(--green)',width:13,height:13}}/></th>
             <th style={{width:64}}>Date</th>
             <th>Description</th>
             <th style={{width:100}}>Category</th>
@@ -1759,7 +1800,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
             {beginBal.set&&!filterGrp&&!filterCat&&!search&&(
               <tr className="bb-row">
                 <td style={{fontSize:11}}>{new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-                <td colSpan={4} style={{color:'#6b8dc4'}}>💰 Beginning balance</td>
+                <td colSpan={4} style={{color:'var(--text-muted)'}}>💰 Beginning balance</td>
                 <td className="fw credit-color">${beginBal.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 <td></td>
               </tr>
@@ -1768,15 +1809,15 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
               const bal=bals[t.id];
               const ci=ALL_CATS[t.cat]||{color:'#6b7280',bg:'rgba(107,114,128,0.1)'};
               return(
-                <tr key={t.id} style={{background:selectedTxIds.includes(t.id)?'rgba(26,111,212,0.06)':''}}>
+                <tr key={t.id} style={{background:selectedTxIds.includes(t.id)?'var(--green-light)':''}}>
                   <td style={{width:28,textAlign:'center'}}>
-                    <input type="checkbox" checked={selectedTxIds.includes(t.id)} onChange={e=>{if(e.target.checked)setSelectedTxIds(s=>[...s,t.id]);else setSelectedTxIds(s=>s.filter(id=>id!==t.id));}} style={{accentColor:'#1a6fd4',width:13,height:13}}/>
+                    <input type="checkbox" checked={selectedTxIds.includes(t.id)} onChange={e=>{if(e.target.checked)setSelectedTxIds(s=>[...s,t.id]);else setSelectedTxIds(s=>s.filter(id=>id!==t.id));}} style={{accentColor:'var(--green)',width:13,height:13}}/>
                   </td>
                   <td style={{fontSize:11,whiteSpace:'nowrap'}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
                   <td>
                     <div style={{fontSize:12}}>{t.desc}</div>
-                    {t.note&&<div style={{fontSize:10,color:'#6b8dc4',fontStyle:'italic'}}>📝 {t.note}</div>}
-                    {t.refNum&&<div style={{fontSize:10,color:'#1a6fd4'}}>Ref: {t.refNum}</div>}
+                    {t.note&&<div style={{fontSize:10,color:'var(--text-muted)',fontStyle:'italic'}}>📝 {t.note}</div>}
+                    {t.refNum&&<div style={{fontSize:10,color:'var(--green)'}}>Ref: {t.refNum}</div>}
                     {t.recurring&&t.recurring!=='none'&&<div style={{fontSize:10,color:'#7c3aed'}}>🔁 {t.recurring}</div>}
                   </td>
                   <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span></td>
@@ -1831,9 +1872,9 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
         <div className="metric-card"><div className="lbl">Still owed</div><div className={`val ${totalUnpaid>0?'val-red':'val-green'}`}>${totalUnpaid.toFixed(2)}</div></div>
         <div className="metric-card"><div className="lbl">Bills paid</div><div className="val val-teal">{paidCount} / {bills.length}</div></div>
       </div>
-      <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
+      <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:10,display:'flex',alignItems:'center',gap:10}}>
         <span style={{fontSize:18,flexShrink:0}}>💡</span>
-        <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.5}}>
+        <div style={{fontSize:12,color:'var(--slate)',lineHeight:1.5}}>
           <strong>Did you know?</strong> You can import your bank statement to automatically detect your fixed bills and subscriptions. Click <strong>📂 Import CSV</strong> in the header to get started!
         </div>
       </div>
@@ -1848,15 +1889,15 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
           <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowForm(f=>!f)}>{showForm?'✕ Cancel':'+ Add bill'}</button>
         </div>
         {showForm&&(
-          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+          <div style={{borderTop:'1px solid var(--border)',paddingTop:'1rem'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Bill name</label><input placeholder="e.g. Car payment" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'#dc2626'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Monthly amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{BILL_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Bill name</label><input placeholder="e.g. Car payment" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Monthly amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{BILL_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             </div>
-            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:14,fontSize:13,color:'#2d5a9e'}}>
-              <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:14,fontSize:13,color:'var(--slate)'}}>
+              <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'var(--green)'}}/>
               This bill is on autopay
             </label>
             <button className="btn-gold" onClick={addBill}>Save bill</button>
@@ -1886,12 +1927,12 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
                 return(
                   <tr key={bill.id} style={{opacity:paid?0.75:1}}>
                     <td style={{padding:'10px 16px'}}>
-                      <div style={{fontWeight:600,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e',textDecoration:paid?'line-through':'none'}}>{bill.name}</div>
+                      <div style={{fontWeight:600,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)',textDecoration:paid?'line-through':'none'}}>{bill.name}</div>
                       {bill.autopay&&<div style={{fontSize:10,color:'#0ea5e9',fontWeight:600,marginTop:1}}>⚡ AUTOPAY</div>}
                     </td>
-                    <td style={{fontSize:11,color:'#6b8dc4'}}>{bill.category}</td>
-                    <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(bill.dueDay)}</span></td>
-                    <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                    <td style={{fontSize:11,color:'var(--text-muted)'}}>{bill.category}</td>
+                    <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'var(--text-muted)':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'var(--slate)'}}>{daySuffix(bill.dueDay)}</span></td>
+                    <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)'}}>${bill.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                     <td style={{textAlign:'center'}}>
                       {paid?(
                         <button onClick={()=>onUnpayBill(bill.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
@@ -1899,10 +1940,10 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
                         <button onClick={()=>onPayBill(bill)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                       )}
                     </td>
-                    <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(bill.id)||'—'}</td>
+                    <td style={{textAlign:'center',fontSize:11,color:'var(--text-muted)'}}>{paidAt(bill.id)||'—'}</td>
                     <td style={{textAlign:'center'}}>
                       <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                        <button onClick={()=>setEditingBill(bill)} style={{background:'rgba(26,111,212,0.1)',color:'#1a6fd4',border:'1px solid rgba(26,111,212,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
+                        <button onClick={()=>setEditingBill(bill)} style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
                         {accounts&&Object.keys(accounts).filter(k=>k!==activeAccount).length>0&&<MovePicker accounts={accounts} currentAccount={activeAccount} onMove={(targetKey)=>onMoveBill&&onMoveBill(bill,targetKey)} />}
                         <button className="btn-danger" onClick={()=>setBills(bills.filter(b=>b.id!==bill.id))}>✕</button>
                       </div>
@@ -1917,7 +1958,7 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
       {editingBill&&(
         <div className="modal-overlay" style={{zIndex:3000}}>
           <div className="modal-box slide-up" style={{maxWidth:480}}>
-            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'#0f2a5e'}}>✏️ Edit Bill</h2>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit Bill</h2>
             <EditBillForm bill={editingBill} billCats={BILL_CATS} onSave={(updated)=>{setBills(bills.map(b=>b.id===updated.id?updated:b));setEditingBill(null);}} onCancel={()=>setEditingBill(null)} />
           </div>
         </div>
@@ -1925,9 +1966,9 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
       {bills.length>0&&(
         <div className="card">
           <div className="card-title">Monthly bill progress</div>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#6b8dc4',marginBottom:6}}><span>{paidCount} of {bills.length} bills paid</span><span>${totalPaid.toFixed(2)} of ${totalBills.toFixed(2)}</span></div>
-          <div style={{background:'#e8f1fd',borderRadius:6,height:10,overflow:'hidden'}}>
-            <div style={{height:10,borderRadius:6,width:`${totalBills>0?Math.round((totalPaid/totalBills)*100):0}%`,background:paidCount===bills.length?'#16a34a':'linear-gradient(90deg, #1a6fd4, #5ba3f5)',transition:'width 0.4s ease'}}/>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text-muted)',marginBottom:6}}><span>{paidCount} of {bills.length} bills paid</span><span>${totalPaid.toFixed(2)} of ${totalBills.toFixed(2)}</span></div>
+          <div style={{background:'var(--border-light)',borderRadius:6,height:10,overflow:'hidden'}}>
+            <div style={{height:10,borderRadius:6,width:`${totalBills>0?Math.round((totalPaid/totalBills)*100):0}%`,background:paidCount===bills.length?'#16a34a':'linear-gradient(90deg, var(--green), #5ba3f5)',transition:'width 0.4s ease'}}/>
           </div>
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
@@ -1949,14 +1990,14 @@ function BudgetsTab({transactions,budgets,setBudgets}){
     <>
       <div className="card">
         <div className="card-title">Monthly budget limits</div>
-        <div style={{fontSize:12,color:'#6b8dc4',marginBottom:12}}>Set $0 to skip. You'll get an alert when you exceed a limit.</div>
+        <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:12}}>Set $0 to skip. You'll get an alert when you exceed a limit.</div>
         {Object.entries(GROUPS).filter(([g])=>g!=='Income'&&g!=='Savings').map(([g,v])=>(
           <div key={g} style={{marginBottom:14}}>
-            <div style={{fontSize:11,fontWeight:600,color:v.color,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8,paddingBottom:4,borderBottom:'1px solid #e8f1fd'}}>{g}</div>
+            <div style={{fontSize:11,fontWeight:600,color:v.color,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8,paddingBottom:4,borderBottom:'1px solid var(--border-light)'}}>{g}</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
               {v.cats.map(c=>(
                 <div key={c} style={{display:'flex',alignItems:'center',gap:6}}>
-                  <label style={{fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#2d5a9e'}} title={c}>{c}</label>
+                  <label style={{fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--slate)'}} title={c}>{c}</label>
                   <input type="number" value={localBudgets[c]||''} placeholder="$0" min="0" step="5" style={{width:80,flexShrink:0}} onChange={e=>setLocalBudgets(b=>({...b,[c]:parseFloat(e.target.value)||0}))}/>
                 </div>
               ))}
@@ -1982,7 +2023,7 @@ function BudgetsTab({transactions,budgets,setBudgets}){
                         <div className="cat-fill" style={{width:`${Math.round((spent/maxVal)*100)}%`,background:over?'#dc2626':ALL_CATS[c]?.color||'#6b7280'}}/>
                         {limit>0&&<div style={{position:'absolute',top:0,left:`${Math.round((limit/maxVal)*100)}%`,width:2,height:'100%',background:'rgba(0,0,0,0.2)'}}/>}
                       </div>
-                      <div className="cat-val" style={over?{color:'#dc2626'}:{}}>${spent.toFixed(0)}{limit>0&&<span style={{color:'#6b8dc4'}}>/{limit.toFixed(0)}</span>}</div>
+                      <div className="cat-val" style={over?{color:'#dc2626'}:{}}>${spent.toFixed(0)}{limit>0&&<span style={{color:'var(--text-muted)'}}>/{limit.toFixed(0)}</span>}</div>
                     </div>
                   );
                 })}
@@ -2035,17 +2076,17 @@ function DebtsTab({debts,setDebts}){
               const color=i<2?colors[i]:colors[2];
               const bg=i<2?bgs[i]:bgs[2];
               return(
-                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid #e8f1fd'}}>
+                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{d.name}</span>
+                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{d.name}</span>
                       <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
                     </div>
-                    <div style={{fontSize:12,color:'#6b8dc4'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
+                    <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
                     <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
                   </div>
                   <div style={{textAlign:'right',flexShrink:0}}>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'#0f2a5e'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
                     <button className="btn-danger" style={{marginTop:6}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
                   </div>
                 </div>
@@ -2101,15 +2142,15 @@ function SavingsTab({transactions,goals,setGoals,onMilestone}){
         </div>
         {goals.length===0?<div className="empty-state">Add a goal above — emergency fund, vacation, down payment…</div>:goals.map(g=>{
           const pct=Math.min(100,Math.round(g.saved/g.target*100));
-          const barC=pct>=100?'#16a34a':pct>=50?'#1a6fd4':'#0ea5e9';
+          const barC=pct>=100?'#16a34a':pct>=50?'var(--green)':'#0ea5e9';
           return(
-            <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:'1px solid #e8f1fd'}}>
+            <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
-                  <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{g.name}</span>
-                  <span style={{fontSize:12,color:'#6b8dc4'}}>${Math.max(0,g.target-g.saved).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} to go</span>
+                  <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{g.name}</span>
+                  <span style={{fontSize:12,color:'var(--text-muted)'}}>${Math.max(0,g.target-g.saved).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} to go</span>
                 </div>
-                <div style={{fontSize:12,color:'#6b8dc4',marginBottom:5}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} of ${g.target.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+                <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:5}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} of ${g.target.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
                 <div className="goal-bar-track"><div className="goal-bar-fill" style={{width:`${pct}%`,background:barC}}/></div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
@@ -2135,8 +2176,8 @@ function SavingsTab({transactions,goals,setGoals,onMilestone}){
             <thead><tr><th style={{width:70}}>Date</th><th>Description</th><th style={{width:130}}>Category</th><th style={{width:90,textAlign:'right'}}>Amount</th></tr></thead>
             <tbody>
               {savTxs.map(t=>{
-                const ci=ALL_CATS[t.cat]||{color:'#1a6fd4',bg:'rgba(26,111,212,0.1)'};
-                return(<tr key={t.id}><td style={{fontSize:11}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td><td>{t.desc}</td><td><span className="badge" style={{background:ci.bg,color:ci.color}}>{t.cat}</span></td><td style={{textAlign:'right',fontWeight:600,color:'#1a6fd4'}}>+${t.amt.toFixed(2)}</td></tr>);
+                const ci=ALL_CATS[t.cat]||{color:'var(--green)',bg:'var(--green-light)'};
+                return(<tr key={t.id}><td style={{fontSize:11}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td><td>{t.desc}</td><td><span className="badge" style={{background:ci.bg,color:ci.color}}>{t.cat}</span></td><td style={{textAlign:'right',fontWeight:600,color:'var(--green)'}}>+${t.amt.toFixed(2)}</td></tr>);
               })}
             </tbody>
           </table>
@@ -2152,21 +2193,21 @@ function CashPopup({onClose}){
       <div className="modal-box slide-up" style={{maxWidth:500}}>
         <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
           <div style={{fontSize:48,marginBottom:12}}>💵</div>
-          <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'#0f2a5e'}}>Cash Spending Tracker</h2>
-          <p style={{fontSize:14,color:'#6b8dc4',lineHeight:1.7}}>Cash feels simple — but it's actually the <strong style={{color:'#0f2a5e'}}>hardest money to track.</strong></p>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:24,marginBottom:10,color:'var(--text-primary)'}}>Cash Spending Tracker</h2>
+          <p style={{fontSize:14,color:'var(--text-muted)',lineHeight:1.7}}>Cash feels simple — but it's actually the <strong style={{color:'var(--text-primary)'}}>hardest money to track.</strong></p>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:'1.75rem'}}>
           <div style={{background:'rgba(14,165,233,0.06)',border:'1px solid rgba(14,165,233,0.2)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>🤔</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'#0f2a5e'}}>Where did it go?</strong></div>
+            <div style={{fontSize:13,color:'var(--slate)',lineHeight:1.6}}>You pull $200 from the ATM. A week later it's gone. <strong style={{color:'var(--text-primary)'}}>Where did it go?</strong></div>
           </div>
           <div style={{background:'rgba(22,163,74,0.06)',border:'1px solid rgba(22,163,74,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>✅</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}>This tab fixes that. <strong style={{color:'#16a34a'}}>Log every cash purchase here.</strong></div>
+            <div style={{fontSize:13,color:'var(--slate)',lineHeight:1.6}}>This tab fixes that. <strong style={{color:'#16a34a'}}>Log every cash purchase here.</strong></div>
           </div>
-          <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
+          <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-md)',padding:'12px 16px',display:'flex',gap:12}}>
             <span style={{fontSize:20,flexShrink:0}}>💡</span>
-            <div style={{fontSize:13,color:'#2d5a9e',lineHeight:1.6}}><strong style={{color:'#1a6fd4'}}>Pro tip:</strong> Log cash right when you spend it. $3 coffee = $90/month.</div>
+            <div style={{fontSize:13,color:'var(--slate)',lineHeight:1.6}}><strong style={{color:'var(--green)'}}>Pro tip:</strong> Log cash right when you spend it. $3 coffee = $90/month.</div>
           </div>
         </div>
         <button className="btn-gold" style={{width:'100%',padding:'13px',fontSize:14}} onClick={onClose}>Got it — let me start tracking my cash 💪</button>
@@ -2280,7 +2321,7 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
         <div className="card-title">Extra monthly payment toward top debt</div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <input type="number" placeholder="Extra payment ($/mo)" min="0" step="10" value={extra} style={{maxWidth:220}} onChange={e=>setExtra(e.target.value)}/>
-          <span style={{fontSize:13,color:'#6b8dc4'}}>beyond minimums</span>
+          <span style={{fontSize:13,color:'var(--text-muted)'}}>beyond minimums</span>
         </div>
       </div>
       {debts.length===0?<div className="card"><div className="empty-state">Add debts in the Debt Stack tab first.</div></div>:(
@@ -2291,14 +2332,14 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
             <div className="metric-card"><div className="lbl">Total interest paid</div><div className="val val-red">${ti.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
           </div>
           {results.map((r,i)=>(
-            <div key={i} style={{display:'flex',alignItems:'baseline',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
-              <div style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:'#1a6fd4',minWidth:32}}>#{i+1}</div>
+            <div key={i} style={{display:'flex',alignItems:'baseline',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
+              <div style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:'var(--green)',minWidth:32}}>#{i+1}</div>
               <div style={{flex:1}}>
-                <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>{r.name}</div>
-                <div style={{fontSize:12,color:'#6b8dc4'}}>{r.rate.toFixed(2)}% APR · min ${r.min.toFixed(2)}/mo</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{r.name}</div>
+                <div style={{fontSize:12,color:'var(--text-muted)'}}>{r.rate.toFixed(2)}% APR · min ${r.min.toFixed(2)}/mo</div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'#0f2a5e'}}>{fmtMo(r.months)}</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{fmtMo(r.months)}</div>
                 <div style={{fontSize:12,fontWeight:600,color:'#16a34a'}}>${r.interest.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} interest</div>
               </div>
             </div>
@@ -2339,7 +2380,7 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
   const maxTrend=Math.max(...trendData.map(d=>d.value),1);
 
   const exportMonthlySummary=()=>{
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>MoneyMap Summary — ${label}</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#0f2a5e;background:#fff}h1{color:#1a6fd4;border-bottom:2px solid #1a6fd4;padding-bottom:10px}h2{color:#2d5a9e;margin-top:24px;font-size:16px}.metric{display:inline-block;background:#f0f6ff;border:1px solid #c7ddf7;border-radius:8px;padding:12px 20px;margin:6px;text-align:center}.metric .val{font-size:24px;font-weight:800;color:#1a6fd4}.metric .lbl{font-size:11px;color:#6b8dc4;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#f0f6ff;padding:8px;text-align:left;font-size:12px;color:#6b8dc4;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #e8f1fd;font-size:13px}.green{color:#16a34a}.red{color:#dc2626}</style></head><body><h1>💰 MoneyMap Monthly Summary</h1><h2>${label}</h2><div><div class="metric"><div class="val">$${totalIncome.toFixed(2)}</div><div class="lbl">Income</div></div><div class="metric"><div class="val red">$${totalSpent.toFixed(2)}</div><div class="lbl">Spent</div></div><div class="metric"><div class="val ${net>=0?'green':'red'}">${net<0?'-':''}$${Math.abs(net).toFixed(2)}</div><div class="lbl">Net ${net>=0?'Surplus':'Deficit'}</div></div></div><h2>Spending by Category</h2><table><tr><th>Category</th><th>Group</th><th>Transactions</th><th>Total</th><th>% of Spending</th></tr>${cats.map(([cat,val])=>`<tr><td>${cat}</td><td>${ALL_CATS[cat]?.group||'Other'}</td><td>${counts[cat]||0}</td><td>$${val.toFixed(2)}</td><td>${totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>`).join('')}</table><p style="margin-top:30px;font-size:11px;color:#6b8dc4;text-align:center">Generated by MoneyMap — ${new Date().toLocaleDateString()}</p></body></html>`;
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>MoneyMap Summary — ${label}</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:var(--text-primary);background:#fff}h1{color:var(--green);border-bottom:2px solid var(--green);padding-bottom:10px}h2{color:var(--slate);margin-top:24px;font-size:16px}.metric{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 20px;margin:6px;text-align:center}.metric .val{font-size:24px;font-weight:800;color:var(--green)}.metric .lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:var(--bg);padding:8px;text-align:left;font-size:12px;color:var(--text-muted);text-transform:uppercase}td{padding:8px;border-bottom:1px solid var(--border-light);font-size:13px}.green{color:#16a34a}.red{color:#dc2626}</style></head><body><h1>💰 MoneyMap Monthly Summary</h1><h2>${label}</h2><div><div class="metric"><div class="val">$${totalIncome.toFixed(2)}</div><div class="lbl">Income</div></div><div class="metric"><div class="val red">$${totalSpent.toFixed(2)}</div><div class="lbl">Spent</div></div><div class="metric"><div class="val ${net>=0?'green':'red'}">${net<0?'-':''}$${Math.abs(net).toFixed(2)}</div><div class="lbl">Net ${net>=0?'Surplus':'Deficit'}</div></div></div><h2>Spending by Category</h2><table><tr><th>Category</th><th>Group</th><th>Transactions</th><th>Total</th><th>% of Spending</th></tr>${cats.map(([cat,val])=>`<tr><td>${cat}</td><td>${ALL_CATS[cat]?.group||'Other'}</td><td>${counts[cat]||0}</td><td>$${val.toFixed(2)}</td><td>${totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>`).join('')}</table><p style="margin-top:30px;font-size:11px;color:var(--text-muted);text-align:center">Generated by MoneyMap — ${new Date().toLocaleDateString()}</p></body></html>`;
     const blob=new Blob([html],{type:'text/html'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`MoneyMap_${label.replace(' ','_')}.html`;a.click();
   };
@@ -2409,9 +2450,9 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
           <div style={{display:'flex',alignItems:'flex-end',gap:6,height:160,padding:'0 4px'}}>
             {trendData.map((d,i)=>(
               <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                <div style={{fontSize:9,color:'#6b8dc4',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
-                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'#1a6fd4':'rgba(26,111,212,0.25)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
-                <div style={{fontSize:9,color:d.current?'#1a6fd4':'#6b8dc4',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
+                <div style={{fontSize:9,color:'var(--text-muted)',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
+                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'var(--green)':'rgba(26,111,212,0.25)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
+                <div style={{fontSize:9,color:d.current?'var(--green)':'var(--text-muted)',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
               </div>
             ))}
           </div>
@@ -2479,10 +2520,10 @@ function MovePicker({accounts,currentAccount,onMove}){
     <div style={{display:'inline-block'}}>
       <button ref={btnRef} onClick={()=>setShow(s=>!s)} style={{background:'rgba(124,58,237,0.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>↗</button>
       {show&&(
-        <div ref={menuRef} style={{position:'fixed',top:menuPos.top,left:menuPos.left,background:'#fff',border:'1px solid #c7ddf7',borderRadius:'var(--radius-md)',boxShadow:'0 4px 20px rgba(26,111,212,0.15)',zIndex:9999,minWidth:150,marginTop:0}}>
-          <div style={{fontSize:10,color:'#6b8dc4',padding:'6px 10px 4px',fontWeight:600,textTransform:'uppercase',borderBottom:'1px solid #e8f1fd'}}>Move to</div>
+        <div ref={menuRef} style={{position:'fixed',top:menuPos.top,left:menuPos.left,background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--radius-md)',boxShadow:'0 4px 20px var(--green-mid)',zIndex:9999,minWidth:150,marginTop:0}}>
+          <div style={{fontSize:10,color:'var(--text-muted)',padding:'6px 10px 4px',fontWeight:600,textTransform:'uppercase',borderBottom:'1px solid var(--border-light)'}}>Move to</div>
           {others.map(([k,a])=>(
-            <div key={k} onMouseDown={()=>{onMove(k);setShow(false);}} style={{padding:'9px 12px',fontSize:12,color:'#0f2a5e',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='#f0f6ff'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <div key={k} onMouseDown={()=>{onMove(k);setShow(false);}} style={{padding:'9px 12px',fontSize:12,color:'var(--text-primary)',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
               {a.name}
             </div>
           ))}
@@ -2499,13 +2540,13 @@ function EditBillForm({bill,billCats,onSave,onCancel}){
   return(
     <div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Bill name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{billCats.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Bill name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{billCats.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
       </div>
-      <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:16,fontSize:13,color:'#2d5a9e'}}>
-        <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+      <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',marginBottom:16,fontSize:13,color:'var(--slate)'}}>
+        <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'var(--green)'}}/>
         This bill is on autopay
       </label>
       <div style={{display:'flex',gap:10}}>
@@ -2522,14 +2563,14 @@ function EditSubForm({sub,categories,onSave,onCancel}){
   return(
     <div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Service name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-        <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay||1} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Service name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Amount</label><input type="number" value={form.amount} min="0" step="0.01" onChange={e=>setForm(f=>({...f,amount:parseFloat(e.target.value)||0}))}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay||1} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
         <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
-          <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
-            <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+          <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'var(--slate)'}}>
+            <input type="checkbox" checked={form.autopay||false} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'var(--green)'}}/>
             Autopay
           </label>
         </div>
@@ -2633,7 +2674,7 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
       {editingSub&&(
         <div className="modal-overlay" style={{zIndex:3000}}>
           <div className="modal-box slide-up" style={{maxWidth:480}}>
-            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'#0f2a5e'}}>✏️ Edit Subscription</h2>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit Subscription</h2>
             <EditSubForm sub={editingSub} categories={['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other']} onSave={(updated)=>{setSubscriptions(subscriptions.map(s=>s.id===updated.id?updated:s));setEditingSub(null);}} onCancel={()=>setEditingSub(null)} />
           </div>
         </div>
@@ -2643,8 +2684,8 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
           <div className="modal-box slide-up" style={{maxWidth:420}}>
             <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
               <div style={{fontSize:36,marginBottom:8}}>📱</div>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Mark "{paySubModal.name}" as paid</h2>
-              <p style={{fontSize:13,color:'#6b8dc4'}}>${paySubModal.amount.toFixed(2)}</p>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Mark "{paySubModal.name}" as paid</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)'}}>${paySubModal.amount.toFixed(2)}</p>
             </div>
             {accounts&&(
               <PaySubAccountSelector accounts={accounts} sub={paySubModal} onConfirm={handlePaySubConfirm} onCancel={()=>setPaySubModal(null)} />
@@ -2657,7 +2698,7 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:showForm?'1rem':0,flexWrap:'wrap',gap:8}}>
           <div>
             <div className="card-title" style={{marginBottom:2}}>📱 Subscriptions</div>
-            <div style={{fontSize:12,color:'#6b8dc4'}}>Track recurring subscriptions separately from bills</div>
+            <div style={{fontSize:12,color:'var(--text-muted)'}}>Track recurring subscriptions separately from bills</div>
           </div>
           <div style={{display:'flex',gap:6,alignItems:'center'}}>
             {subscriptions.length>0&&<ClearBtn label="Clear all" onClear={()=>setSubscriptions([])} title="Clear all subscriptions?" message="This will permanently delete all subscriptions." />}
@@ -2665,16 +2706,16 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
           </div>
         </div>
         {showForm&&(
-          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+          <div style={{borderTop:'1px solid var(--border)',paddingTop:'1rem'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Service name</label><input placeholder="e.g. Netflix, Spotify" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'#dc2626'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Service name</label><input placeholder="e.g. Netflix, Spotify" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={err.name?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Amount</label><input type="number" placeholder="$0.00" min="0" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} style={err.amount?{borderColor:'#dc2626'}:{}}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Billing cycle</label><select value={form.cycle} onChange={e=>setForm(f=>({...f,cycle:e.target.value}))}><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:e.target.value}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
               <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
-                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
-                  <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'var(--slate)'}}>
+                  <input type="checkbox" checked={form.autopay} onChange={e=>setForm(f=>({...f,autopay:e.target.checked}))} style={{width:15,height:15,accentColor:'var(--green)'}}/>
                   Autopay
                 </label>
               </div>
@@ -2719,12 +2760,12 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
                   return(
                     <tr key={sub.id} style={{opacity:paid?0.75:1}}>
                       <td style={{padding:'10px 16px'}}>
-                        <div style={{fontWeight:600,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e',textDecoration:paid?'line-through':'none'}}>{sub.name}</div>
+                        <div style={{fontWeight:600,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)',textDecoration:paid?'line-through':'none'}}>{sub.name}</div>
                         <div style={{fontSize:10,color:'#7c3aed',fontWeight:600,marginTop:1}}>{sub.cycle==='yearly'?'📅 YEARLY':'🔄 MONTHLY'}{sub.autopay?' · ⚡ AUTOPAY':''}</div>
                       </td>
-                      <td style={{fontSize:11,color:'#6b8dc4'}}>{sub.category}</td>
-                      <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'#6b8dc4':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'#2d5a9e'}}>{daySuffix(sub.dueDay)}</span></td>
-                      <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'#6b8dc4':'#0f2a5e'}}>${sub.amount.toFixed(2)}</td>
+                      <td style={{fontSize:11,color:'var(--text-muted)'}}>{sub.category}</td>
+                      <td style={{textAlign:'center'}}><span style={{fontSize:12,fontWeight:600,color:paid?'var(--text-muted)':status==='overdue'?'#dc2626':status==='due-soon'?'#d97706':'var(--slate)'}}>{daySuffix(sub.dueDay)}</span></td>
+                      <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)'}}>${sub.amount.toFixed(2)}</td>
                       <td style={{textAlign:'center'}}>
                         {paid?(
                           <button onClick={()=>handleUnpaySub(sub.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
@@ -2732,10 +2773,10 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
                           <button onClick={()=>handlePaySub(sub)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                         )}
                       </td>
-                      <td style={{textAlign:'center',fontSize:11,color:'#6b8dc4'}}>{paidAt(sub)||'—'}</td>
+                      <td style={{textAlign:'center',fontSize:11,color:'var(--text-muted)'}}>{paidAt(sub)||'—'}</td>
                       <td style={{textAlign:'center'}}>
                         <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                          <button onClick={()=>setEditingSub(sub)} style={{background:'rgba(26,111,212,0.1)',color:'#1a6fd4',border:'1px solid rgba(26,111,212,0.2)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
+                          <button onClick={()=>setEditingSub(sub)} style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}}>✏️</button>
                           {accounts&&Object.keys(accounts).filter(k=>k!==activeAccount).length>0&&<MovePicker accounts={accounts} currentAccount={activeAccount} onMove={(targetKey)=>onMoveSubscription&&onMoveSubscription(sub,targetKey)} />}
                           <button className="btn-danger" onClick={()=>setSubscriptions(subscriptions.filter(s=>s.id!==sub.id))}>✕</button>
                         </div>
@@ -2749,8 +2790,8 @@ function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals
 
           <div className="card">
             <div className="card-title">Subscription progress — {now.toLocaleDateString('en-US',{month:'long'})}</div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#6b8dc4',marginBottom:6}}><span>{paidCount} of {subscriptions.length} paid</span><span>${totalPaid.toFixed(2)} of ${monthlyTotal.toFixed(2)}</span></div>
-            <div style={{background:'#e8f1fd',borderRadius:6,height:10,overflow:'hidden'}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text-muted)',marginBottom:6}}><span>{paidCount} of {subscriptions.length} paid</span><span>${totalPaid.toFixed(2)} of ${monthlyTotal.toFixed(2)}</span></div>
+            <div style={{background:'var(--border-light)',borderRadius:6,height:10,overflow:'hidden'}}>
               <div style={{height:10,borderRadius:6,width:`${subscriptions.length>0?Math.round((paidCount/subscriptions.length)*100):0}%`,background:paidCount===subscriptions.length?'#16a34a':'linear-gradient(90deg,#7c3aed,#a78bfa)',transition:'width 0.4s ease'}}/>
             </div>
             {paidCount===subscriptions.length&&subscriptions.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All subscriptions paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
@@ -2771,16 +2812,16 @@ function PaySubAccountSelector({accounts,sub,onConfirm,onCancel}){
   return(
     <>
       <div style={{marginBottom:16}}>
-        <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:6,fontWeight:500}}>Deduct from which account?</label>
+        <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:6,fontWeight:500}}>Deduct from which account?</label>
         <select value={selectedAccount} onChange={e=>setSelectedAccount(e.target.value)} style={{marginBottom:10}}>
           {Object.entries(accounts).map(([key,acct])=><option key={key} value={key}>{acct.name}</option>)}
         </select>
-        <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'#2d5a9e'}}>
-          <input type="checkbox" checked={deduct} onChange={e=>setDeduct(e.target.checked)} style={{width:15,height:15,accentColor:'#1a6fd4'}}/>
+        <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13,color:'var(--slate)'}}>
+          <input type="checkbox" checked={deduct} onChange={e=>setDeduct(e.target.checked)} style={{width:15,height:15,accentColor:'var(--green)'}}/>
           Automatically add debit transaction to this account
         </label>
       </div>
-      <div style={{background:'#f0f6ff',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'#2d5a9e'}}>
+      <div style={{background:'var(--bg)',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'var(--slate)'}}>
         {deduct?`A debit of $${sub.amount.toFixed(2)} will be added to "${accounts[selectedAccount]?.name}" register.`:'Subscription will be marked paid without affecting any account balance.'}
       </div>
       <div style={{display:'flex',gap:10}}>
@@ -2800,7 +2841,7 @@ function MilestoneModal({milestone,onClose}){
   },[]);
   return(
     <div className="modal-overlay" style={{zIndex:4000,background:'rgba(15,42,94,0.3)'}} onClick={onClose}>
-      <div className="slide-up" style={{background:'linear-gradient(135deg,#1a6fd4,#5ba3f5)',borderRadius:'var(--radius-xl)',padding:'2.5rem 2rem',maxWidth:400,width:'100%',textAlign:'center',boxShadow:'0 20px 60px rgba(26,111,212,0.3)'}}>
+      <div className="slide-up" style={{background:'var(--green)',borderRadius:'var(--radius-xl)',padding:'2.5rem 2rem',maxWidth:400,width:'100%',textAlign:'center',boxShadow:'0 20px 60px rgba(26,111,212,0.3)'}}>
         <div style={{fontSize:64,marginBottom:16}}>{milestone.icon}</div>
         <h2 style={{fontFamily:'var(--font-display)',fontSize:24,fontWeight:800,color:'#fff',marginBottom:10,lineHeight:1.2}}>{milestone.title}</h2>
         <p style={{fontSize:14,color:'rgba(255,255,255,0.85)',lineHeight:1.6,marginBottom:16}}>{milestone.message}</p>
@@ -2831,31 +2872,31 @@ function TransferModal({accounts,onTransfer,onCancel}){
       <div className="modal-box slide-up" style={{maxWidth:420}}>
         <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
           <div style={{fontSize:36,marginBottom:8}}>🔄</div>
-          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'#0f2a5e'}}>Transfer Between Accounts</h2>
-          <p style={{fontSize:12,color:'#6b8dc4'}}>This moves money between your accounts without affecting your income or expense totals.</p>
+          <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Transfer Between Accounts</h2>
+          <p style={{fontSize:12,color:'var(--text-muted)'}}>This moves money between your accounts without affecting your income or expense totals.</p>
         </div>
         <div style={{marginBottom:12}}>
-          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>From account</label>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>From account</label>
           <select value={fromKey} onChange={e=>setFromKey(e.target.value)}>
             {accountList.map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
           </select>
         </div>
         <div style={{marginBottom:12}}>
-          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>To account</label>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>To account</label>
           <select value={toKey} onChange={e=>setToKey(e.target.value)}>
             {accountList.map(([k,a])=><option key={k} value={k}>{a.name}</option>)}
           </select>
         </div>
         <div style={{marginBottom:12}}>
-          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Amount</label>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>Amount</label>
           <input type="number" placeholder="$0.00" min="0" step="0.01" value={amt} onChange={e=>{setAmt(e.target.value);setErr('');}}/>
         </div>
         <div style={{marginBottom:16}}>
-          <label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4,fontWeight:500}}>Description (optional)</label>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4,fontWeight:500}}>Description (optional)</label>
           <input placeholder="Account transfer" value={desc} onChange={e=>setDesc(e.target.value)}/>
         </div>
         {err&&<div className="alert-box alert-danger" style={{marginBottom:12}}>{err}</div>}
-        <div style={{background:'#f0f6ff',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'#2d5a9e'}}>
+        <div style={{background:'var(--bg)',borderRadius:'var(--radius-md)',padding:'10px 14px',marginBottom:16,fontSize:12,color:'var(--slate)'}}>
           A debit will be logged in <strong>{accounts[fromKey]?.name}</strong> and a credit in <strong>{accounts[toKey]?.name}</strong>.
         </div>
         <div style={{display:'flex',gap:10}}>
@@ -2903,7 +2944,7 @@ function CalendarTab({bills,billsPaid,subscriptions}){
     dayMap[d].push({name:s.name,amount:s.amount,status,type:'sub'});
   });
 
-  const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'#c7ddf7'}};
+  const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'}};
 
   const totalDue=bills.length+subscriptions.length;
   const totalPaid=[...bills,...subscriptions].filter((_,i)=>i<bills.length?isPaid(bills[i].id,'bill'):isPaid(subscriptions[i-bills.length].id,'sub')).length;
@@ -2925,7 +2966,7 @@ function CalendarTab({bills,billsPaid,subscriptions}){
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:8}}>
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d} style={{textAlign:'center',fontSize:10,color:'#6b8dc4',fontWeight:600,padding:'4px 0'}}>{d}</div>)}
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><div key={d} style={{textAlign:'center',fontSize:10,color:'var(--text-muted)',fontWeight:600,padding:'4px 0'}}>{d}</div>)}
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
           {Array.from({length:firstDay}).map((_,i)=><div key={`empty-${i}`}/>)}
@@ -2938,8 +2979,8 @@ function CalendarTab({bills,billsPaid,subscriptions}){
             const allPaid=items.length>0&&items.every(it=>it.status==='paid');
             const bgColor=items.length===0?'transparent':allPaid?'rgba(22,163,74,0.06)':hasOverdue?'rgba(220,38,38,0.06)':hasDueSoon?'rgba(217,119,6,0.06)':'rgba(26,111,212,0.04)';
             return(
-              <div key={day} style={{minHeight:60,border:`1px solid ${isToday?'#1a6fd4':'#e8f1fd'}`,borderRadius:'var(--radius-sm)',padding:'4px',background:bgColor,position:'relative'}}>
-                <div style={{fontSize:11,fontWeight:isToday?700:400,color:isToday?'#1a6fd4':'#6b8dc4',marginBottom:2}}>{day}</div>
+              <div key={day} style={{minHeight:60,border:`1px solid ${isToday?'var(--green)':'var(--border-light)'}`,borderRadius:'var(--radius-sm)',padding:'4px',background:bgColor,position:'relative'}}>
+                <div style={{fontSize:11,fontWeight:isToday?700:400,color:isToday?'var(--green)':'var(--text-muted)',marginBottom:2}}>{day}</div>
                 {items.map((item,idx)=>{
                   const sc=statusColors[item.status];
                   return(
@@ -2962,13 +3003,13 @@ function CalendarTab({bills,billsPaid,subscriptions}){
           const sc=statusColors[status];
           const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
           return(
-            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
               <div style={{width:8,height:8,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
               <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#0f2a5e'}}>{item.name}</div>
-                <div style={{fontSize:11,color:'#6b8dc4'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':'Fixed bill'}</div>
+                <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{item.name}</div>
+                <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':'Fixed bill'}</div>
               </div>
-              <div style={{fontWeight:700,color:'#0f2a5e'}}>${item.amount.toFixed(2)}</div>
+              <div style={{fontWeight:700,color:'var(--text-primary)'}}>${item.amount.toFixed(2)}</div>
               <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status.charAt(0).toUpperCase()+status.slice(1)}</span>
             </div>
           );
@@ -2988,22 +3029,22 @@ function NetWorthExplainer(){
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <span style={{fontSize:20}}>💡</span>
           <div>
-            <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#0f2a5e'}}>What counts toward my net worth?</div>
-            <div style={{fontSize:11,color:'#6b8dc4'}}>Tap to {open?'hide':'learn more'}</div>
+            <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>What counts toward my net worth?</div>
+            <div style={{fontSize:11,color:'var(--text-muted)'}}>Tap to {open?'hide':'learn more'}</div>
           </div>
         </div>
-        <span style={{fontSize:16,color:'#6b8dc4',transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.2s'}}>▼</span>
+        <span style={{fontSize:16,color:'var(--text-muted)',transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.2s'}}>▼</span>
       </button>
 
       {open&&(
-        <div style={{borderTop:'1px solid #e8f1fd',marginTop:'1rem',paddingTop:'1rem'}}>
+        <div style={{borderTop:'1px solid var(--border-light)',marginTop:'1rem',paddingTop:'1rem'}}>
 
           {/* Formula */}
-          <div style={{background:'rgba(26,111,212,0.06)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem',textAlign:'center'}}>
-            <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'#0f2a5e',marginBottom:4}}>
+          <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-md)',padding:'12px 14px',marginBottom:'1.25rem',textAlign:'center'}}>
+            <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>
               Net Worth = Total Assets − Total Liabilities
             </div>
-            <div style={{fontSize:12,color:'#2d5a9e',lineHeight:1.6}}>
+            <div style={{fontSize:12,color:'var(--slate)',lineHeight:1.6}}>
               A <strong style={{color:'#16a34a'}}>positive number</strong> means you own more than you owe ✅<br/>
               A <strong style={{color:'#dc2626'}}>negative number</strong> is common early in life — the goal is to grow it over time 📈
             </div>
@@ -3029,8 +3070,8 @@ function NetWorthExplainer(){
                 <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
                   <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{item.icon}</span>
                   <div>
-                    <div style={{fontSize:12,fontWeight:600,color:'#0f2a5e'}}>{item.label}</div>
-                    <div style={{fontSize:11,color:'#6b8dc4',lineHeight:1.4}}>{item.desc}</div>
+                    <div style={{fontSize:12,fontWeight:600,color:'var(--text-primary)'}}>{item.label}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)',lineHeight:1.4}}>{item.desc}</div>
                   </div>
                 </div>
               ))}
@@ -3054,8 +3095,8 @@ function NetWorthExplainer(){
                 <div key={i} style={{display:'flex',gap:8,marginBottom:8}}>
                   <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{item.icon}</span>
                   <div>
-                    <div style={{fontSize:12,fontWeight:600,color:'#0f2a5e'}}>{item.label}</div>
-                    <div style={{fontSize:11,color:'#6b8dc4',lineHeight:1.4}}>{item.desc}</div>
+                    <div style={{fontSize:12,fontWeight:600,color:'var(--text-primary)'}}>{item.label}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)',lineHeight:1.4}}>{item.desc}</div>
                   </div>
                 </div>
               ))}
@@ -3072,7 +3113,7 @@ function NetWorthExplainer(){
                 'Update your values monthly to track your net worth growth over time.',
                 'A negative net worth early in life is normal — most people start there. The goal is a growing trend.',
               ].map((tip,i)=>(
-                <div key={i} style={{fontSize:11,color:'#2d5a9e',lineHeight:1.5,display:'flex',gap:6}}>
+                <div key={i} style={{fontSize:11,color:'var(--slate)',lineHeight:1.5,display:'flex',gap:6}}>
                   <span style={{color:'#d97706',flexShrink:0}}>•</span>{tip}
                 </div>
               ))}
@@ -3117,7 +3158,7 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
   const monthSavings=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.grp==='Savings'&&t.type==='debit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
   const actualRate=monthIncome>0?Math.min(100,(monthSavings/monthIncome)*100):0;
   const progress=Math.min(100,(actualRate/savingsRateGoal)*100);
-  const ringColor=progress>=100?'#16a34a':progress>=50?'#1a6fd4':'#d97706';
+  const ringColor=progress>=100?'#16a34a':progress>=50?'var(--green)':'#d97706';
   const circumference=2*Math.PI*40;
   const dashOffset=circumference*(1-progress/100);
 
@@ -3137,14 +3178,14 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
       {/* Net Worth Summary */}
       <div className="card" style={{background:netWorth>=0?'linear-gradient(135deg,rgba(22,163,74,0.08),rgba(22,163,74,0.03))':'linear-gradient(135deg,rgba(220,38,38,0.08),rgba(220,38,38,0.03))'}}>
         <div style={{textAlign:'center',padding:'1rem 0'}}>
-          <div style={{fontSize:13,color:'#6b8dc4',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>Total Net Worth</div>
+          <div style={{fontSize:13,color:'var(--text-muted)',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>Total Net Worth</div>
           <div style={{fontFamily:'var(--font-display)',fontSize:40,fontWeight:800,color:netWorth>=0?'#16a34a':'#dc2626'}}>
             {netWorth<0?'-':''}${Math.abs(netWorth).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}
           </div>
           <div style={{display:'flex',justifyContent:'center',gap:24,marginTop:12}}>
-            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'#6b8dc4'}}>Total Assets</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#16a34a'}}>${totalAssets.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
-            <div style={{width:1,background:'#e8f1fd'}}/>
-            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'#6b8dc4'}}>Total Liabilities</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#dc2626'}}>${totalLiabilities.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'var(--text-muted)'}}>Total Assets</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#16a34a'}}>${totalAssets.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+            <div style={{width:1,background:'var(--border-light)'}}/>
+            <div style={{textAlign:'center'}}><div style={{fontSize:11,color:'var(--text-muted)'}}>Total Liabilities</div><div style={{fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'#dc2626'}}>${totalLiabilities.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
           </div>
         </div>
       </div>
@@ -3154,21 +3195,21 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
         <div style={{display:'flex',alignItems:'center',gap:'1.5rem',flexWrap:'wrap'}}>
           <div style={{flexShrink:0}}>
             <svg width={100} height={100} viewBox="0 0 100 100">
-              <circle cx={50} cy={50} r={40} fill="none" stroke="#e8f1fd" strokeWidth={10}/>
+              <circle cx={50} cy={50} r={40} fill="none" stroke="var(--border-light)" strokeWidth={10}/>
               <circle cx={50} cy={50} r={40} fill="none" stroke={ringColor} strokeWidth={10} strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 50 50)" style={{transition:'stroke-dashoffset 0.6s ease'}}/>
               <text x={50} y={46} textAnchor="middle" style={{fontSize:14,fontWeight:800,fill:ringColor,fontFamily:'var(--font-display)'}}>{actualRate.toFixed(0)}%</text>
-              <text x={50} y={60} textAnchor="middle" style={{fontSize:9,fill:'#6b8dc4'}}>of {savingsRateGoal}% goal</text>
+              <text x={50} y={60} textAnchor="middle" style={{fontSize:9,fill:'var(--text-muted)'}}>of {savingsRateGoal}% goal</text>
             </svg>
           </div>
           <div style={{flex:1,minWidth:0}}>
             <div className="card-title" style={{marginBottom:4}}>💡 Savings Rate Goal</div>
-            <p style={{fontSize:12,color:'#6b8dc4',lineHeight:1.6,marginBottom:10}}>
+            <p style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,marginBottom:10}}>
               {actualRate>=savingsRateGoal?`🎉 You hit your ${savingsRateGoal}% savings goal this month!`:actualRate>0?`You're saving ${actualRate.toFixed(1)}% of income. Keep going to reach your ${savingsRateGoal}% goal!`:'No savings logged this month yet.'}
             </p>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <label style={{fontSize:12,color:'#6b8dc4',whiteSpace:'nowrap'}}>Goal:</label>
+              <label style={{fontSize:12,color:'var(--text-muted)',whiteSpace:'nowrap'}}>Goal:</label>
               <input type="number" value={savingsRateGoal} min="1" max="100" step="1" onChange={e=>setSavingsRateGoal(parseFloat(e.target.value)||20)} style={{width:70}}/>
-              <span style={{fontSize:12,color:'#6b8dc4'}}>% of income</span>
+              <span style={{fontSize:12,color:'var(--text-muted)'}}>% of income</span>
             </div>
           </div>
         </div>
@@ -3181,11 +3222,11 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
           <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowAssetForm(f=>!f)}>{showAssetForm?'✕ Cancel':'+ Add asset'}</button>
         </div>
         {showAssetForm&&(
-          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+          <div style={{borderTop:'1px solid var(--border)',paddingTop:'1rem'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Asset name</label><input placeholder="e.g. Primary Home, Toyota Camry" value={assetForm.name} onChange={e=>setAssetForm(f=>({...f,name:e.target.value}))}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Estimated value</label><input type="number" placeholder="$0" min="0" step="100" value={assetForm.value} onChange={e=>setAssetForm(f=>({...f,value:e.target.value}))}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={assetForm.category} onChange={e=>setAssetForm(f=>({...f,category:e.target.value}))}>{ASSET_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Asset name</label><input placeholder="e.g. Primary Home, Toyota Camry" value={assetForm.name} onChange={e=>setAssetForm(f=>({...f,name:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Estimated value</label><input type="number" placeholder="$0" min="0" step="100" value={assetForm.value} onChange={e=>setAssetForm(f=>({...f,value:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={assetForm.category} onChange={e=>setAssetForm(f=>({...f,category:e.target.value}))}>{ASSET_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             </div>
             <div className="tip-box" style={{marginBottom:10,fontSize:11}}>💡 Only enter the asset name — never enter account numbers or sensitive details.</div>
             <button className="btn-gold" onClick={addAsset}>Save asset</button>
@@ -3197,8 +3238,8 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
               <div key={cat} style={{marginBottom:10}}>
                 <div style={{fontSize:11,color:'#16a34a',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{cat}</div>
                 {items.map(a=>(
-                  <div key={a.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
-                    <span style={{fontSize:13,color:'#0f2a5e'}}>{a.name}</span>
+                  <div key={a.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
+                    <span style={{fontSize:13,color:'var(--text-primary)'}}>{a.name}</span>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <input type="number" defaultValue={a.value} min="0" step="100" style={{width:110,fontSize:12,textAlign:'right'}} onBlur={e=>setAssets(assets.map(x=>x.id===a.id?{...x,value:parseFloat(e.target.value)||0}:x))} title="Update value"/>
                       <button className="btn-danger" onClick={()=>setAssets(assets.filter(x=>x.id!==a.id))}>✕</button>
@@ -3219,11 +3260,11 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
           <button className="btn-gold" style={{fontSize:12,padding:'6px 14px'}} onClick={()=>setShowLiabForm(f=>!f)}>{showLiabForm?'✕ Cancel':'+ Add liability'}</button>
         </div>
         {showLiabForm&&(
-          <div style={{borderTop:'1px solid #c7ddf7',paddingTop:'1rem'}}>
+          <div style={{borderTop:'1px solid var(--border)',paddingTop:'1rem'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Liability name</label><input placeholder="e.g. Home Mortgage, Car Loan" value={liabForm.name} onChange={e=>setLiabForm(f=>({...f,name:e.target.value}))}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Current balance</label><input type="number" placeholder="$0" min="0" step="100" value={liabForm.balance} onChange={e=>setLiabForm(f=>({...f,balance:e.target.value}))}/></div>
-              <div><label style={{fontSize:12,color:'#6b8dc4',display:'block',marginBottom:4}}>Category</label><select value={liabForm.category} onChange={e=>setLiabForm(f=>({...f,category:e.target.value}))}>{LIAB_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Liability name</label><input placeholder="e.g. Home Mortgage, Car Loan" value={liabForm.name} onChange={e=>setLiabForm(f=>({...f,name:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Current balance</label><input type="number" placeholder="$0" min="0" step="100" value={liabForm.balance} onChange={e=>setLiabForm(f=>({...f,balance:e.target.value}))}/></div>
+              <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={liabForm.category} onChange={e=>setLiabForm(f=>({...f,category:e.target.value}))}>{LIAB_CATS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             </div>
             <div className="tip-box" style={{marginBottom:10,fontSize:11}}>💡 Only enter the liability name and balance — never enter account numbers.</div>
             <button className="btn-gold" onClick={addLiability}>Save liability</button>
@@ -3235,8 +3276,8 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
               <div key={cat} style={{marginBottom:10}}>
                 <div style={{fontSize:11,color:'#dc2626',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{cat}</div>
                 {items.map(l=>(
-                  <div key={l.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
-                    <span style={{fontSize:13,color:'#0f2a5e'}}>{l.name}</span>
+                  <div key={l.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
+                    <span style={{fontSize:13,color:'var(--text-primary)'}}>{l.name}</span>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <input type="number" defaultValue={l.balance} min="0" step="100" style={{width:110,fontSize:12,textAlign:'right'}} onBlur={e=>setLiabilities(liabilities.map(x=>x.id===l.id?{...x,balance:parseFloat(e.target.value)||0}:x))} title="Update balance"/>
                       <button className="btn-danger" onClick={()=>setLiabilities(liabilities.filter(x=>x.id!==l.id))}>✕</button>
@@ -3252,14 +3293,14 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
 
       {/* Milestones */}
       {completedGoals.length>0&&(
-        <div className="card" style={{background:'linear-gradient(135deg,rgba(26,111,212,0.06),rgba(26,111,212,0.02))'}}>
+        <div className="card" style={{background:'linear-gradient(135deg,var(--green-light),rgba(26,111,212,0.02))'}}>
           <div className="card-title">🎉 Financial Milestones Reached</div>
           {completedGoals.map(g=>(
-            <div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #e8f1fd'}}>
+            <div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
               <span style={{fontSize:24}}>🏆</span>
               <div>
-                <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'#1a6fd4'}}>{g.name} — Complete!</div>
-                <div style={{fontSize:11,color:'#6b8dc4'}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0})} saved · Goal reached 🎯</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:13,fontWeight:700,color:'var(--green)'}}>{g.name} — Complete!</div>
+                <div style={{fontSize:11,color:'var(--text-muted)'}}>${g.saved.toLocaleString('en-US',{minimumFractionDigits:0})} saved · Goal reached 🎯</div>
               </div>
             </div>
           ))}
