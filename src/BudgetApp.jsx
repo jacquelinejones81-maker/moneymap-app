@@ -1981,8 +1981,8 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
       <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} />
+      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
     </>
   );
 }
