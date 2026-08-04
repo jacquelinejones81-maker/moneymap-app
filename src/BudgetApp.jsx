@@ -2089,7 +2089,7 @@ function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact
                 🏆 You are completely debt free!
               </div>
               <div style={{fontSize:13, color:'#1a4d30', lineHeight:1.7}}>
-                Every dollar you were sending to debt is now yours to build with. This is the moment most people waste — lifestyle creep quietly steals it. Don't let that happen.
+                Every dollar you were sending to debt is now yours to build with. This is the moment most people waste — lifestyle creep quietly steals it. Don’t let that happen.
               </div>
             </div>
             <div style={{background:'rgba(42,107,74,0.06)', border:'1px solid rgba(42,107,74,0.2)', borderRadius:'var(--radius-lg)', padding:'16px', marginBottom:20, textAlign:'left'}}>
@@ -2112,14 +2112,14 @@ function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact
               </button>
             )}
             <button onClick={onClose} style={{width:'100%', background:'none', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', padding:'11px', fontSize:13, color:'var(--text-secondary)', cursor:'pointer', fontFamily:'var(--font-display)'}}>
-              {contacted ? 'Back to my dashboard' : 'Dismiss — I'll figure it out on my own'}
+              {contacted ? 'Back to my dashboard' : "Dismiss — I'll figure it out on my own"}
             </button>
           </>
         ) : (
           <>
             <div style={{background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:'var(--radius-lg)', padding:'14px 16px', marginBottom:14, textAlign:'left'}}>
               <div style={{fontSize:13, fontWeight:700, color:'#92610a', marginBottom:6}}>That ${paidDebt.min.toFixed(0)} is not free — yet</div>
-              <div style={{fontSize:12, color:'#92610a', lineHeight:1.7}}>Roll your ${paidDebt.min.toFixed(0)}/month straight into your next debt. Every dollar you freed up is now your most powerful weapon. Don't let lifestyle creep steal this win.</div>
+              <div style={{fontSize:12, color:'#92610a', lineHeight:1.7}}>Roll your ${paidDebt.min.toFixed(0)}/month straight into your next debt. Every dollar you freed up is now your most powerful weapon. Don’t let lifestyle creep steal this win.</div>
             </div>
             {nextDebt && savings && (
               <div style={{background:'rgba(22,163,74,0.08)', border:'1px solid rgba(22,163,74,0.2)', borderRadius:'var(--radius-lg)', padding:'14px 16px', marginBottom:20, textAlign:'left', display:'flex', gap:12, alignItems:'flex-start'}}>
@@ -2198,7 +2198,7 @@ function DebtsTab({debts,setDebts,onRepContact}){
           </div>
           {inlinePayoff.allDebtFree ? (
             <div style={{fontSize:12,color:'#1a4d30',lineHeight:1.7,marginBottom:12}}>
-              You are completely debt free! Every dollar you were sending to debt is now yours to build with. Don't let lifestyle creep take it — get a plan in place.
+              You are completely debt free! Every dollar you were sending to debt is now yours to build with. Don’t let lifestyle creep take it — get a plan in place.
             </div>
           ) : (
             <div style={{fontSize:12,color:'#1a4d30',lineHeight:1.7,marginBottom:12}}>
