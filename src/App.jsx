@@ -193,13 +193,123 @@ export default function App() {
   if (view === 'admin') return <AdminPanel onBack={() => { window.location.hash = ''; setView('landing'); }} />;
   if (view === 'pin-setup') return <PinSetup lead={currentLead} onComplete={handlePinSetup} />;
   if (view === 'forgot-pin') return <ForgotPin firebaseUser={firebaseUser} currentLead={currentLead} onComplete={()=>{ sessionStorage.setItem(`mm_auth_${firebaseUser.uid}`,'true'); setView('app'); }} onBack={()=>setView('pin-login')} />;
-  if (view === 'pin-login') return <PinLogin uid={firebaseUser?.uid} firstName={currentLead?.name?.split(' ')[0]||''} onSuccess={handlePinLogin} onForgot={()=>setView('forgot-pin')} onSignOut={handleSignOut} />;
+  if (view === 'quick-signin') return <QuickSignIn onSubmit={handleLeadSubmit} onBack={()=>setView('landing')} />;
+  if (view === 'pin-login') return <PinLogin uid={firebaseUser?.uid} firstName={currentLead?.name?.split(' ')[0]||''} onSuccess={handlePinLogin} onForgot={()=>setView('forgot-pin')} onSignOut={()=>setView('quick-signin')} />;
   if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
   return <LandingPage onSubmit={handleLeadSubmit} repName={repName} />;
 }
 
+function QuickSignIn({ onSubmit, onBack }) {
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+
+  const G = '#2a6b4a';
+  const BORDER = '#e8e4dc';
+
+  const formatPhone = (v) => {
+    const d = v.replace(/\D/g,'').slice(0,10);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return d.slice(0,3)+'-'+d.slice(3);
+    return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) { setError('Please enter your name.'); return; }
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) { setError('Please enter a valid email.'); return; }
+    const digits = phone.replace(/\D/g,'');
+    if (digits.length < 10) { setError('Please enter a valid phone number.'); return; }
+    setError('');
+    onSubmit({ name: name.trim(), email: email.trim(), phone });
+  };
+
+  const inputStyle = {
+    background: '#fafaf8',
+    border: `1px solid ${BORDER}`,
+    borderRadius: 8,
+    padding: '10px 12px',
+    color: '#1a1a1a',
+    fontSize: 13,
+    width: '100%',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle = {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: '0.07em',
+    color: '#aaa',
+    display: 'block',
+    marginBottom: 5,
+    fontWeight: 500,
+  };
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#f5f4f0', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
+      <div style={{ background:'#fff', border:`1px solid ${BORDER}`, borderRadius:20, padding:'2.5rem 2rem', width:'100%', maxWidth:380 }}>
+
+        <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
+          <div style={{ fontFamily:"'Georgia',serif", fontSize:22, color:'#1a1a1a', marginBottom:16 }}>
+            Money<span style={{ color:G }}>Map</span>
+          </div>
+          <div style={{ fontSize:32, marginBottom:10 }}>👋</div>
+          <div style={{ fontFamily:"'Georgia',serif", fontSize:18, color:'#1a1a1a', marginBottom:6 }}>Sign in to your account</div>
+          <div style={{ fontSize:12, color:'#888', lineHeight:1.6 }}>
+            Enter your name, email and phone number to access your account.
+          </div>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>Full name</label>
+          <input type="text" placeholder="Your full name" value={name}
+            style={inputStyle}
+            onChange={e=>{ setName(e.target.value); setError(''); }} />
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>Email address</label>
+          <input type="email" placeholder="your@email.com" value={email}
+            style={inputStyle}
+            onChange={e=>{ setEmail(e.target.value); setError(''); }} />
+        </div>
+
+        <div style={{ marginBottom:16 }}>
+          <label style={labelStyle}>Phone number</label>
+          <input type="tel" placeholder="555-555-5555" value={phone}
+            style={inputStyle}
+            onChange={e=>{ setPhone(formatPhone(e.target.value)); setError(''); }} />
+        </div>
+
+        {error && (
+          <div style={{ background:'rgba(184,48,48,0.06)', border:'1px solid rgba(184,48,48,0.2)', borderRadius:8, padding:'8px 12px', marginBottom:12, fontSize:12, color:'#b83030' }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          style={{ background:G, color:'#fff', border:'none', borderRadius:8, padding:'12px', fontSize:14, fontWeight:600, cursor:'pointer', width:'100%', fontFamily:'inherit', marginBottom:10 }}>
+          Sign in →
+        </button>
+
+        <button
+          onClick={onBack}
+          style={{ background:'none', border:'none', color:'#888', fontSize:12, cursor:'pointer', textDecoration:'underline', textUnderlineOffset:3, width:'100%', textAlign:'center', fontFamily:'inherit' }}>
+          Back to landing page
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 function ForgotPin({ firebaseUser, currentLead, onComplete, onBack }) {
-  const [step, setStep] = useState('verify'); // verify | newpin | done
+  // If we have a phone on file, verify it. Otherwise skip straight to set new PIN
+  // since they're already authenticated via Firebase.
+  const hasPhone = !!(currentLead?.phone);
+  const [step, setStep] = useState(hasPhone ? 'verify' : 'newpin');
   const [phone, setPhone] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
