@@ -250,6 +250,30 @@ const TIPS = [
     body: "Tracking your spending is step one. Step two is building a complete financial plan that covers your income, protection, debt elimination, and long-term goals. A Financial Needs Analysis connects all the dots in one free session.",
     cta: 'Get my financial roadmap',
   },
+  {
+    id: 'pay_yourself_1',
+    category: 'Savings',
+    icon: '🐷',
+    interest_key: 'interest_savings_1',
+    title: 'Pay yourself first',
+    body: 'Most people save what's left over after spending. Wealthy people spend what's left over after saving. Set aside 10–20% of every paycheck before paying a single bill — treat savings like a non-negotiable expense.',
+    cta: 'Talk to my rep about saving strategies',
+    action: 'rep:savings',
+    secondaryCta: 'Set a savings goal now',
+    secondaryAction: 'tab:savings',
+  },
+  {
+    id: 'pay_yourself_2',
+    category: 'Savings',
+    icon: '💰',
+    interest_key: 'interest_savings_2',
+    title: 'The 10% rule that builds real wealth',
+    body: 'Saving just 10% of your income consistently — even on a modest salary — can build over $500,000 in 30 years with average market returns. The secret isn't how much you make. It's how consistently you save before you spend.',
+    cta: 'Talk to my rep about a savings plan',
+    action: 'rep:savings',
+    secondaryCta: 'Set a savings goal now',
+    secondaryAction: 'tab:savings',
+  },
 ];
 
 function getNextTip(uid) {
@@ -399,15 +423,32 @@ export default function FinancialTipPopup({ uid, lead, onTabSwitch }) {
         </div>
         <p style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 12 }}>{tip.body}</p>
         {sent ? (
-          <div style={{ textAlign: 'center', fontSize: 13, color: '#16a34a', fontWeight: 600, padding: '8px 0' }}>
-            ✓ Your rep will be in touch soon!
+          <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>✅</span>
+            <div>
+              <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 700, marginBottom: 3 }}>Your rep will be in touch soon! 🎉</div>
+              <div style={{ fontSize: 11, color: '#16a34a', lineHeight: 1.5, opacity: 0.85 }}>We've let your financial rep know you're interested in saving strategies. They'll reach out within 24 hours.</div>
+            </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleLearnMore} disabled={sending} style={{ flex: 1, background: 'linear-gradient(135deg, ' + tip.color + ', ' + tip.color + 'cc)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-display)', lineHeight: 1.3 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button onClick={handleLearnMore} disabled={sending} style={{ width: '100%', background: tip.action && tip.action.startsWith('rep:') ? 'rgba(42,107,74,0.08)' : 'linear-gradient(135deg, ' + tip.color + ', ' + tip.color + 'cc)', color: tip.action && tip.action.startsWith('rep:') ? '#2a6b4a' : '#fff', border: tip.action && tip.action.startsWith('rep:') ? '1px solid rgba(42,107,74,0.25)' : 'none', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-display)', lineHeight: 1.3, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>{tip.action && tip.action.startsWith('rep:') ? '📞' : '→'}</span>
               {sending ? 'Sending…' : tip.cta}
             </button>
-            <button onClick={handleDismiss} style={{ background: '#f8faff', color: '#6b8dc4', border: '1px solid #c7ddf7', borderRadius: 'var(--radius-md)', padding: '9px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {tip.secondaryCta && (
+              <button onClick={() => {
+                markTipSeen(uid, tip.id);
+                if (tip.secondaryAction && tip.secondaryAction.startsWith('tab:')) {
+                  const tabName = tip.secondaryAction.replace('tab:', '');
+                  if (onTabSwitch) onTabSwitch(tabName);
+                }
+                setVisible(false);
+              }} style={{ width: '100%', background: 'var(--bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-display)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>🐷</span>{tip.secondaryCta}
+              </button>
+            )}
+            <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textAlign: 'center', padding: '4px', fontFamily: 'var(--font-display)' }}>
               Got it 👍
             </button>
           </div>
