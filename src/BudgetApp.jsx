@@ -1865,6 +1865,13 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
   const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
   return(
     <>
+      <div style={{background:'rgba(42,107,74,0.06)',border:'1px solid rgba(42,107,74,0.18)',borderRadius:'var(--radius-lg)',padding:'14px 18px',marginBottom:14,display:'flex',gap:14,alignItems:'flex-start'}}>
+        <span style={{fontSize:26,flexShrink:0}}>⭐</span>
+        <div>
+          <div style={{fontSize:14,fontWeight:700,color:'var(--green)',marginBottom:4,fontFamily:'var(--font-display)'}}>Pay yourself first</div>
+          <div style={{fontSize:12.5,color:'#3a5a4a',lineHeight:1.65}}>Before any bill, before any spending — save first. Financial professionals recommend setting aside <strong>10–20% of every paycheck</strong> the moment it hits your account. Add a goal below and start building your future today.</div>
+        </div>
+      </div>
       <div className="metric-grid" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))'}}>
         <div className="metric-card"><div className="lbl">Total monthly bills</div><div className="val val-gold">${totalBills.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
         <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">${totalPaid.toFixed(2)}</div></div>
@@ -1987,6 +1994,10 @@ function BudgetsTab({transactions,budgets,setBudgets}){
   const byGrp={};active.forEach(c=>{const g=ALL_CATS[c]?.group||'Other';if(!byGrp[g])byGrp[g]=[];byGrp[g].push(c);});
   return(
     <>
+      <div style={{background:'rgba(42,107,74,0.06)',borderLeft:'3px solid var(--green)',borderRadius:'0 var(--radius-md) var(--radius-md) 0',padding:'10px 14px',marginBottom:14,display:'flex',gap:10,alignItems:'center'}}>
+        <span style={{fontSize:18,flexShrink:0}}>💡</span>
+        <div style={{fontSize:12.5,color:'#1a4d30',lineHeight:1.6}}>Budget tip: make <strong>Savings</strong> your very first budget category — before food, housing, or anything else. What gets budgeted first gets funded first.</div>
+      </div>
       <div className="card">
         <div className="card-title">Monthly budget limits</div>
         <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:12}}>Set $0 to skip. You'll get an alert when you exceed a limit.</div>
