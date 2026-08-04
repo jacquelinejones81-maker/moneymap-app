@@ -1122,7 +1122,7 @@ function ClearConfirmModal({title,message,onConfirm,onCancel}){
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
-  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[] } });
+  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } });
   const [activeTab, setActiveTab] = useState('register');
   const [periodMode, setPeriodMode] = useState('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -1206,7 +1206,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   };
 
   const acct = accounts[activeAccount] || accounts.main;
-  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, subscriptions, assets, liabilities, savingsRateGoal, networthHistory } = acct;
+  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, subscriptions, assets, liabilities, savingsRateGoal, networthHistory, varBills, varBillsPaid } = acct;
 
   const txs = v => updateAccount('transactions', v);
   const dbs = v => updateAccount('debts', v);
@@ -1218,6 +1218,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const eps = v => updateAccount('extraPayment', v);
   const subs = v => updateAccount('subscriptions', v);
   const setAssets = v => updateAccount('assets', v);
+  const setVarBills = v => updateAccount('varBills', v);
+  const setVarBillsPaid = v => updateAccount('varBillsPaid', v);
   const setLiabilities = v => updateAccount('liabilities', v);
   const setSavingsRateGoal = v => updateAccount('savingsRateGoal', v);
   const setNetworthHistory = v => updateAccount('networthHistory', v);
@@ -1246,7 +1248,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const addNewAccount = () => {
     if (!newAccountName.trim()) return;
     const key = `account_${Date.now()}`;
-    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[] } };
+    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } };
     setAccounts(updated);
     saveToFirebase(updated);
     setActiveAccount(key);
@@ -1546,13 +1548,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </div>
         )}
         {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
-        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
         {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} onMilestone={setMilestone} />}
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
-        {activeTab==='calendar' && <CalendarTab bills={bills} billsPaid={billsPaid} subscriptions={subscriptions} />}
+        {activeTab==='calendar' && <CalendarTab bills={bills} billsPaid={billsPaid} subscriptions={subscriptions} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
       </div>
@@ -1835,7 +1837,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription}){
+function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,varBills,setVarBills,varBillsPaid,setVarBillsPaid}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -1980,6 +1982,7 @@ function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,
         </div>
       )}
       <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
+      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} />
     </>
   );
 }
@@ -2046,8 +2049,123 @@ function BudgetsTab({transactions,budgets,setBudgets}){
   );
 }
 
-function DebtsTab({debts,setDebts}){
+// ── Debt Payoff Celebration (Option A — full screen) ──────────
+function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact}){
+  const [contacted, setContacted] = useState(false);
+
+  // Calculate months faster and interest saved with rolled payment
+  const rolledPayment = paidDebt.min;
+  const calcSavings = (debt, extra) => {
+    if(!debt) return {months:0, interest:0};
+    const r = debt.rate / 100 / 12;
+    const min = debt.min;
+    const bal = debt.bal;
+    if(r === 0) return {months: Math.ceil(bal/(min+extra)), interest: 0};
+    const mOrig = r > 0 ? Math.ceil(-Math.log(1 - (r*bal)/min) / Math.log(1+r)) : Math.ceil(bal/min);
+    const mNew = Math.ceil(-Math.log(1 - (r*bal)/(min+extra)) / Math.log(1+r));
+    const iOrig = mOrig * min - bal;
+    const iNew = mNew * (min+extra) - bal;
+    return {months: Math.max(0, mOrig - mNew), interest: Math.max(0, iOrig - iNew)};
+  };
+
+  const savings = nextDebt ? calcSavings(nextDebt, rolledPayment) : null;
+  const yearlySaved = (paidDebt.min * 12 * 30 / 1000).toFixed(0);
+
+  return (
+    <div className="modal-overlay" style={{zIndex:4000}}>
+      <div className="modal-box slide-up" style={{maxWidth:480, textAlign:'center'}}>
+        <div style={{fontSize:56, marginBottom:12}}>🎉</div>
+        <h2 style={{fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, marginBottom:4, color:'var(--text-primary)'}}>
+          You paid off {paidDebt.name}!
+        </h2>
+        <div style={{fontSize:14, color:'#16a34a', fontWeight:700, marginBottom:20}}>
+          ${paidDebt.min.toFixed(0)}/month just freed up
+        </div>
+
+        {allDebtFree ? (
+          <>
+            <div style={{background:'rgba(22,163,74,0.08)', border:'1px solid rgba(22,163,74,0.2)', borderRadius:'var(--radius-lg)', padding:'16px', marginBottom:16, textAlign:'left'}}>
+              <div style={{fontSize:14, fontWeight:700, color:'#16a34a', marginBottom:8}}>
+                🏆 You are completely debt free!
+              </div>
+              <div style={{fontSize:13, color:'#1a4d30', lineHeight:1.7}}>
+                Every dollar you were sending to debt is now yours to build with. This is the moment most people waste — lifestyle creep quietly steals it. Don't let that happen.
+              </div>
+            </div>
+            <div style={{background:'rgba(42,107,74,0.06)', border:'1px solid rgba(42,107,74,0.2)', borderRadius:'var(--radius-lg)', padding:'16px', marginBottom:20, textAlign:'left'}}>
+              <div style={{fontSize:13, color:'#1a4d30', lineHeight:1.7}}>
+                <strong style={{color:'#2a6b4a'}}>This is exactly when you need a plan.</strong> A free financial review with your rep will show you where that ${paidDebt.min.toFixed(0)}/month should go — retirement, life insurance, savings — so the freedom you just earned starts building real wealth.
+              </div>
+            </div>
+            {contacted ? (
+              <div style={{background:'rgba(22,163,74,0.08)', border:'1px solid rgba(22,163,74,0.2)', borderRadius:'var(--radius-md)', padding:'12px 14px', marginBottom:16, display:'flex', gap:10, alignItems:'flex-start'}}>
+                <span style={{fontSize:20}}>✅</span>
+                <div style={{textAlign:'left'}}>
+                  <div style={{fontSize:13, fontWeight:700, color:'#16a34a', marginBottom:3}}>Your rep will be in touch soon!</div>
+                  <div style={{fontSize:12, color:'#16a34a', lineHeight:1.5}}>We've let your financial rep know you're debt free and ready for a complimentary financial review. They'll reach out within 24 hours.</div>
+                </div>
+              </div>
+            ) : (
+              <button onClick={()=>{setContacted(true); onRepContact&&onRepContact();}}
+                style={{width:'100%', background:'var(--green)', color:'#fff', border:'none', borderRadius:'var(--radius-md)', padding:'13px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'var(--font-display)', marginBottom:10}}>
+                Connect me with my rep for a free financial review
+              </button>
+            )}
+            <button onClick={onClose} style={{width:'100%', background:'none', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', padding:'11px', fontSize:13, color:'var(--text-secondary)', cursor:'pointer', fontFamily:'var(--font-display)'}}>
+              {contacted ? 'Back to my dashboard' : 'Dismiss — I'll figure it out on my own'}
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:'var(--radius-lg)', padding:'14px 16px', marginBottom:14, textAlign:'left'}}>
+              <div style={{fontSize:13, fontWeight:700, color:'#92610a', marginBottom:6}}>That ${paidDebt.min.toFixed(0)} is not free — yet</div>
+              <div style={{fontSize:12, color:'#92610a', lineHeight:1.7}}>Roll your ${paidDebt.min.toFixed(0)}/month straight into your next debt. Every dollar you freed up is now your most powerful weapon. Don't let lifestyle creep steal this win.</div>
+            </div>
+            {nextDebt && savings && (
+              <div style={{background:'rgba(22,163,74,0.08)', border:'1px solid rgba(22,163,74,0.2)', borderRadius:'var(--radius-lg)', padding:'14px 16px', marginBottom:20, textAlign:'left', display:'flex', gap:12, alignItems:'flex-start'}}>
+                <span style={{fontSize:22, flexShrink:0}}>→</span>
+                <div>
+                  <div style={{fontSize:13, fontWeight:700, color:'#16a34a', marginBottom:5}}>Next target: {nextDebt.name} at {nextDebt.rate}% APR</div>
+                  <div style={{fontSize:12, color:'#1a4d30', lineHeight:1.7}}>
+                    Add ${paidDebt.min.toFixed(0)} to your current ${nextDebt.min.toFixed(0)}/month payment and pay ${(nextDebt.min + paidDebt.min).toFixed(0)}/month.
+                    {savings.months > 0 && <> You'll pay it off <strong>{savings.months} months faster</strong></>}
+                    {savings.interest > 0 && <> and save <strong>${savings.interest.toFixed(0)} in interest</strong></>}.
+                  </div>
+                </div>
+              </div>
+            )}
+            <div style={{display:'flex', gap:10}}>
+              <button onClick={onClose} style={{flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', padding:'11px', fontSize:13, color:'var(--text-secondary)', cursor:'pointer', fontFamily:'var(--font-display)'}}>
+                View debt stack
+              </button>
+              <button onClick={onClose} style={{flex:1, background:'var(--green)', color:'#fff', border:'none', borderRadius:'var(--radius-md)', padding:'11px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'var(--font-display)'}}>
+                I'm rolling it over!
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+function DebtsTab({debts,setDebts,onRepContact}){
   const [form,setForm]=useState({name:'',bal:'',rate:'',min:''});
+  const [payoffModal,setPayoffModal]=useState(null); // {paidDebt, nextDebt, allDebtFree}
+  const [inlinePayoff,setInlinePayoff]=useState(null); // same shape, persists in tab
+
+  const handleMarkPaidOff = (debt) => {
+    const remaining = debts.filter(d=>d.id!==debt.id);
+    const sorted = [...remaining].sort((a,b)=>b.rate-a.rate);
+    const nextDebt = sorted[0]||null;
+    const allDebtFree = remaining.length===0;
+    const info = {paidDebt:debt, nextDebt, allDebtFree};
+    setDebts(remaining);
+    setPayoffModal(info);
+    setInlinePayoff(info);
+  };
+
   const addDebt=()=>{
     const {name,bal,rate,min}=form;
     if(!name.trim()||isNaN(parseFloat(bal))||isNaN(parseFloat(rate))||isNaN(parseFloat(min))){alert('Fill in all debt fields.');return;}
@@ -2059,6 +2177,41 @@ function DebtsTab({debts,setDebts}){
   const totalMin=debts.reduce((s,d)=>s+d.min,0);
   return(
     <>
+      {payoffModal&&<DebtPayoffModal
+        paidDebt={payoffModal.paidDebt}
+        nextDebt={payoffModal.nextDebt}
+        allDebtFree={payoffModal.allDebtFree}
+        onClose={()=>setPayoffModal(null)}
+        onRepContact={onRepContact}
+      />}
+      {inlinePayoff&&(
+        <div style={{background:'rgba(22,163,74,0.06)',border:'1px solid rgba(22,163,74,0.2)',borderRadius:'var(--radius-lg)',padding:'16px 18px',marginBottom:14}}>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:24}}>🏆</span>
+              <div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'#16a34a'}}>{inlinePayoff.paidDebt.name} paid off!</div>
+                <div style={{fontSize:12,color:'#16a34a',opacity:0.8}}>${inlinePayoff.paidDebt.min.toFixed(0)}/month freed up</div>
+              </div>
+            </div>
+            <button onClick={()=>setInlinePayoff(null)} style={{background:'none',border:'none',color:'var(--text-muted)',cursor:'pointer',fontSize:16,padding:0,lineHeight:1}}>✕</button>
+          </div>
+          {inlinePayoff.allDebtFree ? (
+            <div style={{fontSize:12,color:'#1a4d30',lineHeight:1.7,marginBottom:12}}>
+              You are completely debt free! Every dollar you were sending to debt is now yours to build with. Don't let lifestyle creep take it — get a plan in place.
+            </div>
+          ) : (
+            <div style={{fontSize:12,color:'#1a4d30',lineHeight:1.7,marginBottom:12}}>
+              That ${inlinePayoff.paidDebt.min.toFixed(0)} is not free money — it's your rollover payment. Add it to your {inlinePayoff.nextDebt?.name} payment and you'll pay it off faster and save money in interest. Once all debt is gone, that same ${inlinePayoff.paidDebt.min.toFixed(0)}/month goes straight toward your future. Your future self is counting on this decision.
+            </div>
+          )}
+          <button
+            onClick={()=>setPayoffModal(inlinePayoff)}
+            style={{width:'100%',background:'var(--green)',color:'#fff',border:'none',borderRadius:'var(--radius-md)',padding:'10px',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'var(--font-display)'}}>
+            {inlinePayoff.allDebtFree ? 'Connect me with my rep for a free financial review' : 'See my rollover plan'}
+          </button>
+        </div>
+      )}
       <div className="card">
         <div className="card-title">Add debt</div>
         <div className="form-row r2">
@@ -2097,7 +2250,8 @@ function DebtsTab({debts,setDebts}){
                   </div>
                   <div style={{textAlign:'right',flexShrink:0}}>
                     <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                    <button className="btn-danger" style={{marginTop:6}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
+                    <button className="btn-gold" style={{marginTop:6,fontSize:11,padding:'4px 10px'}} onClick={()=>handleMarkPaidOff(d)}>✓ Paid off!</button>
+                    <button className="btn-danger" style={{marginTop:4}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
                   </div>
                 </div>
               );
@@ -2544,6 +2698,124 @@ function MovePicker({accounts,currentAccount,onMove}){
 }
 
 
+// ── Variable Bills Section ─────────────────────────────────────
+const VAR_BILL_CATS = ['Electric','Gas / heat','Water','Internet (variable)','Other utility'];
+
+function VarBillsSection({varBills,setVarBills,varBillsPaid,setVarBillsPaid}){
+  const [form,setForm]=useState({name:'',category:'Electric',dueDay:1});
+  const [editingAmount,setEditingAmount]=useState(null); // bill id
+  const [amountInput,setAmountInput]=useState('');
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
+
+  const addVarBill=()=>{
+    if(!form.name.trim())return;
+    setVarBills([...varBills,{id:Date.now(),name:form.name.trim(),category:form.category,dueDay:form.dueDay}]);
+    setForm({name:'',category:'Electric',dueDay:1});
+  };
+
+  const isPaid=(id)=>!!varBillsPaid[`${monthKey}_${id}`];
+  const getPaidAmount=(id)=>varBillsPaid[`${monthKey}_${id}`]?.amount||null;
+
+  const markPaid=(bill,amount)=>{
+    setVarBillsPaid({...varBillsPaid,[`${monthKey}_${bill.id}`]:{amount:parseFloat(amount)||0,date:now.toISOString()}});
+    setEditingAmount(null);
+    setAmountInput('');
+  };
+
+  const unmarkPaid=(bill)=>{
+    const updated={...varBillsPaid};
+    delete updated[`${monthKey}_${bill.id}`];
+    setVarBillsPaid(updated);
+  };
+
+  const catIcon={Electric:'⚡',['Gas / heat']:'🔥',Water:'💧',['Internet (variable)']:'🌐',['Other utility']:'🏠'};
+
+  const getDueStatus=(dueDay)=>{
+    const today=now.getDate();
+    const diff=dueDay-today;
+    if(diff<0)return'overdue';
+    if(diff<=3)return'due-soon';
+    return'upcoming';
+  };
+
+  return(
+    <div className="card" style={{marginTop:14}}>
+      <div className="card-title">Variable bills</div>
+      <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:14,lineHeight:1.6}}>
+        Bills that change every month — electric, gas, water. Set the due date and we'll remind you on the calendar. Enter the actual amount when the bill arrives.
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr auto',gap:8,marginBottom:14,alignItems:'end'}}>
+        <div>
+          <label style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:4}}>Bill name</label>
+          <input placeholder="e.g. Evergy Electric" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} onKeyDown={e=>e.key==='Enter'&&addVarBill()}/>
+        </div>
+        <div>
+          <label style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:4}}>Category</label>
+          <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>
+            {VAR_BILL_CATS.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:4}}>Due day</label>
+          <select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>
+            {Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of month</option>)}
+          </select>
+        </div>
+        <button className="btn-gold" onClick={addVarBill}>+ Add</button>
+      </div>
+
+      {varBills.length===0 ? (
+        <div className="empty-state">Add your variable bills — electric, gas, water — to track them on the calendar.</div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {[...varBills].sort((a,b)=>a.dueDay-b.dueDay).map(bill=>{
+            const paid=isPaid(bill.id);
+            const paidAmt=getPaidAmount(bill.id);
+            const status=paid?'paid':getDueStatus(bill.dueDay);
+            const statusColors={paid:{bg:'rgba(22,163,74,0.08)',border:'rgba(22,163,74,0.2)',text:'#16a34a'},overdue:{bg:'rgba(184,48,48,0.08)',border:'rgba(184,48,48,0.2)',text:'#b83030'},'due-soon':{bg:'rgba(217,119,6,0.08)',border:'rgba(217,119,6,0.2)',text:'#d97706'},upcoming:{bg:'#fafaf8',border:'var(--border)',text:'var(--text-secondary)'}};
+            const sc=statusColors[status];
+            return(
+              <div key={bill.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:sc.bg,border:`0.5px solid ${sc.border}`,borderRadius:'var(--radius-md)'}}>
+                <span style={{fontSize:18,flexShrink:0}}>{catIcon[bill.category]||'🏠'}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{bill.name}</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(bill.dueDay)} · {bill.category}</div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',justifyContent:'flex-end'}}>
+                  {paid ? (
+                    <>
+                      <span style={{fontSize:13,fontWeight:600,color:'#16a34a'}}>${paidAmt?.toFixed(2)||'0.00'}</span>
+                      <span style={{background:'rgba(22,163,74,0.12)',color:'#16a34a',border:'0.5px solid rgba(22,163,74,0.25)',borderRadius:20,fontSize:11,fontWeight:600,padding:'2px 10px'}}>Paid ✓</span>
+                      <button className="btn-outline" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>unmarkPaid(bill)}>Undo</button>
+                    </>
+                  ) : editingAmount===bill.id ? (
+                    <>
+                      <input type="number" placeholder="$0.00" min="0" step="0.01" value={amountInput} onChange={e=>setAmountInput(e.target.value)} style={{width:90,fontSize:12}} autoFocus onKeyDown={e=>e.key==='Enter'&&amountInput&&markPaid(bill,amountInput)}/>
+                      <button className="btn-gold" style={{fontSize:11,padding:'5px 10px'}} onClick={()=>amountInput&&markPaid(bill,amountInput)}>Save & mark paid</button>
+                      <button className="btn-outline" style={{fontSize:11,padding:'5px 8px'}} onClick={()=>{setEditingAmount(null);setAmountInput('');}}>✕</button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{fontSize:11,color:'var(--text-muted)',fontStyle:'italic'}}>Amount TBD</span>
+                      <button className="btn-outline" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>{setEditingAmount(bill.id);setAmountInput('');}}>Enter amount</button>
+                      <button className="btn-gold" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>markPaid(bill,0)}>Mark paid</button>
+                    </>
+                  )}
+                  <button className="btn-danger" onClick={()=>setVarBills(varBills.filter(v=>v.id!==bill.id))}>✕</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function EditBillForm({bill,billCats,onSave,onCancel}){
   const [form,setForm]=useState({...bill});
   const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
@@ -2919,7 +3191,7 @@ function TransferModal({accounts,onTransfer,onCancel}){
 }
 
 // ── Calendar Tab ───────────────────────────────────────────────
-function CalendarTab({bills,billsPaid,subscriptions}){
+function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
   const now=new Date();
   const year=now.getFullYear();
   const month=now.getMonth();
@@ -2953,26 +3225,37 @@ function CalendarTab({bills,billsPaid,subscriptions}){
     const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
     dayMap[d].push({name:s.name,amount:s.amount,status,type:'sub'});
   });
+  (varBills||[]).forEach(v=>{
+    const d=v.dueDay||1;
+    if(!dayMap[d])dayMap[d]=[];
+    const paidEntry=(varBillsPaid||{})[`${monthKey}_${v.id}`];
+    const paid=!!paidEntry;
+    const diff=d-todayDay;
+    const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'var-tbd';
+    dayMap[d].push({name:v.name,amount:paidEntry?.amount||null,status,type:'var'});
+  });
 
   const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'}};
 
-  const totalDue=bills.length+subscriptions.length;
-  const totalPaid=[...bills,...subscriptions].filter((_,i)=>i<bills.length?isPaid(bills[i].id,'bill'):isPaid(subscriptions[i-bills.length].id,'sub')).length;
+  const totalDue=bills.length+subscriptions.length+(varBills||[]).length;
+  const varPaid=(varBills||[]).filter(v=>!!((varBillsPaid||{})[`${monthKey}_${v.id}`])).length;
+  const totalPaid=bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length+varPaid;
 
   return(
     <>
       <div className="metric-grid" style={{gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
         <div className="metric-card"><div className="lbl">Total bills & subs</div><div className="val val-gold">{totalDue}</div></div>
-        <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">{bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length}</div></div>
-        <div className="metric-card"><div className="lbl">Still due</div><div className="val val-red">{totalDue-(bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length)}</div></div>
+        <div className="metric-card"><div className="lbl">Paid this month</div><div className="val val-green">{totalPaid}</div></div>
+        <div className="metric-card"><div className="lbl">Still due</div><div className="val val-red">{totalDue-totalPaid}</div></div>
       </div>
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
           <div className="card-title" style={{marginBottom:0}}>📅 {monthName}</div>
-          <div style={{display:'flex',gap:10,fontSize:11}}>
+          <div style={{display:'flex',gap:10,fontSize:11,flexWrap:'wrap'}}>
             <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>Paid</span>
             <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#d97706',display:'inline-block'}}/>Due soon</span>
             <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#dc2626',display:'inline-block'}}/>Overdue</span>
+            <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#7c3aed',display:'inline-block'}}/>Variable — amount TBD</span>
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:8}}>
@@ -3006,10 +3289,10 @@ function CalendarTab({bills,billsPaid,subscriptions}){
       </div>
       <div className="card">
         <div className="card-title">All bills this month</div>
-        {[...bills.map(b=>({...b,itemType:'bill'})),...subscriptions.map(s=>({...s,itemType:'sub'}))].sort((a,b)=>a.dueDay-b.dueDay).map((item,i)=>{
-          const paid=isPaid(item.id,item.itemType);
+        {[...bills.map(b=>({...b,itemType:'bill'})),...subscriptions.map(s=>({...s,itemType:'sub'})),...(varBills||[]).map(v=>({...v,itemType:'var',amount:((varBillsPaid||{})[`${monthKey}_${v.id}`]?.amount)||0}))].sort((a,b)=>a.dueDay-b.dueDay).map((item,i)=>{
+          const paid=item.itemType==='var'?!!((varBillsPaid||{})[`${monthKey}_${item.id}`]):isPaid(item.id,item.itemType);
           const diff=item.dueDay-todayDay;
-          const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
+          const status=paid?'paid':item.itemType==='var'&&diff>=0?'var-tbd':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
           const sc=statusColors[status];
           const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
           return(
@@ -3017,7 +3300,7 @@ function CalendarTab({bills,billsPaid,subscriptions}){
               <div style={{width:8,height:8,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{item.name}</div>
-                <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':'Fixed bill'}</div>
+                <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':item.itemType==='var'?'Variable bill':'Fixed bill'}</div>
               </div>
               <div style={{fontWeight:700,color:'var(--text-primary)'}}>${item.amount.toFixed(2)}</div>
               <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status.charAt(0).toUpperCase()+status.slice(1)}</span>
