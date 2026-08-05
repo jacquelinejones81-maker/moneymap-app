@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { db } from './firebase';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 
 const TIPS = [
   {
@@ -305,21 +307,188 @@ function markTipSeen(uid, tipId) {
 }
 
 // ── Rep Contact Card ─────────────────────────────────────────────
+// Looks up the rep's name and phone from the NextLevel Training Hub Firebase:
+//   1. Checks appdata/main → admins and trainers arrays (matched by linkName or first name)
+//   2. Falls back to the reps collection (matched by first name)
 export function RepContactCard({ repName, uid }) {
-  // Format the rep name from the URL slug (e.g. "jackieJones" -> "Jackie Jones")
-  const displayName = repName
-    ? repName.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase())
-    : '';
+  const [repInfo, setRepInfo] = useState(null);
 
-  if (!displayName) return null;
+  useEffect(function() {
+    if (!repName) return;
+
+    const slug = repName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Helper: does this person match the slug?
+    function matches(person) {
+      if (!person || !person.name) return false;
+      // Check linkName first (admins can have a custom link name set)
+      if (person.linkName && person.linkName.toLowerCase().replace(/[^a-z0-9]/g, '') === slug) return true;
+      // Fall back to first name match
+      const firstName = person.name.trim().split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      return firstName === slug;
+    }
+
+    async function lookupRep() {
+      try {
+        // Step 1: Check appdata/main for admins and trainers
+        const appdataSnap = await getDoc(doc(db, 'appdata', 'main'));
+        if (appdataSnap.exists()) {
+          const data = JSON.parse(appdataSnap.data().payload || '{}');
+          const everyone = [...(data.admins || []), ...(data.trainers || [])];
+          const found = everyone.find(matches);
+          if (found && found.name) {
+            setRepInfo({ name: found.name, phone: found.phone || '' });
+            return;
+          }
+        }
+
+        // Step 2: Fall back to reps collection
+        const repsSnap = await getDocs(collection(db, 'reps'));
+        const repList = repsSnap.docs.map(function(d) { return { ...d.data(), id: d.id }; });
+        const found = repList.find(matches);
+        if (found && found.name) {
+          setRepInfo({ name: found.name, phone: found.phone || '' });
+        }
+
+      } catch (err) {
+        console.error('Rep lookup error:', err);
+        // Fallback: just show formatted name from slug with no phone
+        const displayName = repName
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^./, function(s) { return s.toUpperCase(); });
+        setRepInfo({ name: displayName, phone: '' });
+      }
+    }
+
+    lookupRep();
+  }, [repName]);
+
+  if (!repInfo) return null;
 
   return (
-    <div style={{ background: 'rgba(42,107,74,0.06)', border: '1px solid rgba(42,107,74,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{
+      background: 'rgba(42,107,74,0.06)',
+      border: '1px solid rgba(42,107,74,0.2)',
+      borderRadius: 'var(--radius-md)',
+      padding: '10px 14px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }}>
       <span style={{ fontSize: 20 }}>👤</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>Your financial rep</div>
-        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{displayName}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>{repInfo.name}</div>
+        {repInfo.phone ? (
+          <a
+            href={"tel:" + repInfo.phone.replace(/\D/g, '')}
+            style={{ fontSize: 12, color: 'var(--green)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}
+          >
+            📞 {repInfo.phone}
+          </a>
+        ) : (
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Will reach out within 24 hrs</div>
+        )}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Will reach out within 24 hrs</div>
     </div>
-  )
+  );
+}
+
+export default function FinancialTips({ uid, lead, onTabSwitch }) {
+  const [tip, setTip] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(function() {
+    if (!uid) return;
+    const next = getNextTip(uid);
+    setTip(next);
+  }, [uid]);
+
+  if (!tip || dismissed) return null;
+
+  function handleCta() {
+    if (!tip.action) {
+      markTipSeen(uid, tip.id);
+      setConfirmed(true);
+      return;
+    }
+    if (tip.action.startsWith('tab:')) {
+      const tab = tip.action.replace('tab:', '');
+      if (onTabSwitch) onTabSwitch(tab);
+      markTipSeen(uid, tip.id);
+      setDismissed(true);
+      return;
+    }
+    if (tip.action.startsWith('rep:')) {
+      markTipSeen(uid, tip.id);
+      setConfirmed(true);
+      return;
+    }
+  }
+
+  function handleSecondaryCta() {
+    if (!tip.secondaryAction) return;
+    if (tip.secondaryAction.startsWith('tab:')) {
+      const tab = tip.secondaryAction.replace('tab:', '');
+      if (onTabSwitch) onTabSwitch(tab);
+      markTipSeen(uid, tip.id);
+      setDismissed(true);
+    }
+  }
+
+  if (confirmed) {
+    return (
+      <div style={{ background: tip.bg, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: tip.color, marginBottom: 4 }}>
+          {tip.icon} Got it! Your rep will be in touch soon 🎉
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          We've let your financial rep know you're interested. Expect a call or text within 24 hours.
+        </div>
+        <button
+          onClick={function() { setDismissed(true); }}
+          style={{ marginTop: 8, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: tip.bg, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+        <span style={{ fontSize: 20, flexShrink: 0 }}>{tip.icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tip.color, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{tip.category}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 5 }}>{tip.title}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{tip.body}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button
+          onClick={handleCta}
+          style={{ background: tip.color, color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-display)' }}
+        >
+          {tip.cta}
+        </button>
+        {tip.secondaryCta && (
+          <button
+            onClick={handleSecondaryCta}
+            style={{ background: 'transparent', color: tip.color, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          >
+            {tip.secondaryCta}
+          </button>
+        )}
+        <button
+          onClick={function() { markTipSeen(uid, tip.id); setDismissed(true); }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: '6px 4px', textDecoration: 'underline' }}
+        >
+          Not now
+        </button>
+      </div>
+    </div>
+  );
+}
