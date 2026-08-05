@@ -1931,7 +1931,7 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
                 const paid=isPaid(bill.id);
                 const status=paid?'paid':getDueStatus(bill.dueDay);
                 const statusColors={paid:{bg:'rgba(22,163,74,0.1)',color:'#16a34a',label:'✓ Paid'},overdue:{bg:'rgba(220,38,38,0.1)',color:'#dc2626',label:'Overdue'},'due-soon':{bg:'rgba(217,119,6,0.1)',color:'#d97706',label:'Due soon'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',label:'Upcoming'}};
-                const sc=statusColors[status];
+                const sc=statusColors[status]||statusColors['upcoming'];
                 return(
                   <tr key={bill.id} style={{opacity:paid?0.75:1}}>
                     <td style={{padding:'10px 16px'}}>
@@ -2776,7 +2776,7 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
             const paidAmt=getPaidAmount(bill.id);
             const status=paid?'paid':getDueStatus(bill.dueDay);
             const statusColors={paid:{bg:'rgba(22,163,74,0.08)',border:'rgba(22,163,74,0.2)',text:'#16a34a'},overdue:{bg:'rgba(184,48,48,0.08)',border:'rgba(184,48,48,0.2)',text:'#b83030'},'due-soon':{bg:'rgba(217,119,6,0.08)',border:'rgba(217,119,6,0.2)',text:'#d97706'},upcoming:{bg:'#fafaf8',border:'var(--border)',text:'var(--text-secondary)'}};
-            const sc=statusColors[status];
+            const sc=statusColors[status]||statusColors['upcoming'];
             return(
               <div key={bill.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:sc.bg,border:`0.5px solid ${sc.border}`,borderRadius:'var(--radius-md)'}}>
                 <span style={{fontSize:18,flexShrink:0}}>{catIcon[bill.category]||'🏠'}</span>
@@ -3038,7 +3038,7 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
                 {subscriptions.map(sub=>{
                   const paid=isPaid(sub);
                   const status=paid?'paid':getDueStatus(sub.dueDay);
-                  const sc=statusColors[status];
+                  const sc=statusColors[status]||statusColors['upcoming'];
                   return(
                     <tr key={sub.id} style={{opacity:paid?0.75:1}}>
                       <td style={{padding:'10px 16px'}}>
@@ -3277,7 +3277,7 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
                 {items.map((item,idx)=>{
                   const sc=statusColors[item.status]||statusColors['upcoming'];
                   return(
-                    <div key={idx} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden'}} title={`${item.name} - $${item.amount.toFixed(2)}`}>
+                    <div key={idx} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden'}} title={`${item.name}${item.amount!=null?' - $'+item.amount.toFixed(2):''}`}>
                       <div style={{fontSize:9,color:sc.color,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.name}</div>
                     </div>
                   );
@@ -3293,7 +3293,7 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
           const paid=item.itemType==='var'?!!((varBillsPaid||{})[`${monthKey}_${item.id}`]):isPaid(item.id,item.itemType);
           const diff=item.dueDay-todayDay;
           const status=paid?'paid':item.itemType==='var'&&diff>=0?'var-tbd':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
-          const sc=statusColors[status];
+          const sc=statusColors[status]||statusColors['upcoming'];
           const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
           return(
             <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
@@ -3302,8 +3302,8 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
                 <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{item.name}</div>
                 <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':item.itemType==='var'?'Variable bill':'Fixed bill'}</div>
               </div>
-              <div style={{fontWeight:700,color:'var(--text-primary)'}}>${item.amount.toFixed(2)}</div>
-              <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status.charAt(0).toUpperCase()+status.slice(1)}</span>
+              <div style={{fontWeight:700,color:'var(--text-primary)'}}>{item.amount!=null?`$${item.amount.toFixed(2)}`:'TBD'}</div>
+              <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status==='var-tbd'?'Amount TBD':status.charAt(0).toUpperCase()+status.slice(1)}</span>
             </div>
           );
         })}
