@@ -3235,7 +3235,7 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
     dayMap[d].push({name:v.name,amount:paidEntry?.amount||null,status,type:'var'});
   });
 
-  const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'}};
+  const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'},'var-tbd':{bg:'rgba(124,58,237,0.1)',color:'#7c3aed',dot:'#7c3aed'}};
 
   const totalDue=bills.length+subscriptions.length+(varBills||[]).length;
   const varPaid=(varBills||[]).filter(v=>!!((varBillsPaid||{})[`${monthKey}_${v.id}`])).length;
@@ -3275,7 +3275,7 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
               <div key={day} style={{minHeight:60,border:`1px solid ${isToday?'var(--green)':'var(--border-light)'}`,borderRadius:'var(--radius-sm)',padding:'4px',background:bgColor,position:'relative'}}>
                 <div style={{fontSize:11,fontWeight:isToday?700:400,color:isToday?'var(--green)':'var(--text-muted)',marginBottom:2}}>{day}</div>
                 {items.map((item,idx)=>{
-                  const sc=statusColors[item.status];
+                  const sc=statusColors[item.status]||statusColors['upcoming'];
                   return(
                     <div key={idx} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden'}} title={`${item.name} - $${item.amount.toFixed(2)}`}>
                       <div style={{fontSize:9,color:sc.color,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.name}</div>
