@@ -45,30 +45,30 @@ function SidebarRepCard({ repName, uid }) {
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.07)',
-      border: '1px solid rgba(255,255,255,0.14)',
+      background: 'rgba(42,107,74,0.06)',
+      border: '1px solid rgba(42,107,74,0.2)',
       borderRadius: 8,
       padding: '10px 10px 8px',
     }}>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 7 }}>Your financial rep</div>
+      <div style={{ fontSize: 10, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600, marginBottom: 7 }}>Your financial rep</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, color: 'white', flexShrink: 0 }}>{initials}</div>
+        <div style={{ width: 28, height: 28, background: 'rgba(42,107,74,0.12)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, color: 'var(--green)', flexShrink: 0 }}>{initials}</div>
         <div>
-          <div style={{ color: 'white', fontSize: 12, fontWeight: 500, lineHeight: 1.2 }}>{repInfo.name}</div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>Financial professional</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, lineHeight: 1.2 }}>{repInfo.name}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>Financial professional</div>
         </div>
       </div>
       {phone ? (
         <div style={{ display: 'flex', gap: 5 }}>
-          <a href={`tel:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, textDecoration: 'none', color: 'white', fontSize: 11 }}>
+          <a href={`tel:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'var(--green)', borderRadius: 5, textDecoration: 'none', color: 'white', fontSize: 11, fontWeight: 500 }}>
             📞 Call
           </a>
-          <a href={`sms:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, textDecoration: 'none', color: 'white', fontSize: 11 }}>
+          <a href={`sms:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'white', border: '1px solid rgba(42,107,74,0.3)', borderRadius: 5, textDecoration: 'none', color: 'var(--green)', fontSize: 11, fontWeight: 500 }}>
             💬 Text
           </a>
         </div>
       ) : (
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>Will reach out within 24 hrs</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>Will reach out within 24 hrs</div>
       )}
     </div>
   );
@@ -1189,7 +1189,7 @@ function ClearConfirmModal({title,message,onConfirm,onCancel}){
   );
 }
 
-export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
+export default function BudgetApp({ lead, repName, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
   const [activeAccount, setActiveAccount] = useState('main');
   const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } });
@@ -1544,9 +1544,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </button>
         ))}
         <div className="sidebar-spacer"/>
-        {lead && lead.referredBy && (
-          <div style={{padding:'0 10px 8px'}}>
-            <SidebarRepCard repName={lead.referredBy} uid={uid} />
+        {repName && (
+          <div style={{margin:'0 10px 8px'}}>
+            <SidebarRepCard repName={repName} uid={uid} />
           </div>
         )}
         <div className="sidebar-bottom">
