@@ -1,8 +1,78 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AppTour, { useTour } from './AppTour';
-import FinancialTipPopup, { RepContactCard } from './FinancialTips';
+import FinancialTipPopup from './FinancialTips';
 import { db } from './firebase';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, getDoc, getDocs, collection } from 'firebase/firestore';
+
+function SidebarRepCard({ repName, uid }) {
+  const [repInfo, setRepInfo] = useState(null);
+
+  useEffect(function() {
+    if (!repName) return;
+    const slug = repName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    function matches(person) {
+      if (!person || !person.name) return false;
+      if (person.linkName && person.linkName.toLowerCase().replace(/[^a-z0-9]/g, '') === slug) return true;
+      const firstName = person.name.trim().split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      return firstName === slug;
+    }
+
+    async function lookup() {
+      try {
+        const appdataSnap = await getDoc(doc(db, 'appdata', 'main'));
+        if (appdataSnap.exists()) {
+          const data = JSON.parse(appdataSnap.data().payload || '{}');
+          const everyone = [...(data.admins || []), ...(data.trainers || [])];
+          const found = everyone.find(matches);
+          if (found && found.name) { setRepInfo({ name: found.name, phone: found.phone || '' }); return; }
+        }
+        const repsSnap = await getDocs(collection(db, 'reps'));
+        const found = repsSnap.docs.map(d => ({ ...d.data(), id: d.id })).find(matches);
+        if (found && found.name) setRepInfo({ name: found.name, phone: found.phone || '' });
+      } catch (err) {
+        const display = repName.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase());
+        setRepInfo({ name: display, phone: '' });
+      }
+    }
+    lookup();
+  }, [repName]);
+
+  if (!repInfo) return null;
+
+  const initials = repInfo.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const phone = repInfo.phone ? repInfo.phone.replace(/\D/g, '') : '';
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.07)',
+      border: '1px solid rgba(255,255,255,0.14)',
+      borderRadius: 8,
+      padding: '10px 10px 8px',
+    }}>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 7 }}>Your financial rep</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, color: 'white', flexShrink: 0 }}>{initials}</div>
+        <div>
+          <div style={{ color: 'white', fontSize: 12, fontWeight: 500, lineHeight: 1.2 }}>{repInfo.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>Financial professional</div>
+        </div>
+      </div>
+      {phone ? (
+        <div style={{ display: 'flex', gap: 5 }}>
+          <a href={`tel:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, textDecoration: 'none', color: 'white', fontSize: 11 }}>
+            📞 Call
+          </a>
+          <a href={`sms:${phone}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, textDecoration: 'none', color: 'white', fontSize: 11 }}>
+            💬 Text
+          </a>
+        </div>
+      ) : (
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>Will reach out within 24 hrs</div>
+      )}
+    </div>
+  );
+}
 
 const GROUPS = {
   'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
@@ -1474,6 +1544,11 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </button>
         ))}
         <div className="sidebar-spacer"/>
+        {lead && lead.referredBy && (
+          <div style={{padding:'0 10px 8px'}}>
+            <SidebarRepCard repName={lead.referredBy} uid={uid} />
+          </div>
+        )}
         <div className="sidebar-bottom">
           <button className="nav-item" onClick={()=>setShowAddToHome(true)}><span className="nav-icon">📱</span>Add to phone</button>
           <button className="nav-item" onClick={resetTour}><span className="nav-icon">🗺</span>Tour</button>
@@ -1549,7 +1624,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       )}
 
       <div className="page-content">
-        {lead && lead.referredBy && <RepContactCard repName={lead.referredBy} uid={uid} />}
         <MetricsBar transactions={transactions} debts={debts} beginBal={beginBal} />
         <AlertsBar transactions={transactions} budgets={budgets} />
         <div className="mobile-bottom-nav">
