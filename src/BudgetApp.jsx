@@ -1547,15 +1547,15 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             ))}
           </div>
         )}
-        {activeTab==='register' && <RegisterTab transactions={transactions} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
-        {activeTab==='bills' && <BillsTab bills={bills} setBills={bls} billsPaid={billsPaid} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='register' && <RegisterTab transactions={transactions||[]} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
-        {activeTab==='debts' && <DebtsTab debts={debts} setDebts={dbs} />}
-        {activeTab==='savings' && <SavingsTab transactions={transactions} goals={goals} setGoals={gls} onMilestone={setMilestone} />}
+        {activeTab==='debts' && <DebtsTab debts={debts||[]} setDebts={dbs} />}
+        {activeTab==='savings' && <SavingsTab transactions={transactions||[]} goals={goals||[]} setGoals={gls} onMilestone={setMilestone} />}
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
-        {activeTab==='calendar' && <CalendarTab bills={bills} billsPaid={billsPaid} subscriptions={subscriptions} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
-        {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
+        {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
+        {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions||[]} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
       </div>
       </div>
@@ -1837,7 +1837,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills,setBills,billsPaid,onPayBill,onUnpayBill,subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,varBills,setVarBills,varBillsPaid,setVarBillsPaid}){
+function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -2701,7 +2701,7 @@ function MovePicker({accounts,currentAccount,onMove}){
 // ── Variable Bills Section ─────────────────────────────────────
 const VAR_BILL_CATS = ['Electric','Gas / heat','Water','Internet (variable)','Other utility'];
 
-function VarBillsSection({varBills,setVarBills,varBillsPaid,setVarBillsPaid}){
+function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
   const [form,setForm]=useState({name:'',category:'Electric',dueDay:1});
   const [editingAmount,setEditingAmount]=useState(null); // bill id
   const [amountInput,setAmountInput]=useState('');
@@ -2866,7 +2866,7 @@ function EditSubForm({sub,categories,onSave,onCancel}){
 }
 
 
-function SubscriptionsSection({subscriptions,setSubscriptions,transactions,goals,accounts,activeAccount,setAccounts,saveToFirebase,onMoveSubscription}){
+function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveSubscription}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -3191,7 +3191,7 @@ function TransferModal({accounts,onTransfer,onCancel}){
 }
 
 // ── Calendar Tab ───────────────────────────────────────────────
-function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
+function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBillsPaid={}}){
   const now=new Date();
   const year=now.getFullYear();
   const month=now.getMonth();
@@ -3202,14 +3202,14 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
   const monthName=now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
 
   const isPaid=(id,type)=>{
-    if(type==='bill') return !!billsPaid[`${monthKey}_${id}`];
-    const sub=subscriptions.find(s=>s.id===id);
+    if(type==='bill') return !!(billsPaid||{})[`${monthKey}_${id}`];
+    const sub=(subscriptions||[]).find(s=>s.id===id);
     return !!(sub&&sub.subsPaid&&sub.subsPaid[monthKey]);
   };
 
   // Build day map
   const dayMap={};
-  bills.forEach(b=>{
+  (bills||[]).forEach(b=>{
     const d=b.dueDay;
     if(!dayMap[d])dayMap[d]=[];
     const paid=isPaid(b.id,'bill');
@@ -3217,7 +3217,7 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
     const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
     dayMap[d].push({name:b.name,amount:b.amount,status,type:'bill'});
   });
-  subscriptions.forEach(s=>{
+  (subscriptions||[]).forEach(s=>{
     const d=s.dueDay||1;
     if(!dayMap[d])dayMap[d]=[];
     const paid=isPaid(s.id,'sub');
@@ -3237,9 +3237,9 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
 
   const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'},'var-tbd':{bg:'rgba(124,58,237,0.1)',color:'#7c3aed',dot:'#7c3aed'}};
 
-  const totalDue=bills.length+subscriptions.length+(varBills||[]).length;
+  const totalDue=(bills||[]).length+(subscriptions||[]).length+(varBills||[]).length;
   const varPaid=(varBills||[]).filter(v=>!!((varBillsPaid||{})[`${monthKey}_${v.id}`])).length;
-  const totalPaid=bills.filter(b=>isPaid(b.id,'bill')).length+subscriptions.filter(s=>isPaid(s.id,'sub')).length+varPaid;
+  const totalPaid=(bills||[]).filter(b=>isPaid(b.id,'bill')).length+(subscriptions||[]).filter(s=>isPaid(s.id,'sub')).length+varPaid;
 
   return(
     <>
@@ -3289,7 +3289,7 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
       </div>
       <div className="card">
         <div className="card-title">All bills this month</div>
-        {[...bills.map(b=>({...b,itemType:'bill'})),...subscriptions.map(s=>({...s,itemType:'sub'})),...(varBills||[]).map(v=>({...v,itemType:'var',amount:((varBillsPaid||{})[`${monthKey}_${v.id}`]?.amount)||0}))].sort((a,b)=>a.dueDay-b.dueDay).map((item,i)=>{
+        {[...(bills||[]).map(b=>({...b,itemType:'bill'})),...(subscriptions||[]).map(s=>({...s,itemType:'sub'})),...(varBills||[]).map(v=>({...v,itemType:'var',amount:((varBillsPaid||{})[`${monthKey}_${v.id}`]?.amount)||0}))].sort((a,b)=>a.dueDay-b.dueDay).map((item,i)=>{
           const paid=item.itemType==='var'?!!((varBillsPaid||{})[`${monthKey}_${item.id}`]):isPaid(item.id,item.itemType);
           const diff=item.dueDay-todayDay;
           const status=paid?'paid':item.itemType==='var'&&diff>=0?'var-tbd':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
@@ -3307,7 +3307,7 @@ function CalendarTab({bills,billsPaid,subscriptions,varBills,varBillsPaid}){
             </div>
           );
         })}
-        {bills.length===0&&subscriptions.length===0&&<div className="empty-state">No bills or subscriptions added yet.</div>}
+        {(bills||[]).length===0&&(subscriptions||[]).length===0&&<div className="empty-state">No bills or subscriptions added yet.</div>}
       </div>
     </>
   );
