@@ -306,159 +306,20 @@ function markTipSeen(uid, tipId) {
 
 // ── Rep Contact Card ─────────────────────────────────────────────
 export function RepContactCard({ repName, uid }) {
-  const [rep, setRep] = useState(null);
+  // Format the rep name from the URL slug (e.g. "jackieJones" -> "Jackie Jones")
+  const displayName = repName
+    ? repName.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase())
+    : '';
 
-  useEffect(function() {
-    if (!repName) return;
-    async function fetchRep() {
-      try {
-        const { db } = await import('./firebase');
-        const { collection, getDocs } = await import('firebase/firestore');
-        const snap = await getDocs(collection(db, 'leads'));
-        const leads = snap.docs.map(function(d) { return d.data(); });
-        // Find lead whose name matches the rep slug
-        const slug = repName.toLowerCase().replace(/\s+/g, '');
-        const match = leads.find(function(l) {
-          if (!l.name) return false;
-          const nameSlug = l.name.toLowerCase().replace(/\s+/g, '');
-          return nameSlug.includes(slug) || slug.includes(nameSlug.slice(0, 6));
-        });
-        if (match) {
-          setRep({ name: match.name, phone: match.phone });
-        }
-      } catch (err) {
-        console.error('Rep lookup error:', err);
-      }
-    }
-    fetchRep();
-  }, [repName]);
-
-  if (!rep) return null;
-
-  const formatPhone = function(phone) {
-    const digits = (phone || '').replace(/\D/g, '');
-    if (digits.length === 10) return digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
-    return phone;
-  };
+  if (!displayName) return null;
 
   return (
-    <div style={{ background: 'rgba(26,111,212,0.06)', border: '1px solid rgba(26,111,212,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#fff', fontWeight: 700, flexShrink: 0 }}>
-          {rep.name ? rep.name.charAt(0).toUpperCase() : '?'}
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: '#6b8dc4', fontWeight: 500 }}>Your financial rep</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f2a5e', fontFamily: 'var(--font-display)' }}>{rep.name}</div>
-        </div>
+    <div style={{ background: 'rgba(42,107,74,0.06)', border: '1px solid rgba(42,107,74,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+      <span style={{ fontSize: 20 }}>👤</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>Your financial rep</div>
+        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{displayName}</div>
       </div>
-      <a href={'tel:' + rep.phone.replace(/\D/g, '')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #1a6fd4, #5ba3f5)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '7px 14px', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-display)' }}>
-        📞 {formatPhone(rep.phone)}
-      </a>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Will reach out within 24 hrs</div>
     </div>
-  );
-}
-
-// ── Financial Tip Popup ──────────────────────────────────────────
-export default function FinancialTipPopup({ uid, lead, onTabSwitch }) {
-  const [tip, setTip] = useState(null);
-  const [visible, setVisible] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  useEffect(function() {
-    if (!uid) return;
-    const timer = setTimeout(function() {
-      const next = getNextTip(uid);
-      if (next) {
-        setTip(next);
-        setVisible(true);
-      }
-    }, 30000);
-    return function() { clearTimeout(timer); };
-  }, [uid]);
-
-  const handleDismiss = function() {
-    if (tip) markTipSeen(uid, tip.id);
-    setVisible(false);
-  };
-
-  const handleLearnMore = async function() {
-    if (tip) markTipSeen(uid, tip.id);
-    if (tip && tip.action && tip.action.startsWith('tab:')) {
-      const tabName = tip.action.replace('tab:', '');
-      if (onTabSwitch) onTabSwitch(tabName);
-      setVisible(false);
-      return;
-    }
-    setSending(true);
-    try {
-      const { db } = await import('./firebase');
-      const { doc, updateDoc } = await import('firebase/firestore');
-      await updateDoc(doc(db, 'leads', uid), {
-        ['interest_' + tip.id]: true,
-        lastInterestAt: new Date().toISOString(),
-        lastInterestTopic: tip.category,
-      });
-      setSent(true);
-      setTimeout(function() { setVisible(false); }, 2500);
-    } catch (err) {
-      console.error('Interest save error:', err);
-      setVisible(false);
-    }
-    setSending(false);
-  };
-
-  if (!visible || !tip) return null;
-
-  return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, maxWidth: 360, width: 'calc(100vw - 48px)', background: '#fff', border: '1px solid ' + tip.border, borderRadius: 'var(--radius-xl)', boxShadow: '0 8px 40px rgba(26,111,212,0.15)', zIndex: 999, overflow: 'hidden', animation: 'slideUpTip 0.4s ease forwards' }}>
-      <style>{'@keyframes slideUpTip { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }'}</style>
-      <div style={{ height: 4, background: 'linear-gradient(90deg, ' + tip.color + ', ' + tip.color + '88)' }} />
-      <div style={{ padding: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 22 }}>{tip.icon}</span>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: tip.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tip.category}</div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#0f2a5e', lineHeight: 1.3 }}>{tip.title}</div>
-            </div>
-          </div>
-          <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: '#6b8dc4', fontSize: 16, cursor: 'pointer', flexShrink: 0, marginLeft: 8 }}>✕</button>
-        </div>
-        <p style={{ fontSize: 12, color: '#2d5a9e', lineHeight: 1.6, marginBottom: 12 }}>{tip.body}</p>
-        {sent ? (
-          <div style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>✅</span>
-            <div>
-              <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 700, marginBottom: 3 }}>Your rep will be in touch soon! 🎉</div>
-              <div style={{ fontSize: 11, color: '#16a34a', lineHeight: 1.5, opacity: 0.85 }}>We've let your financial rep know you're interested in saving strategies. They'll reach out within 24 hours.</div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button onClick={handleLearnMore} disabled={sending} style={{ width: '100%', background: tip.action && tip.action.startsWith('rep:') ? 'rgba(42,107,74,0.08)' : 'linear-gradient(135deg, ' + tip.color + ', ' + tip.color + 'cc)', color: tip.action && tip.action.startsWith('rep:') ? '#2a6b4a' : '#fff', border: tip.action && tip.action.startsWith('rep:') ? '1px solid rgba(42,107,74,0.25)' : 'none', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-display)', lineHeight: 1.3, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>{tip.action && tip.action.startsWith('rep:') ? '📞' : '→'}</span>
-              {sending ? 'Sending…' : tip.cta}
-            </button>
-            {tip.secondaryCta && (
-              <button onClick={() => {
-                markTipSeen(uid, tip.id);
-                if (tip.secondaryAction && tip.secondaryAction.startsWith('tab:')) {
-                  const tabName = tip.secondaryAction.replace('tab:', '');
-                  if (onTabSwitch) onTabSwitch(tabName);
-                }
-                setVisible(false);
-              }} style={{ width: '100%', background: 'var(--bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-display)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>🐷</span>{tip.secondaryCta}
-              </button>
-            )}
-            <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textAlign: 'center', padding: '4px', fontFamily: 'var(--font-display)' }}>
-              Got it 👍
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+  )
