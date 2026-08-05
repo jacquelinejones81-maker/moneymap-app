@@ -1157,7 +1157,31 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       clearTimeout(timeout);
       if (snap.exists()) {
         const data = snap.data();
-        if (data.accounts) setAccounts(data.accounts);
+        if (data.accounts) {
+          // Normalize accounts — fill in any fields added after the account was created
+          const normalized = {};
+          Object.entries(data.accounts).forEach(([key, acct]) => {
+            normalized[key] = {
+              transactions: [],
+              debts: [],
+              budgets: {},
+              beginBal: {amount:0,date:'',set:false},
+              goals: [],
+              bills: [],
+              billsPaid: {},
+              extraPayment: '',
+              subscriptions: [],
+              assets: [],
+              liabilities: [],
+              savingsRateGoal: 20,
+              networthHistory: [],
+              varBills: [],
+              varBillsPaid: {},
+              ...acct, // overlay saved data on top of defaults
+            };
+          });
+          setAccounts(normalized);
+        }
       }
       setLoading(false);
     }, (error) => {
