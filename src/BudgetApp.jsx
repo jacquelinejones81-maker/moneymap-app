@@ -1151,12 +1151,14 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [dismissedBillAlerts, setDismissedBillAlerts] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`mm_dismissed_bill_alerts_${uid}`) || '{}'); } catch { return {}; }
   });
+  const [showBillToasts, setShowBillToasts] = useState(false);
   const dismissBillAlert = (key) => {
     setDismissedBillAlerts(prev => {
-      const next = { ...prev, [key]: true };
+      const next = { ...prev, [key]: 'sidebar' };
       localStorage.setItem(`mm_dismissed_bill_alerts_${uid}`, JSON.stringify(next));
       return next;
     });
+    setShowBillToasts(false);
   };
   const { showTour, completeTour, resetTour } = useTour();
 
@@ -1500,12 +1502,16 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           const daysUntil = b.dueDay - todayDay;
           if (daysUntil < 0 || daysUntil > 7) return false;
           const alertKey = `${monthKey}_${b.id}`;
-          return !dismissedBillAlerts[alertKey] && !Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
+          const dismissed = dismissedBillAlerts[alertKey];
+          const paid = Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
+          if (paid) return false;
+          if (!dismissed) return true;
+          if (dismissed === 'sidebar' && showBillToasts) return true;
+          return false;
         });
         if (upcomingBills.length === 0) return null;
         return (
-          <div style={{ position:'fixed', bottom:24, right:24, zIndex:2000, display:'flex', flexDirection:'column', gap:6, maxWidth:320, width:'calc(100vw - 48px)', pointerEvents:'none' }}>
-            {upcomingBills.map(b => {
+          <div style={{ position:'fixed', bottom:24, right:24, zIndex:2000, display:'flex', flexDirection:'column', gap:6, maxWidth:320, width:'calc(100vw - 48px)', pointerEvents:'none' }}>\n            {upcomingBills.map(b => {
               const daysUntil = b.dueDay - todayDay;
               const alertKey = `${monthKey}_${b.id}`;
               const isOverdue = daysUntil < 0;
@@ -1629,6 +1635,25 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             <span className="nav-icon">{t.icon}</span>{t.label}
           </button>
         ))}
+        {(()=>{
+          const today = new Date();
+          const todayDay = today.getDate();
+          const monthKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+          const sidebarBills = bills.filter(b=>{
+            const daysUntil = b.dueDay - todayDay;
+            if(daysUntil < 0 || daysUntil > 7) return false;
+            const alertKey = `${monthKey}_${b.id}`;
+            return dismissedBillAlerts[alertKey]==='sidebar' && !Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
+          });
+          if(sidebarBills.length===0) return null;
+          return(
+            <button className="nav-item" onClick={()=>setShowBillToasts(s=>!s)} style={{color:showBillToasts?'#2a6b4a':'#b45309',background:showBillToasts?'rgba(42,107,74,0.08)':'rgba(217,119,6,0.08)',fontWeight:500}}>
+              <span className="nav-icon">🔔</span>
+              Coming due
+              <span style={{marginLeft:'auto',background:'#d97706',color:'#fff',fontSize:10,fontWeight:700,padding:'1px 6px',borderRadius:20}}>{sidebarBills.length}</span>
+            </button>
+          );
+        })()}
         <div className="sidebar-spacer"/>
         <div className="sidebar-bottom">
           <button className="nav-item" onClick={()=>setShowAddToHome(true)}><span className="nav-icon">📱</span>Add to phone</button>
