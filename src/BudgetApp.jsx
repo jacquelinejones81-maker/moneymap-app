@@ -2462,6 +2462,17 @@ function DebtsTab({debts,setDebts,onRepContact}){
           <button className="btn-gold" style={{alignSelf:'end'}} onClick={addDebt}>+ Add debt</button>
         </div>
       </div>
+      {sorted.length>0&&(
+        <div className="card">
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+            <span style={{fontSize:20}}>📋</span>
+            <div>
+              <div style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>Avalanche strategy</div>
+              <div style={{fontSize:12,color:'var(--text-muted)',marginTop:2}}>Pay minimums on all debts. Put every extra dollar toward <strong style={{color:'var(--text-primary)'}}>{sorted[0].name}</strong> ({sorted[0].rate.toFixed(2)}% APR) — the highest interest rate first. This saves the most money over time. Total minimums: <strong style={{color:'var(--text-primary)'}}>${totalMin.toFixed(2)}/mo</strong>.</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}}>
           <div className="card-title" style={{marginBottom:0}}>Debt stacking order — avalanche method</div>
@@ -2494,7 +2505,6 @@ function DebtsTab({debts,setDebts,onRepContact}){
                 </div>
               );
             })}
-            <div className="tip-box" style={{marginTop:12}}><strong>Avalanche strategy:</strong> Pay minimums on all debts. Put every extra dollar toward <em>{sorted[0].name}</em> ({sorted[0].rate.toFixed(2)}% APR). Total minimums: <strong>${totalMin.toFixed(2)}/mo</strong>.</div>
           </>
         )}
       </div>
@@ -2726,6 +2736,12 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
           <span style={{fontSize:13,color:'var(--text-muted)'}}>beyond minimums</span>
         </div>
       </div>
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+          <span style={{fontSize:20}}>💡</span>
+          <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6}}>Add an extra payment above to accelerate payoff and see how much interest you save. Even <strong style={{color:'var(--text-primary)'}}>$50/month extra</strong> can cut years off your debt and save thousands in interest.</div>
+        </div>
+      </div>
       {debts.length===0?<div className="card"><div className="empty-state">Add debts in the Debt Stack tab first.</div></div>:(
         <div className="card">
           <div className="card-title">Payoff timeline</div>
@@ -2746,7 +2762,6 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
               </div>
             </div>
           ))}
-          <div className="tip-box" style={{marginTop:12}}>Add an extra payment above to accelerate payoff and see how much interest you save.</div>
         </div>
       )}
     </>
