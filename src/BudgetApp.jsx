@@ -1215,39 +1215,61 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     return () => { clearTimeout(timeout); unsubscribe(); };
   }, [uid]);
 
-  // Month rollover modal
+  // Month rollover modal — synced to Firestore
   const [showRolloverModal, setShowRolloverModal] = useState(false);
-  const [rolloverSettings, setRolloverSettings] = useState(() => {
-    const saved = localStorage.getItem(`mm_rollover_settings_${uid}`);
-    return saved ? JSON.parse(saved) : {
-      fixedExpenses: true,
-      variableExpenses: true,
-      subscriptions: true,
-      clearTransactions: true,
-      carryUnspent: false,
-    };
+  const [rolloverSettings, setRolloverSettings] = useState({
+    fixedExpenses: true,
+    variableExpenses: true,
+    subscriptions: true,
+    clearTransactions: true,
+    carryUnspent: false,
   });
 
+  // Load rollover settings and seen flag from Firestore
   useEffect(() => {
-    const today = new Date();
-    if (today.getDate() === 1) {
-      const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
-      if (!localStorage.getItem(key)) setShowRolloverModal(true);
-    }
+    if (!uid) return;
+    const prefsRef = doc(db, 'users', uid, 'data', 'userPrefs');
+    const unsubscribe = onSnapshot(prefsRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.rolloverSettings) setRolloverSettings(s => ({ ...s, ...data.rolloverSettings }));
+        const today = new Date();
+        const monthKey = `${today.getFullYear()}_${today.getMonth()}`;
+        if (today.getDate() === 1 && !data.rolloverSeenMonths?.[monthKey]) {
+          setShowRolloverModal(true);
+        }
+      } else {
+        const today = new Date();
+        if (today.getDate() === 1) setShowRolloverModal(true);
+      }
+    });
+    return () => unsubscribe();
   }, [uid]);
+
+  const saveUserPrefs = async (updates) => {
+    if (!uid) return;
+    try {
+      const prefsRef = doc(db, 'users', uid, 'data', 'userPrefs');
+      await setDoc(prefsRef, updates, { merge: true });
+    } catch(e) { console.error('Prefs save error:', e); }
+  };
 
   const toggleRollover = (key) => {
     setRolloverSettings(prev => {
       const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(`mm_rollover_settings_${uid}`, JSON.stringify(next));
+      saveUserPrefs({ rolloverSettings: next });
       return next;
     });
   };
 
-  const applyRollover = () => {
+  const markRolloverSeen = async () => {
     const today = new Date();
-    const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
-    localStorage.setItem(key, 'true');
+    const monthKey = `${today.getFullYear()}_${today.getMonth()}`;
+    await saveUserPrefs({ [`rolloverSeenMonths.${monthKey}`]: true });
+  };
+
+  const applyRollover = async () => {
+    await markRolloverSeen();
 
     const acct = accounts[activeAccount];
     let updated = { ...acct };
@@ -1616,7 +1638,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             <button onClick={applyRollover} style={{ width:'100%', background:'var(--green)', color:'#fff', border:'none', borderRadius:10, padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', marginBottom:8 }}>
               Start {new Date().toLocaleString('default',{month:'long'})} →
             </button>
-            <button onClick={() => { const today=new Date(); localStorage.setItem(`mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`,'true'); setShowRolloverModal(false); }} style={{ width:'100%', background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textDecoration:'underline' }}>
+            <button onClick={async () => { await markRolloverSeen(); setShowRolloverModal(false); }} style={{ width:'100%', background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textDecoration:'underline' }}>
               Decide later
             </button>
           </div>
