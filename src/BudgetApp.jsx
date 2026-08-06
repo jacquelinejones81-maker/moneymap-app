@@ -1505,6 +1505,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           const dismissed = dismissedBillAlerts[alertKey];
           const paid = Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
           if (paid) return false;
+          if (daysUntil <= 2) return true; // always re-alert at 2 days regardless of dismissal
           if (!dismissed) return true;
           if (dismissed === 'sidebar' && showBillToasts) return true;
           return false;
@@ -1642,6 +1643,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           const sidebarBills = bills.filter(b=>{
             const daysUntil = b.dueDay - todayDay;
             if(daysUntil < 0 || daysUntil > 7) return false;
+            if(daysUntil <= 2) return false; // force-showing as toast, not in sidebar
             const alertKey = `${monthKey}_${b.id}`;
             return dismissedBillAlerts[alertKey]==='sidebar' && !Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
           });
