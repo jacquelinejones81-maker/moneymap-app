@@ -1148,17 +1148,27 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [deleteAccountKey, setDeleteAccountKey] = useState(null);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false); // kept for legacy, replaced by showRolloverModal
-  const [dismissedBillAlerts, setDismissedBillAlerts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(`mm_dismissed_bill_alerts_${uid}`) || '{}'); } catch { return {}; }
-  });
+  const [dismissedBillAlerts, setDismissedBillAlerts] = useState({});
   const [showBillToasts, setShowBillToasts] = useState(false);
-  const dismissBillAlert = (key) => {
-    setDismissedBillAlerts(prev => {
-      const next = { ...prev, [key]: 'sidebar' };
-      localStorage.setItem(`mm_dismissed_bill_alerts_${uid}`, JSON.stringify(next));
-      return next;
+
+  // Sync dismissed bill alerts to/from Firestore so all devices stay in sync
+  useEffect(() => {
+    if (!uid) return;
+    const alertsRef = doc(db, 'users', uid, 'data', 'billAlerts');
+    const unsubscribe = onSnapshot(alertsRef, (snap) => {
+      if (snap.exists()) setDismissedBillAlerts(snap.data().dismissed || {});
     });
+    return () => unsubscribe();
+  }, [uid]);
+
+  const dismissBillAlert = async (key) => {
+    const next = { ...dismissedBillAlerts, [key]: 'sidebar' };
+    setDismissedBillAlerts(next);
     setShowBillToasts(false);
+    try {
+      const alertsRef = doc(db, 'users', uid, 'data', 'billAlerts');
+      await setDoc(alertsRef, { dismissed: next }, { merge: true });
+    } catch(e) { console.error('Bill alert sync error:', e); }
   };
   const { showTour, completeTour, resetTour } = useTour();
 
