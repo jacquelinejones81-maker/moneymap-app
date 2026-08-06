@@ -1491,7 +1491,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {milestone && <MilestoneModal milestone={milestone} onClose={()=>setMilestone(null)} />}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
 
-      {/* Bill due reminders */}
+      {/* Bill due reminders — fixed overlay bottom-right, never affects layout */}
       {(() => {
         const today = new Date();
         const todayDay = today.getDate();
@@ -1504,24 +1504,24 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         });
         if (upcomingBills.length === 0) return null;
         return (
-          <div style={{ position:'sticky', top:0, zIndex:200, display:'flex', flexDirection:'column', gap:4, padding:'8px 12px', background:'var(--surface-0)' }}>
+          <div style={{ position:'fixed', bottom:24, right:24, zIndex:2000, display:'flex', flexDirection:'column', gap:6, maxWidth:320, width:'calc(100vw - 48px)', pointerEvents:'none' }}>
             {upcomingBills.map(b => {
               const daysUntil = b.dueDay - todayDay;
               const alertKey = `${monthKey}_${b.id}`;
               const isOverdue = daysUntil < 0;
               const isUrgent = daysUntil <= 2;
               const color = isOverdue ? '#dc2626' : isUrgent ? '#d97706' : '#2a6b4a';
-              const bg = isOverdue ? 'rgba(220,38,38,0.07)' : isUrgent ? 'rgba(217,119,6,0.07)' : 'rgba(42,107,74,0.07)';
-              const border = isOverdue ? 'rgba(220,38,38,0.25)' : isUrgent ? 'rgba(217,119,6,0.25)' : 'rgba(42,107,74,0.2)';
+              const bg = isOverdue ? '#fff5f5' : isUrgent ? '#fffbeb' : '#f0faf5';
+              const border = isOverdue ? 'rgba(220,38,38,0.3)' : isUrgent ? 'rgba(217,119,6,0.3)' : 'rgba(42,107,74,0.25)';
               const label = isOverdue ? 'Overdue' : daysUntil === 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil} days`;
               return (
-                <div key={b.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:bg, border:`1px solid ${border}`, borderRadius:8 }}>
-                  <span style={{ fontSize:16 }}>{isOverdue ? '⚠️' : isUrgent ? '🔔' : '📅'}</span>
-                  <div style={{ flex:1 }}>
-                    <span style={{ fontSize:13, fontWeight:600, color }}>{b.name}</span>
-                    <span style={{ fontSize:12, color, opacity:0.8, marginLeft:8 }}>${parseFloat(b.amount).toFixed(2)} — {label}</span>
+                <div key={b.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:bg, border:`1px solid ${border}`, borderRadius:10, boxShadow:'0 2px 12px rgba(0,0,0,0.10)', pointerEvents:'auto' }}>
+                  <span style={{ fontSize:15, flexShrink:0 }}>{isOverdue ? '⚠️' : isUrgent ? '🔔' : '📅'}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{b.name}</div>
+                    <div style={{ fontSize:11, color, opacity:0.85 }}>${parseFloat(b.amount).toFixed(2)} — {label}</div>
                   </div>
-                  <button onClick={() => dismissBillAlert(alertKey)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color, opacity:0.6, padding:'0 4px', lineHeight:1 }}>✕</button>
+                  <button onClick={() => dismissBillAlert(alertKey)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:17, color, opacity:0.5, padding:'0 2px', lineHeight:1, flexShrink:0 }}>✕</button>
                 </div>
               );
             })}
