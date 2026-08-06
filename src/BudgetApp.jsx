@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import AppTour, { useTour } from './AppTour';
 import FinancialTipPopup from './FinancialTips';
 import { db } from './firebase';
@@ -1148,6 +1148,16 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [deleteAccountKey, setDeleteAccountKey] = useState(null);
   const [splitModal, setSplitModal] = useState(null);
   const [budgetResetBanner, setBudgetResetBanner] = useState(false); // kept for legacy, replaced by showRolloverModal
+  const [dismissedBillAlerts, setDismissedBillAlerts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`mm_dismissed_bill_alerts_${uid}`) || '{}'); } catch { return {}; }
+  });
+  const dismissBillAlert = (key) => {
+    setDismissedBillAlerts(prev => {
+      const next = { ...prev, [key]: true };
+      localStorage.setItem(`mm_dismissed_bill_alerts_${uid}`, JSON.stringify(next));
+      return next;
+    });
+  };
   const { showTour, completeTour, resetTour } = useTour();
 
   useEffect(() => {
@@ -1481,6 +1491,44 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {milestone && <MilestoneModal milestone={milestone} onClose={()=>setMilestone(null)} />}
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
 
+      {/* Bill due reminders */}
+      {(() => {
+        const today = new Date();
+        const todayDay = today.getDate();
+        const monthKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+        const upcomingBills = bills.filter(b => {
+          const daysUntil = b.dueDay - todayDay;
+          if (daysUntil < 0 || daysUntil > 7) return false;
+          const alertKey = `${monthKey}_${b.id}`;
+          return !dismissedBillAlerts[alertKey] && !Object.keys(billsPaid||{}).some(k=>k.includes(`${monthKey}_${b.id}`));
+        });
+        if (upcomingBills.length === 0) return null;
+        return (
+          <div style={{ position:'sticky', top:0, zIndex:200, display:'flex', flexDirection:'column', gap:4, padding:'8px 12px', background:'var(--surface-0)' }}>
+            {upcomingBills.map(b => {
+              const daysUntil = b.dueDay - todayDay;
+              const alertKey = `${monthKey}_${b.id}`;
+              const isOverdue = daysUntil < 0;
+              const isUrgent = daysUntil <= 2;
+              const color = isOverdue ? '#dc2626' : isUrgent ? '#d97706' : '#2a6b4a';
+              const bg = isOverdue ? 'rgba(220,38,38,0.07)' : isUrgent ? 'rgba(217,119,6,0.07)' : 'rgba(42,107,74,0.07)';
+              const border = isOverdue ? 'rgba(220,38,38,0.25)' : isUrgent ? 'rgba(217,119,6,0.25)' : 'rgba(42,107,74,0.2)';
+              const label = isOverdue ? 'Overdue' : daysUntil === 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil} days`;
+              return (
+                <div key={b.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:bg, border:`1px solid ${border}`, borderRadius:8 }}>
+                  <span style={{ fontSize:16 }}>{isOverdue ? '⚠️' : isUrgent ? '🔔' : '📅'}</span>
+                  <div style={{ flex:1 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color }}>{b.name}</span>
+                    <span style={{ fontSize:12, color, opacity:0.8, marginLeft:8 }}>${parseFloat(b.amount).toFixed(2)} — {label}</span>
+                  </div>
+                  <button onClick={() => dismissBillAlert(alertKey)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color, opacity:0.6, padding:'0 4px', lineHeight:1 }}>✕</button>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* Budget Reset Banner */}
       {showRolloverModal && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:3000, display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
@@ -1687,7 +1735,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
         {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions||[]} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
-        {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} />}
+        {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} budgets={budgets} bills={bills} />}
       </div>
       </div>
     </div>
@@ -2646,7 +2694,11 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
   );
 }
 
-function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeriodOffset}){
+function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeriodOffset,budgets,bills}){
+  const donutRef=useRef(null);
+  const chartRef=useRef(null);
+  const barRef=useRef(null);
+  const barChartRef=useRef(null);
   const getPeriodBounds=(mode,offset)=>{
     const now=new Date();let start,end,label;
     if(mode==='monthly'){const d=new Date(now.getFullYear(),now.getMonth()+offset,1);start=new Date(d.getFullYear(),d.getMonth(),1);end=new Date(d.getFullYear(),d.getMonth()+1,0);label=start.toLocaleDateString('en-US',{month:'long',year:'numeric'});}
@@ -2673,6 +2725,72 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
     trendData.push({label:l.replace(' 20',"'"),value:parseFloat(tot.toFixed(2)),current:i===0});
   }
   const maxTrend=Math.max(...trendData.map(d=>d.value),1);
+
+  const CHART_COLORS=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#4a3aa7','#e34948','#898781'];
+
+  useEffect(()=>{
+    if(!donutRef.current||cats.length===0) return;
+    const loadChart=()=>{
+      if(!window.Chart) return;
+      if(chartRef.current) chartRef.current.destroy();
+      const topCats=cats.slice(0,7);
+      const otherVal=cats.slice(7).reduce((s,[,v])=>s+v,0);
+      const labels=topCats.map(([c])=>c);
+      const data=topCats.map(([,v])=>v);
+      if(otherVal>0){labels.push('Other');data.push(otherVal);}
+      chartRef.current=new window.Chart(donutRef.current,{
+        type:'doughnut',
+        data:{labels,datasets:[{data,backgroundColor:CHART_COLORS.slice(0,labels.length),borderWidth:2,borderColor:'#ffffff'}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: $${ctx.raw.toFixed(2)} (${totalSpent>0?((ctx.raw/totalSpent)*100).toFixed(1):0}%)`}}},cutout:'65%'}
+      });
+    };
+    if(window.Chart){loadChart();}
+    else{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+      s.onload=loadChart;
+      document.head.appendChild(s);
+    }
+    return()=>{if(chartRef.current){chartRef.current.destroy();chartRef.current=null;}};
+  },[cats,totalSpent]);
+
+  useEffect(()=>{
+    if(!barRef.current||trendData.every(d=>d.value===0)) return;
+    const loadBar=()=>{
+      if(!window.Chart) return;
+      if(barChartRef.current) barChartRef.current.destroy();
+      barChartRef.current=new window.Chart(barRef.current,{
+        type:'bar',
+        data:{
+          labels:trendData.map(d=>d.label),
+          datasets:[{
+            data:trendData.map(d=>d.value),
+            backgroundColor:trendData.map(d=>d.current?'#2a6b4a':'rgba(42,107,74,0.25)'),
+            borderRadius:4,borderSkipped:false
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'$'+ctx.raw.toLocaleString()}}},scales:{x:{grid:{display:false},ticks:{color:'#898781',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#898781',font:{size:11},callback:v=>'$'+v.toLocaleString()}}}}
+      });
+    };
+    if(window.Chart){loadBar();}
+    else{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+      s.onload=loadBar;
+      document.head.appendChild(s);
+    }
+    return()=>{if(barChartRef.current){barChartRef.current.destroy();barChartRef.current=null;}};
+  },[trendData]);
+
+  const budgetVsActual=useMemo(()=>{
+    if(!budgets) return[];
+    return Object.entries(budgets).map(([cat,limit])=>{
+      const spent=curr[cat]||0;
+      const pct=limit>0?Math.min((spent/limit)*100,100):0;
+      const over=spent>limit;
+      return{cat,limit,spent,pct,over};
+    }).filter(b=>b.limit>0).sort((a,b)=>b.spent-a.spent);
+  },[budgets,curr]);
 
   const exportMonthlySummary=()=>{
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>MoneyMap Summary — ${label}</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:var(--text-primary);background:#fff}h1{color:var(--green);border-bottom:2px solid var(--green);padding-bottom:10px}h2{color:var(--slate);margin-top:24px;font-size:16px}.metric{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 20px;margin:6px;text-align:center}.metric .val{font-size:24px;font-weight:800;color:var(--green)}.metric .lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:var(--bg);padding:8px;text-align:left;font-size:12px;color:var(--text-muted);text-transform:uppercase}td{padding:8px;border-bottom:1px solid var(--border-light);font-size:13px}.green{color:#16a34a}.red{color:#dc2626}</style></head><body><h1>💰 MoneyMap Monthly Summary</h1><h2>${label}</h2><div><div class="metric"><div class="val">$${totalIncome.toFixed(2)}</div><div class="lbl">Income</div></div><div class="metric"><div class="val red">$${totalSpent.toFixed(2)}</div><div class="lbl">Spent</div></div><div class="metric"><div class="val ${net>=0?'green':'red'}">${net<0?'-':''}$${Math.abs(net).toFixed(2)}</div><div class="lbl">Net ${net>=0?'Surplus':'Deficit'}</div></div></div><h2>Spending by Category</h2><table><tr><th>Category</th><th>Group</th><th>Transactions</th><th>Total</th><th>% of Spending</th></tr>${cats.map(([cat,val])=>`<tr><td>${cat}</td><td>${ALL_CATS[cat]?.group||'Other'}</td><td>${counts[cat]||0}</td><td>$${val.toFixed(2)}</td><td>${totalSpent>0?((val/totalSpent)*100).toFixed(1):0}%</td></tr>`).join('')}</table><p style="margin-top:30px;font-size:11px;color:var(--text-muted);text-align:center">Generated by MoneyMap — ${new Date().toLocaleDateString()}</p></body></html>`;
@@ -2705,6 +2823,50 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
         <div className="metric-card"><div className="lbl">Income</div><div className={`val ${totalIncome>0?'val-green':'val-red'}`}>${totalIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
         <div className="metric-card"><div className="lbl">Net {net>=0?'surplus':'deficit'}</div><div className={`val ${net>=0?'val-teal':'val-red'}`}>{net<0?'-':''}${Math.abs(net).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
       </div>
+      {cats.length>0&&(
+        <div className="card">
+          <div className="card-title">Where your money went</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
+            <div>
+              <div style={{position:'relative',width:'100%',height:180}}>
+                <canvas ref={donutRef} role="img" aria-label="Donut chart of spending by category"/>
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
+              {cats.slice(0,7).map(([cat,val],i)=>(
+                <div key={cat} style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                  <span style={{width:10,height:10,borderRadius:2,background:CHART_COLORS[i],flexShrink:0}}/>
+                  <span style={{flex:1,color:'var(--text-secondary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cat}</span>
+                  <span style={{fontWeight:500,color:'var(--text-primary)',flexShrink:0}}>{totalSpent>0?((val/totalSpent)*100).toFixed(0):0}%</span>
+                </div>
+              ))}
+              {cats.length>7&&<div style={{fontSize:11,color:'var(--text-muted)'}}>{cats.length-7} more categories…</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {budgetVsActual.length>0&&(
+        <div className="card">
+          <div className="card-title">Budget vs actual</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {budgetVsActual.map(({cat,limit,spent,pct,over})=>(
+              <div key={cat}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
+                  <span style={{color:'var(--text-secondary)'}}>{cat}</span>
+                  <span style={{fontWeight:600,color:over?'#dc2626':'var(--text-primary)'}}>
+                    ${spent.toFixed(2)} / ${limit.toFixed(2)}{over&&' — over'}
+                  </span>
+                </div>
+                <div style={{height:6,background:'var(--border)',borderRadius:3,overflow:'hidden'}}>
+                  <div style={{height:'100%',borderRadius:3,background:over?'#dc2626':'#2a6b4a',width:`${pct}%`,transition:'width 0.4s ease'}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-title">Spending by category — {label}</div>
         {cats.length===0?<div className="empty-state">No expenses in this period.</div>:(
@@ -2742,14 +2904,8 @@ function SpendingTab({transactions,periodMode,setPeriodMode,periodOffset,setPeri
         {trendData.every(d=>d.value===0)?(
           <div className="empty-state">Add transactions to see your spending trend.</div>
         ):(
-          <div style={{display:'flex',alignItems:'flex-end',gap:6,height:160,padding:'0 4px'}}>
-            {trendData.map((d,i)=>(
-              <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                <div style={{fontSize:9,color:'var(--text-muted)',fontWeight:600}}>${d.value>999?`${(d.value/1000).toFixed(1)}k`:d.value.toFixed(0)}</div>
-                <div style={{width:'100%',borderRadius:'4px 4px 0 0',background:d.current?'var(--green)':'rgba(26,111,212,0.25)',height:`${Math.max(4,Math.round((d.value/maxTrend)*120))}px`,transition:'height 0.4s ease',minHeight:4}}/>
-                <div style={{fontSize:9,color:d.current?'var(--green)':'var(--text-muted)',fontWeight:d.current?700:400,textAlign:'center',whiteSpace:'nowrap'}}>{d.label}</div>
-              </div>
-            ))}
+          <div style={{position:'relative',width:'100%',height:180}}>
+            <canvas ref={barRef} role="img" aria-label="Bar chart of spending trend over time"/>
           </div>
         )}
       </div>
