@@ -1147,7 +1147,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [editingAccountName, setEditingAccountName] = useState('');
   const [deleteAccountKey, setDeleteAccountKey] = useState(null);
   const [splitModal, setSplitModal] = useState(null);
-  const [budgetResetBanner, setBudgetResetBanner] = useState(false);
+  const [budgetResetBanner, setBudgetResetBanner] = useState(false); // kept for legacy, replaced by showRolloverModal
   const { showTour, completeTour, resetTour } = useTour();
 
   useEffect(() => {
@@ -1193,24 +1193,65 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     return () => { clearTimeout(timeout); unsubscribe(); };
   }, [uid]);
 
-  // Budget reset banner on 1st of month
+  // Month rollover modal
+  const [showRolloverModal, setShowRolloverModal] = useState(false);
+  const [rolloverSettings, setRolloverSettings] = useState(() => {
+    const saved = localStorage.getItem(`mm_rollover_settings_${uid}`);
+    return saved ? JSON.parse(saved) : {
+      fixedExpenses: true,
+      variableExpenses: true,
+      subscriptions: true,
+      clearTransactions: true,
+      carryUnspent: false,
+    };
+  });
+
   useEffect(() => {
     const today = new Date();
     if (today.getDate() === 1) {
       const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
-      if (!localStorage.getItem(key)) setBudgetResetBanner(true);
+      if (!localStorage.getItem(key)) setShowRolloverModal(true);
     }
   }, [uid]);
 
-  const dismissBudgetBanner = (copy) => {
+  const toggleRollover = (key) => {
+    setRolloverSettings(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(`mm_rollover_settings_${uid}`, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const applyRollover = () => {
     const today = new Date();
     const key = `mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`;
     localStorage.setItem(key, 'true');
-    setBudgetResetBanner(false);
-    if (copy) {
-      // Copy last month's budgets to this month (they're already there, just confirm)
-      alert('Budget limits carried over! Review them in the Budgets tab.');
+
+    const acct = accounts[activeAccount];
+    let updated = { ...acct };
+
+    if (rolloverSettings.clearTransactions) {
+      updated.transactions = [];
+      updated.billsPaid = {};
+      updated.varBillsPaid = {};
     }
+
+    if (rolloverSettings.carryUnspent) {
+      const income = acct.transactions.filter(t => parseFloat(t.amount) > 0).reduce((s, t) => s + parseFloat(t.amount), 0);
+      const spent = acct.transactions.filter(t => parseFloat(t.amount) < 0).reduce((s, t) => s + Math.abs(parseFloat(t.amount)), 0);
+      const surplus = income - spent;
+      if (surplus > 0) {
+        const carryTx = { id: Date.now(), date: today.toISOString().slice(0, 10), desc: 'Carried over from last month', amount: surplus.toFixed(2), category: 'Other income', note: '' };
+        updated.transactions = [carryTx, ...(updated.transactions || [])];
+      }
+    }
+
+    if (!rolloverSettings.fixedExpenses) updated.bills = [];
+    if (!rolloverSettings.subscriptions) updated.subscriptions = [];
+    if (!rolloverSettings.variableExpenses) updated.budgets = {};
+
+    setAccounts(prev => ({ ...prev, [activeAccount]: updated }));
+    setShowRolloverModal(false);
   };
 
   const saveToFirebase = async (updatedAccounts) => {
@@ -1441,12 +1482,78 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       {splitModal && <SplitModal form={splitModal.form} onConfirm={(splits) => { splitModal.onConfirm(splits); setSplitModal(null); }} onCancel={() => setSplitModal(null)} />}
 
       {/* Budget Reset Banner */}
-      {budgetResetBanner && (
-        <div style={{ background:'linear-gradient(135deg, var(--green), #5ba3f5)', padding:'12px 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
-          <div style={{ fontSize:13, color:'#fff', fontWeight:500 }}>🎯 New month! Would you like to carry over last month's budget limits?</div>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => dismissBudgetBanner(true)} style={{ background:'#fff', color:'var(--green)', border:'none', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Yes, carry over</button>
-            <button onClick={() => dismissBudgetBanner(false)} style={{ background:'rgba(255,255,255,0.2)', color:'#fff', border:'1px solid rgba(255,255,255,0.4)', borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:600, cursor:'pointer' }}>Dismiss</button>
+      {showRolloverModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:3000, display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
+          <div style={{ background:'#fff', borderRadius:16, padding:'1.5rem', width:'100%', maxWidth:420, maxHeight:'90vh', overflowY:'auto' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+              <div style={{ fontSize:28 }}>🗓</div>
+              <div>
+                <div style={{ fontSize:16, fontWeight:700, color:'var(--text-primary)' }}>New month — {new Date().toLocaleString('default',{month:'long',year:'numeric'})}</div>
+                <div style={{ fontSize:12, color:'var(--text-muted)' }}>Choose what carries over from last month</div>
+              </div>
+            </div>
+
+            <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:8 }}>Budget categories</div>
+            <div style={{ background:'#fafaf8', border:'1px solid #eee', borderRadius:10, marginBottom:14, overflow:'hidden' }}>
+              {[
+                { key:'fixedExpenses', label:'Fixed expenses', sub:'Rent, car payment, insurance' },
+                { key:'variableExpenses', label:'Variable budgets', sub:'Groceries, gas, dining targets' },
+                { key:'subscriptions', label:'Subscriptions', sub:'Netflix, Spotify, recurring apps' },
+              ].map((item, i, arr) => (
+                <div key={item.key} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom: i < arr.length-1 ? '1px solid #eee' : 'none' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--text-primary)' }}>{item.label}</div>
+                    <div style={{ fontSize:11, color:'var(--text-muted)' }}>{item.sub}</div>
+                  </div>
+                  <div onClick={() => toggleRollover(item.key)} style={{ width:36, height:20, borderRadius:20, background: rolloverSettings[item.key] ? 'var(--green)' : '#ccc', position:'relative', cursor:'pointer', transition:'background 0.2s', flexShrink:0 }}>
+                    <div style={{ position:'absolute', top:3, left: rolloverSettings[item.key] ? 19 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left 0.2s' }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:8 }}>Transactions</div>
+            <div style={{ background:'#fafaf8', border:'1px solid #eee', borderRadius:10, marginBottom:14, overflow:'hidden' }}>
+              {[
+                { key:'clearTransactions', label:'Clear transaction register', sub:'Start fresh — history stays viewable' },
+                { key:'carryUnspent', label:'Carry over unspent balance', sub:"Add last month's surplus to income" },
+              ].map((item, i, arr) => (
+                <div key={item.key} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom: i < arr.length-1 ? '1px solid #eee' : 'none' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--text-primary)' }}>{item.label}</div>
+                    <div style={{ fontSize:11, color:'var(--text-muted)' }}>{item.sub}</div>
+                  </div>
+                  <div onClick={() => toggleRollover(item.key)} style={{ width:36, height:20, borderRadius:20, background: rolloverSettings[item.key] ? 'var(--green)' : '#ccc', position:'relative', cursor:'pointer', transition:'background 0.2s', flexShrink:0 }}>
+                    <div style={{ position:'absolute', top:3, left: rolloverSettings[item.key] ? 19 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left 0.2s' }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:8 }}>Goals — always carry forward</div>
+            <div style={{ background:'#fafaf8', border:'1px solid #eee', borderRadius:10, marginBottom:20, overflow:'hidden' }}>
+              {[
+                { label:'Debt payoff progress', sub:'Tracks across all months' },
+                { label:'Savings progress', sub:'Tracks across all months' },
+              ].map((item, i, arr) => (
+                <div key={item.label} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderBottom: i < arr.length-1 ? '1px solid #eee' : 'none', opacity:0.6 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:500, color:'var(--text-primary)' }}>{item.label}</div>
+                    <div style={{ fontSize:11, color:'var(--text-muted)' }}>{item.sub}</div>
+                  </div>
+                  <div style={{ width:36, height:20, borderRadius:20, background:'var(--green)', position:'relative', flexShrink:0 }}>
+                    <div style={{ position:'absolute', top:3, left:19, width:14, height:14, borderRadius:'50%', background:'#fff' }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={applyRollover} style={{ width:'100%', background:'var(--green)', color:'#fff', border:'none', borderRadius:10, padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', marginBottom:8 }}>
+              Start {new Date().toLocaleString('default',{month:'long'})} →
+            </button>
+            <button onClick={() => { const today=new Date(); localStorage.setItem(`mm_budget_reset_${uid}_${today.getFullYear()}_${today.getMonth()}`,'true'); setShowRolloverModal(false); }} style={{ width:'100%', background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textDecoration:'underline' }}>
+              Decide later
+            </button>
           </div>
         </div>
       )}
