@@ -195,7 +195,8 @@ export default function App() {
   if (view === 'forgot-pin') return <ForgotPin firebaseUser={firebaseUser} currentLead={currentLead} onComplete={()=>{ sessionStorage.setItem(`mm_auth_${firebaseUser.uid}`,'true'); setView('app'); }} onBack={()=>setView('pin-login')} />;
   if (view === 'quick-signin') return <QuickSignIn onSubmit={handleLeadSubmit} onBack={()=>setView('landing')} />;
   if (view === 'pin-login') return <PinLogin uid={firebaseUser?.uid} firstName={currentLead?.name?.split(' ')[0]||''} onSuccess={handlePinLogin} onForgot={()=>setView('forgot-pin')} onSignOut={()=>setView('quick-signin')} />;
-<BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />  return <LandingPage onSubmit={handleLeadSubmit} repName={repName} />;
+  if (view === 'app') return <BudgetApp lead={currentLead} firebaseUser={firebaseUser} onSignOut={handleSignOut} onDeleteAccount={handleDeleteAccount} />;
+  return <LandingPage onSubmit={handleLeadSubmit} repName={repName} />;
 }
 
 function QuickSignIn({ onSubmit, onBack }) {
