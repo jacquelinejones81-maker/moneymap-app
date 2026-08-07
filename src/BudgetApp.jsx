@@ -36,7 +36,7 @@ function WelcomeVideoModal({ lead, onClose }) {
   const firstName = lead?.name?.split(' ')[0] || 'there';
   if (!videoId) return null;
   return (
-    <div className="modal-overlay" style={{ zIndex:2000 }} onClick={e => e.target===e.currentTarget&&onClose()}>
+    <div className="modal-overlay" style={{ position:"fixed", inset:0, zIndex:2000, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }} onClick={e => e.target===e.currentTarget&&onClose()}>
       <div className="slide-up" style={{ background:'#fff', border:'1px solid var(--navy-border)', borderRadius:'var(--radius-xl)', padding:'2rem', maxWidth:620, width:'100%' }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
           <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:6, color:'var(--text-primary)' }}>A personal note for you, {firstName} 👋</h2>
@@ -58,7 +58,7 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
   const [confirmed, setConfirmed] = useState(false);
   const firstName = lead?.name?.split(' ')[0] || 'there';
   return (
-    <div className="modal-overlay" style={{ zIndex:3000 }}>
+    <div className="modal-overlay" style={{ position:"fixed", inset:0, zIndex:3000, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
       <div className="modal-box slide-up" style={{ maxWidth:460 }}>
         <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
           <div style={{ fontSize:44, marginBottom:12 }}>⚠️</div>
@@ -85,7 +85,7 @@ function DeleteAccountModal({ lead, onConfirm, onCancel }) {
 function GoodbyeModal({ lead }) {
   const firstName = lead?.name?.split(' ')[0] || 'there';
   return (
-    <div className="modal-overlay" style={{ zIndex:3000 }}>
+    <div className="modal-overlay" style={{ position:"fixed", inset:0, zIndex:3000, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
       <div className="modal-box slide-up" style={{ maxWidth:460, textAlign:'center' }}>
         <div style={{ fontSize:52, marginBottom:16 }}>👋</div>
         <h2 style={{ fontFamily:'var(--font-display)', fontSize:24, marginBottom:10, color:'var(--text-primary)' }}>Take care, {firstName}!</h2>
@@ -103,7 +103,7 @@ function PayBillModal({ bill, accounts, onConfirm, onCancel }) {
   const [selectedAccount, setSelectedAccount] = useState(Object.keys(accounts)[0] || 'main');
   const [deductFromAccount, setDeductFromAccount] = useState(true);
   return (
-    <div className="modal-overlay" style={{ zIndex:3000 }}>
+    <div className="modal-overlay" style={{ position:"fixed", inset:0, zIndex:3000, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
       <div className="modal-box slide-up" style={{ maxWidth:420 }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
           <div style={{ fontSize:36, marginBottom:8 }}>💳</div>
@@ -159,7 +159,7 @@ function SplitModal({ form, onConfirm, onCancel }) {
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex:3000 }}>
+    <div className="modal-overlay" style={{ position:"fixed", inset:0, zIndex:3000, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
       <div className="modal-box slide-up" style={{ maxWidth:520 }}>
         <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
           <div style={{ fontSize:32, marginBottom:8 }}>✂️</div>
@@ -821,7 +821,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
   };
 
   return(
-    <div className="modal-overlay" style={{zIndex:3000}} onClick={e=>e.target===e.currentTarget&&onCancel()}>
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&onCancel()}>
       <div className="modal-box slide-up" style={{maxWidth:580,maxHeight:'85vh',overflow:'auto'}}>
         
         {step==='upload'&&(
@@ -1038,7 +1038,7 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
 
 function AddToHomeScreenModal({onClose}){
   return(
-    <div className="modal-overlay" style={{zIndex:2500}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:2500,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal-box slide-up" style={{maxWidth:460}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.25rem'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -1096,7 +1096,7 @@ function ClearBtn({label,onClear,title,message}){
 function ClearConfirmModal({title,message,onConfirm,onCancel}){
   const [checked,setChecked]=useState(false);
   return(
-    <div className="modal-overlay" style={{zIndex:4000}}>
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:4000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
       <div className="modal-box slide-up" style={{maxWidth:420}}>
         <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
           <div style={{fontSize:40,marginBottom:10}}>⚠️</div>
@@ -1469,7 +1469,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       />}
       {showAddToHome && <AddToHomeScreenModal onClose={() => setShowAddToHome(false)} />}
       {showMortgageTip && (
-        <div className="modal-overlay" style={{zIndex:2500}} onClick={e=>e.target===e.currentTarget&&setShowMortgageTip(false)}>
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:2500,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setShowMortgageTip(false)}>
           <div className="modal-box slide-up" style={{maxWidth:460}}>
             <div style={{height:4,background:'linear-gradient(90deg,#059669,#34d399)',borderRadius:'4px 4px 0 0',margin:'-2rem -2rem 1.25rem'}}/>
             <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:'1rem'}}>
@@ -2202,7 +2202,7 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
         )}
       </div>
       {editingBill&&(
-        <div className="modal-overlay" style={{zIndex:3000}}>
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
           <div className="modal-box slide-up" style={{maxWidth:480}}>
             <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit Bill</h2>
             <EditBillForm bill={editingBill} billCats={BILL_CATS} onSave={(updated)=>{setBills(bills.map(b=>b.id===updated.id?updated:b));setEditingBill(null);}} onCancel={()=>setEditingBill(null)} />
@@ -2310,7 +2310,7 @@ function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact
   const yearlySaved = (paidDebt.min * 12 * 30 / 1000).toFixed(0);
 
   return (
-    <div className="modal-overlay" style={{zIndex:4000}}>
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:4000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
       <div className="modal-box slide-up" style={{maxWidth:480, textAlign:'center'}}>
         <div style={{fontSize:56, marginBottom:12}}>🎉</div>
         <h2 style={{fontFamily:'var(--font-display)', fontSize:24, fontWeight:800, marginBottom:4, color:'var(--text-primary)'}}>
@@ -3315,7 +3315,7 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
   return(
     <>
       {editingSub&&(
-        <div className="modal-overlay" style={{zIndex:3000}}>
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
           <div className="modal-box slide-up" style={{maxWidth:480}}>
             <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit Subscription</h2>
             <EditSubForm sub={editingSub} categories={['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other']} onSave={(updated)=>{setSubscriptions(subscriptions.map(s=>s.id===updated.id?updated:s));setEditingSub(null);}} onCancel={()=>setEditingSub(null)} />
@@ -3323,7 +3323,7 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
         </div>
       )}
       {paySubModal&&(
-        <div className="modal-overlay" style={{zIndex:3000}}>
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
           <div className="modal-box slide-up" style={{maxWidth:420}}>
             <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
               <div style={{fontSize:36,marginBottom:8}}>📱</div>
@@ -3511,7 +3511,7 @@ function TransferModal({accounts,onTransfer,onCancel}){
     onTransfer(fromKey,toKey,parseFloat(amt),desc);
   };
   return(
-    <div className="modal-overlay" style={{zIndex:3000}}>
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
       <div className="modal-box slide-up" style={{maxWidth:420}}>
         <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
           <div style={{fontSize:36,marginBottom:8}}>🔄</div>
