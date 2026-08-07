@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const TIPS = [
   {
@@ -408,7 +408,28 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
 
   if (!tip || dismissed) return null;
 
+  async function recordLeadEngagement(tipCategory, tipTitle) {
+    if (!lead || !lead.docId) return;
+    try {
+      const leadRef = doc(db, 'leads', lead.docId);
+      await updateDoc(leadRef, {
+        lastInterestTopic: tipCategory,
+        lastInterestAt: new Date().toISOString(),
+        tipEngagements: arrayUnion({
+          tipId: tip.id,
+          category: tipCategory,
+          title: tipTitle,
+          clickedAt: new Date().toISOString(),
+        }),
+        wantsReview: tipCategory === 'Life Insurance' ? true : undefined,
+      });
+    } catch(e) {
+      console.error('Lead engagement write error:', e);
+    }
+  }
+
   function handleCta() {
+    recordLeadEngagement(tip.category, tip.title);
     if (!tip.action) {
       markTipSeen(uid, tip.id);
       setConfirmed(true);
