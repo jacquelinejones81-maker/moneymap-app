@@ -440,16 +440,16 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
 
   if (confirmed) {
     return (
-      <div style={{ background: tip.bg, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: tip.color, marginBottom: 4 }}>
+      <div style={{ position:'fixed', bottom:24, right:24, zIndex:3000, width:300, background:'#fff', borderRadius:12, boxShadow:'0 4px 24px rgba(0,0,0,0.14)', border:'1px solid '+tip.border, padding:'14px 16px', pointerEvents:'auto' }}>
+        <div style={{ fontSize:13, fontWeight:600, color:tip.color, marginBottom:6 }}>
           {tip.icon} Got it! Your rep will be in touch soon 🎉
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+        <div style={{ fontSize:12, color:'var(--text-secondary)', lineHeight:1.5 }}>
           We've let your financial rep know you're interested. Expect a call or text within 24 hours.
         </div>
         <button
           onClick={function() { setDismissed(true); }}
-          style={{ marginTop: 8, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+          style={{ marginTop:8, background:'none', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', padding:0, textDecoration:'underline' }}
         >
           Dismiss
         </button>
@@ -458,33 +458,37 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
   }
 
   return (
-    <div style={{ background: tip.bg, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 20, flexShrink: 0 }}>{tip.icon}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: tip.color, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{tip.category}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 5 }}>{tip.title}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{tip.body}</div>
+    <div style={{ position:'fixed', bottom:24, right:24, zIndex:3000, width:300, maxWidth:'calc(100vw - 48px)', background:'#fff', borderRadius:12, boxShadow:'0 4px 24px rgba(0,0,0,0.14)', border:'1px solid '+tip.border, padding:'14px 16px', pointerEvents:'auto' }}>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:10, marginBottom:10 }}>
+        <span style={{ fontSize:22, flexShrink:0 }}>{tip.icon}</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:10, fontWeight:700, color:tip.color, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:3 }}>{tip.category}</div>
+          <div style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)', marginBottom:5 }}>{tip.title}</div>
+          <div style={{ fontSize:11, color:'var(--text-secondary)', lineHeight:1.6 }}>{tip.body}</div>
         </div>
+        <button
+          onClick={function() { markTipSeen(uid, tip.id); setDismissed(true); }}
+          style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color:'var(--text-muted)', opacity:0.5, padding:0, lineHeight:1, flexShrink:0 }}
+        >✕</button>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
         <button
           onClick={handleCta}
-          style={{ background: tip.color, color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-display)' }}
+          style={{ flex:1, background:tip.color, color:'#fff', border:'none', borderRadius:7, padding:'8px 10px', fontSize:12, fontWeight:700, cursor:'pointer' }}
         >
           {tip.cta}
         </button>
         {tip.secondaryCta && (
           <button
             onClick={handleSecondaryCta}
-            style={{ background: 'transparent', color: tip.color, border: '1px solid ' + tip.border, borderRadius: 'var(--radius-sm)', padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            style={{ background:'transparent', color:tip.color, border:'1px solid '+tip.border, borderRadius:7, padding:'8px 10px', fontSize:12, fontWeight:600, cursor:'pointer' }}
           >
             {tip.secondaryCta}
           </button>
         )}
         <button
           onClick={function() { markTipSeen(uid, tip.id); setDismissed(true); }}
-          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', padding: '6px 4px', textDecoration: 'underline' }}
+          style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', padding:'6px 4px', textDecoration:'underline', whiteSpace:'nowrap' }}
         >
           Not now
         </button>
