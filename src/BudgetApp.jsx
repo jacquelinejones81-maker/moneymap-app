@@ -1789,7 +1789,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts||[]} setDebts={dbs} />}
-        {activeTab==='savings' && <SavingsTab transactions={transactions||[]} goals={goals||[]} setGoals={gls} onMilestone={setMilestone} />}
+        {activeTab==='savings' && <SavingsTab transactions={transactions||[]} goals={goals||[]} setGoals={gls} onMilestone={setMilestone} uid={uid} lead={lead} onLeadEngagement={async(topic,section)=>{if(lead&&lead.docId){try{await setDoc(doc(db,'leads',lead.docId),{lastInterestTopic:topic,lastInterestAt:new Date().toISOString()},{merge:true});}catch(e){console.error(e);}}}}/>}
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
         {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
@@ -2512,21 +2512,50 @@ function DebtsTab({debts,setDebts,onRepContact}){
   );
 }
 
-function SavingsTab({transactions,goals,setGoals,onMilestone}){
+function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEngagement}){
   const [form,setForm]=useState({name:'',target:'',saved:''});
+  const [showIncomePrompt,setShowIncomePrompt]=useState(false);
+  const [incomeInput,setIncomeInput]=useState('');
+  const [monthlyIncome,setMonthlyIncome]=useState(()=>{
+    try{return parseFloat(localStorage.getItem('mm_declared_income_'+uid)||'0');}catch{return 0;}
+  });
+  const [setupModal,setSetupModal]=useState(null);
+  const [setupDone,setSetupDone]=useState(false);
   const n=new Date();const m=n.getMonth();const y=n.getFullYear();
   const savTxs=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.grp==='Savings'&&t.type==='debit'&&d.getMonth()===m&&d.getFullYear()===y;});
   const monthSavings=savTxs.reduce((s,t)=>s+t.amt,0);
-  const monthIncome=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='credit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
-  const savRate=monthIncome>0?(monthSavings/monthIncome*100):0;
+  const calcIncome=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='credit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
+  const effectiveIncome=monthlyIncome>0?monthlyIncome:calcIncome;
+  const savRate=effectiveIncome>0?(monthSavings/effectiveIncome*100):0;
   const totalGoalTarget=goals.reduce((s,g)=>s+g.target,0);
   const totalGoalSaved=goals.reduce((s,g)=>s+g.saved,0);
+  const THREE_ACCOUNTS=[
+    {type:'emergency',icon:'🚨',name:'Emergency Account',subtitle:'Up to 3 months of income',color:'#c2410c',bg:'#fff8f0',border:'rgba(234,88,12,0.2)',calcTarget:inc=>Math.round(inc*3),desc:'Your first line of defense. Keep this liquid and separate — only touch it for true emergencies.',tags:['Medical bills','Car repairs','Home repairs','Emergency travel'],tip:"Keep this in a separate bank account so you're not tempted to use it for everyday expenses.",repMsg:'Would you like your financial professional to help you figure out the best place to keep your emergency fund?'},
+    {type:'shortterm',icon:'📆',name:'Short-Term Account',subtitle:'Up to 6 months of income',color:'#15803d',bg:'#f0faf5',border:'rgba(22,163,74,0.2)',calcTarget:inc=>Math.round(inc*6),desc:'For planned and unplanned life events. Build toward bigger goals while keeping funds accessible.',tags:['Job loss buffer','Vacation','Holidays','Down payment','New car'],tip:'A dedicated account for short-term goals keeps you from accidentally spending money earmarked for something important.',repMsg:'Would you like your financial professional to help you build a plan to reach this goal faster?'},
+    {type:'wealth',icon:'📈',name:'Wealth Building Account',subtitle:'Pay yourself first — long-term',color:'#4338ca',bg:'#f0f4ff',border:'rgba(99,102,241,0.2)',calcTarget:()=>null,desc:'Pay your future self first. No matter where you are financially, setting aside something every month builds a habit that compounds over time. Your future self will thank you.',tags:['Retirement','Future planning','Long-term goals'],tip:'Even a small amount set aside consistently every month makes a massive difference over time. Start now, not later.',repMsg:'Would you like your financial professional to reach out and help you create a long-term plan?'}
+  ];
+  const saveIncome=(val)=>{
+    const parsed=parseFloat(val);
+    if(!parsed||parsed<=0){alert('Please enter a valid monthly income.');return;}
+    setMonthlyIncome(parsed);
+    localStorage.setItem('mm_declared_income_'+uid,String(parsed));
+    setShowIncomePrompt(false);
+  };
+  const openSetup=(acct)=>{setSetupDone(false);setSetupModal({acct,repChoice:null});};
+  const confirmSetup=()=>{
+    const {acct,repChoice}=setupModal;
+    const target=acct.calcTarget(effectiveIncome);
+    setGoals([...goals,{id:Date.now(),name:acct.name,target:target||0,saved:0}]);
+    if(repChoice==='yes'&&onLeadEngagement) onLeadEngagement(acct.name+' setup','savings');
+    setSetupDone(true);
+  };
   const addGoal=()=>{
     const name=form.name.trim();const target=parseFloat(form.target);const saved=parseFloat(form.saved)||0;
     if(!name||isNaN(target)||target<=0){alert('Enter a goal name and target.');return;}
     setGoals([...goals,{id:Date.now(),name,target,saved}]);
     setForm({name:'',target:'',saved:''});
   };
+  const alreadySetup=(type)=>goals.some(g=>g.name.toLowerCase().includes(type==='emergency'?'emergency':type==='shortterm'?'short':'wealth'));
   return(
     <>
       <div className="metric-grid" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))'}}>
@@ -2538,6 +2567,99 @@ function SavingsTab({transactions,goals,setGoals,onMilestone}){
       {monthSavings===0&&<div className="alert-box alert-warning" style={{marginBottom:12}}>No savings logged this month. Add transactions under the <strong>Savings</strong> group.</div>}
       {savRate>=20&&<div className="alert-box alert-success" style={{marginBottom:12}}>Excellent! You're saving {savRate.toFixed(1)}% of income this month 🎉</div>}
       {savRate>0&&savRate<5&&<div className="alert-box alert-warning" style={{marginBottom:12}}>Savings rate is {savRate.toFixed(1)}% — try to reach at least 10–20% of income.</div>}
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+          <div className="card-title" style={{marginBottom:0}}>💡 The 3 fundamental accounts</div>
+          <button onClick={()=>setShowIncomePrompt(true)} style={{fontSize:11,color:'var(--text-muted)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline'}}>
+            {effectiveIncome>0?`Based on $${effectiveIncome.toLocaleString()}/mo ✎`:'Set income'}
+          </button>
+        </div>
+        <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,marginBottom:12}}>
+          A solid financial foundation starts with three savings accounts — each with a specific purpose.
+          {effectiveIncome>0?<span> Based on your <strong style={{color:'var(--text-primary)'}}>${effectiveIncome.toLocaleString()}/mo income</strong>:</span>:<span> <button onClick={()=>setShowIncomePrompt(true)} style={{color:'var(--green)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontSize:12}}>Add your income</button> to see personalized targets.</span>}
+        </div>
+        {THREE_ACCOUNTS.map(acct=>{
+          const target=acct.calcTarget(effectiveIncome);
+          const done=alreadySetup(acct.type);
+          return(
+            <div key={acct.type} style={{background:acct.bg,border:`1px solid ${acct.border}`,borderRadius:10,padding:'13px 14px',marginBottom:8}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                <span style={{fontSize:22,flexShrink:0}}>{acct.icon}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:700,color:acct.color}}>{acct.name}</div>
+                  <div style={{fontSize:10,color:acct.color,opacity:0.8}}>{acct.subtitle}</div>
+                </div>
+                {target&&effectiveIncome>0&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:acct.color+'20',color:acct.color,whiteSpace:'nowrap'}}>${target.toLocaleString()} target</span>}
+              </div>
+              <div style={{fontSize:11,color:'var(--text-muted)',lineHeight:1.6,marginBottom:8}}>{acct.desc}</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10}}>
+                {acct.tags.map(tag=><span key={tag} style={{fontSize:10,padding:'2px 7px',borderRadius:10,fontWeight:500,background:acct.color+'14',color:acct.color}}>{tag}</span>)}
+              </div>
+              {done?(
+                <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:600,color:acct.color}}>✓ Goal added to your savings tracker</div>
+              ):(
+                <button onClick={()=>openSetup(acct)} style={{width:'100%',padding:8,border:'none',borderRadius:7,fontSize:12,fontWeight:700,cursor:'pointer',background:acct.color,color:'#fff'}}>+ Set up {acct.name}</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {showIncomePrompt&&(
+        <div style={{position:'fixed',inset:0,zIndex:3000,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
+          <div style={{background:'#fff',borderRadius:14,padding:'1.5rem',width:'100%',maxWidth:360}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:8}}>What's your monthly take-home income?</div>
+            <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:16,lineHeight:1.5}}>This helps us calculate personalized savings targets. We never share this information.</div>
+            <input type="number" placeholder="e.g. 4200" min="0" value={incomeInput} onChange={e=>setIncomeInput(e.target.value)} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e5e7eb',fontSize:15,marginBottom:12}}/>
+            <button onClick={()=>saveIncome(incomeInput)} style={{width:'100%',padding:10,background:'var(--green)',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>Save</button>
+            <button onClick={()=>setShowIncomePrompt(false)} style={{width:'100%',padding:8,background:'none',border:'none',color:'var(--text-muted)',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {setupModal&&(
+        <div style={{position:'fixed',inset:0,zIndex:3000,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
+          <div style={{background:'#fff',borderRadius:14,padding:'1.5rem',width:'100%',maxWidth:400,maxHeight:'90vh',overflowY:'auto'}}>
+            {setupDone?(
+              <div style={{textAlign:'center',padding:'0.5rem 0'}}>
+                <div style={{fontSize:36,marginBottom:10}}>🎉</div>
+                <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:6}}>{setupModal.acct.name} created!</div>
+                <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,marginBottom:20}}>
+                  Your goal is set and showing in your savings tracker.{' '}
+                  {setupModal.repChoice==='yes'?'Your financial professional has been notified and will reach out to you soon.':"You're all set — start contributing whenever you're ready."}
+                </div>
+                <button onClick={()=>setSetupModal(null)} style={{width:'100%',padding:11,background:setupModal.acct.color,color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,cursor:'pointer'}}>Done</button>
+              </div>
+            ):(
+              <>
+                <div style={{textAlign:'center',marginBottom:14}}>
+                  <div style={{fontSize:30,marginBottom:6}}>{setupModal.acct.icon}</div>
+                  <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>{setupModal.acct.name}</div>
+                  {setupModal.acct.calcTarget(effectiveIncome)&&effectiveIncome>0&&<div style={{fontSize:13,color:setupModal.acct.color,fontWeight:600}}>Target: ${setupModal.acct.calcTarget(effectiveIncome).toLocaleString()}</div>}
+                </div>
+                <div style={{background:setupModal.acct.bg,border:`1px solid ${setupModal.acct.border}`,borderRadius:8,padding:'10px 12px',fontSize:12,color:setupModal.acct.color,lineHeight:1.6,marginBottom:16}}>
+                  💡 {setupModal.acct.tip}
+                </div>
+                <div style={{height:1,background:'#f3f4f6',margin:'14px 0'}}/>
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:700,color:'var(--text-primary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>Want help from your financial professional?</div>
+                  <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:10,lineHeight:1.5}}>{setupModal.acct.repMsg}</div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>setSetupModal(s=>({...s,repChoice:'yes'}))} style={{flex:1,padding:9,borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',border:setupModal.repChoice==='yes'?`2px solid ${setupModal.acct.color}`:'1.5px solid #e5e7eb',background:setupModal.repChoice==='yes'?setupModal.acct.bg:'#fff',color:setupModal.repChoice==='yes'?setupModal.acct.color:'#6b7280'}}>
+                      👋 Yes, reach out to me
+                    </button>
+                    <button onClick={()=>setSetupModal(s=>({...s,repChoice:'no'}))} style={{flex:1,padding:9,borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',border:setupModal.repChoice==='no'?'2px solid #e5e7eb':'1.5px solid #e5e7eb',background:setupModal.repChoice==='no'?'#f9f9f7':'#fff',color:'#6b7280'}}>
+                      Not right now
+                    </button>
+                  </div>
+                  {setupModal.repChoice==='yes'&&<div style={{fontSize:11,color:setupModal.acct.color,marginTop:8}}>✅ Your financial professional will be notified and reach out soon.</div>}
+                  {setupModal.repChoice==='no'&&<div style={{fontSize:11,color:'#9ca3af',marginTop:8}}>No problem — you can always reach out to them whenever you are ready.</div>}
+                </div>
+                <button onClick={confirmSetup} style={{width:'100%',padding:11,background:setupModal.acct.color,color:'#fff',border:'none',borderRadius:9,fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>Create Goal</button>
+                <button onClick={()=>setSetupModal(null)} style={{width:'100%',padding:8,background:'none',border:'none',color:'var(--text-muted)',fontSize:12,cursor:'pointer',textDecoration:'underline'}}>Cancel</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <div className="card">
         <div className="card-title">Add savings goal</div>
         <div className="form-row r4">
@@ -2568,13 +2690,13 @@ function SavingsTab({transactions,goals,setGoals,onMilestone}){
               <div style={{textAlign:'right',flexShrink:0}}>
                 <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:barC}}>{pct}%</div>
                 <input type="number" defaultValue={g.saved} min="0" step="10" style={{width:80,fontSize:12,padding:'3px 8px',marginTop:4}} onBlur={e=>{
-                const newSaved=Math.max(0,parseFloat(e.target.value)||0);
-                const updated=goals.map(x=>x.id===g.id?{...x,saved:newSaved}:x);
-                setGoals(updated);
-                if(newSaved>=g.target&&g.saved<g.target&&onMilestone){
-                  onMilestone({icon:'🏆',title:`${g.name} Complete!`,message:`Amazing! You hit your $${g.target.toLocaleString()} goal. Your future self thanks you! 🎉`});
-                }
-              }} title="Update saved amount"/>
+                  const newSaved=Math.max(0,parseFloat(e.target.value)||0);
+                  const updated=goals.map(x=>x.id===g.id?{...x,saved:newSaved}:x);
+                  setGoals(updated);
+                  if(newSaved>=g.target&&g.saved<g.target&&onMilestone){
+                    onMilestone({icon:'🏆',title:`${g.name} Complete!`,message:`Amazing! You hit your $${g.target.toLocaleString()} goal. Your future self thanks you! 🎉`});
+                  }
+                }} title="Update saved amount"/>
                 <button className="btn-danger" style={{display:'block',marginTop:4,width:'100%'}} onClick={()=>setGoals(goals.filter(x=>x.id!==g.id))}>✕</button>
               </div>
             </div>
@@ -2598,7 +2720,6 @@ function SavingsTab({transactions,goals,setGoals,onMilestone}){
     </>
   );
 }
-
 function CashPopup({onClose}){
   return(
     <div className="modal-overlay" style={{zIndex:2000}}>
