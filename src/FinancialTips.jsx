@@ -409,10 +409,13 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
   if (!tip || dismissed) return null;
 
   async function recordLeadEngagement(tipCategory, tipTitle) {
-    if (!lead || !lead.docId) return;
+    if (!lead || !lead.docId) {
+      console.warn('MoneyMap: lead.docId missing — engagement not recorded');
+      return;
+    }
     try {
       const leadRef = doc(db, 'leads', lead.docId);
-      await updateDoc(leadRef, {
+      const update = {
         lastInterestTopic: tipCategory,
         lastInterestAt: new Date().toISOString(),
         tipEngagements: arrayUnion({
@@ -421,16 +424,18 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
           title: tipTitle,
           clickedAt: new Date().toISOString(),
         }),
-        wantsReview: tipCategory === 'Life Insurance' ? true : undefined,
-      });
+      };
+      if (tipCategory === 'Life Insurance') update.wantsReview = true;
+      await updateDoc(leadRef, update);
     } catch(e) {
       console.error('Lead engagement write error:', e);
     }
   }
 
   function handleCta() {
-    recordLeadEngagement(tip.category, tip.title);
-    if (!tip.action) {
+    // Only record engagement when user takes a positive action (rep: or no action = wants contact)
+    if (!tip.action || tip.action.startsWith('rep:')) {
+      recordLeadEngagement(tip.category, tip.title);
       markTipSeen(uid, tip.id);
       setConfirmed(true);
       return;
@@ -440,11 +445,6 @@ export default function FinancialTips({ uid, lead, onTabSwitch }) {
       if (onTabSwitch) onTabSwitch(tab);
       markTipSeen(uid, tip.id);
       setDismissed(true);
-      return;
-    }
-    if (tip.action.startsWith('rep:')) {
-      markTipSeen(uid, tip.id);
-      setConfirmed(true);
       return;
     }
   }
