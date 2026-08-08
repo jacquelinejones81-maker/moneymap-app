@@ -395,18 +395,23 @@ export function RepContactCard({ repName, uid }) {
   );
 }
 
-export default function FinancialTips({ uid, lead, onTabSwitch }) {
+export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
   const [tip, setTip] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(function() {
     if (!uid) return;
-    const next = getNextTip(uid);
-    setTip(next);
-  }, [uid]);
+    if (showTour) return; // don't load tip while tour is showing
+    // Delay tip by 30 seconds so user has time to explore first
+    const timer = setTimeout(function() {
+      const next = getNextTip(uid);
+      setTip(next);
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [uid, showTour]);
 
-  if (!tip || dismissed) return null;
+  if (!tip || dismissed || showTour) return null;
 
   async function recordLeadEngagement(tipCategory, tipTitle) {
     if (!lead || !lead.docId) {
