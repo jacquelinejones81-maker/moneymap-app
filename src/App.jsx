@@ -50,6 +50,10 @@ export default function App() {
         const emailKey = `mm_email_uid_${user.email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
         localStorage.setItem(emailKey, user.uid);
         const lead = JSON.parse(localStorage.getItem(`mm_lead_${user.uid}`) || 'null');
+        if (lead && !lead.docId) {
+          lead.docId = user.uid;
+          localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(lead));
+        }
         setCurrentLead(lead);
         const pinSet = localStorage.getItem(`mm_pin_${user.uid}`);
         if (!pinSet) {
@@ -114,6 +118,7 @@ export default function App() {
       const newLead = {
         ...lead,
         uid: user.uid,
+        docId: user.uid,
         id: Date.now(),
         submittedAt: new Date().toISOString(),
         referredBy: rep,
