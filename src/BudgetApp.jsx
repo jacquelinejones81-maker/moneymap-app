@@ -2541,11 +2541,17 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
     localStorage.setItem('mm_declared_income_'+uid,String(parsed));
     setShowIncomePrompt(false);
   };
-  const openSetup=(acct)=>{setSetupDone(false);setSetupModal({acct,repChoice:null});};
+  const openSetup=(acct)=>{
+    const suggested=acct.calcTarget(effectiveIncome)||0;
+    setSetupDone(false);
+    setSetupModal({acct,repChoice:null,targetInput:suggested>0?String(suggested):'',savedInput:''});
+  };
   const confirmSetup=()=>{
-    const {acct,repChoice}=setupModal;
-    const target=acct.calcTarget(effectiveIncome);
-    setGoals([...goals,{id:Date.now(),name:acct.name,target:target||0,saved:0}]);
+    const {acct,repChoice,targetInput,savedInput}=setupModal;
+    const target=parseFloat(targetInput)||0;
+    const saved=parseFloat(savedInput)||0;
+    if(target<=0){alert('Please enter a goal amount.');return;}
+    setGoals([...goals,{id:Date.now(),name:acct.name,target,saved}]);
     if(repChoice==='yes'&&onLeadEngagement) onLeadEngagement(acct.name+' setup','savings');
     setSetupDone(true);
   };
@@ -2633,10 +2639,40 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
                 <div style={{textAlign:'center',marginBottom:14}}>
                   <div style={{fontSize:30,marginBottom:6}}>{setupModal.acct.icon}</div>
                   <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>{setupModal.acct.name}</div>
-                  {setupModal.acct.calcTarget(effectiveIncome)&&effectiveIncome>0&&<div style={{fontSize:13,color:setupModal.acct.color,fontWeight:600}}>Target: ${setupModal.acct.calcTarget(effectiveIncome).toLocaleString()}</div>}
                 </div>
                 <div style={{background:setupModal.acct.bg,border:`1px solid ${setupModal.acct.border}`,borderRadius:8,padding:'10px 12px',fontSize:12,color:setupModal.acct.color,lineHeight:1.6,marginBottom:16}}>
                   💡 {setupModal.acct.tip}
+                </div>
+                <div style={{marginBottom:12}}>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Goal amount</label>
+                  <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
+                    <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
+                    <input
+                      type="number" min="0" step="100"
+                      placeholder={setupModal.acct.calcTarget(effectiveIncome)>0?`Suggested: $${setupModal.acct.calcTarget(effectiveIncome).toLocaleString()}`:'Enter your goal'}
+                      value={setupModal.targetInput}
+                      onChange={e=>setSetupModal(s=>({...s,targetInput:e.target.value}))}
+                      style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}
+                    />
+                  </div>
+                  {setupModal.acct.calcTarget(effectiveIncome)>0&&effectiveIncome>0&&(
+                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>
+                      Suggested based on your ${effectiveIncome.toLocaleString()}/mo income
+                    </div>
+                  )}
+                </div>
+                <div style={{marginBottom:16}}>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Already saved toward this? <span style={{fontWeight:400,color:'var(--text-muted)'}}>(optional)</span></label>
+                  <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
+                    <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
+                    <input
+                      type="number" min="0" step="1"
+                      placeholder="0"
+                      value={setupModal.savedInput}
+                      onChange={e=>setSetupModal(s=>({...s,savedInput:e.target.value}))}
+                      style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}
+                    />
+                  </div>
                 </div>
                 <div style={{height:1,background:'#f3f4f6',margin:'14px 0'}}/>
                 <div style={{marginBottom:16}}>
