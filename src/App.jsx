@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import LandingPage from './LandingPage';
 import BudgetApp from './BudgetApp';
 import AdminPanel from './AdminPanel';
@@ -50,9 +51,22 @@ export default function App() {
         const emailKey = `mm_email_uid_${user.email.toLowerCase().replace(/[^a-z0-9]/g,'_')}`;
         localStorage.setItem(emailKey, user.uid);
         const lead = JSON.parse(localStorage.getItem(`mm_lead_${user.uid}`) || 'null');
-        if (lead && !lead.docId) {
-          lead.docId = user.uid;
-          localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(lead));
+        if (lead) {
+          if (!lead.docId) {
+            lead.docId = user.uid;
+            localStorage.setItem(`mm_lead_${user.uid}`, JSON.stringify(lead));
+          }
+          // Always sync lead to Firestore so Hub pipeline stays current
+          // Self-referral is allowed — reps need to test their own experience
+          (async () => {
+            try {
+              await setDoc(doc(db, 'leads', user.uid), {
+                ...lead,
+                docId: user.uid,
+                lastLoginAt: new Date().toISOString(),
+              }, { merge: true });
+            } catch(e) { console.error('Lead sync error:', e); }
+          })();
         }
         setCurrentLead(lead);
         const pinSet = localStorage.getItem(`mm_pin_${user.uid}`);
