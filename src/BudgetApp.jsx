@@ -2541,8 +2541,9 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
   };
   const openSetup=(acct)=>{
     const suggested=acct.calcTarget(effectiveIncome)||0;
+    const wealthTarget=acct.type==='wealth'?String(Math.round((effectiveIncome||0)*12*25)):'';
     setSetupDone(false);
-    setSetupModal({acct,repChoice:null,targetInput:suggested>0?String(suggested):'',savedInput:''});
+    setSetupModal({acct,repChoice:null,targetInput:suggested>0?String(suggested):wealthTarget,savedInput:'',finIncome:acct.type==='wealth'?(effectiveIncome||0):undefined});
   };
   const confirmSetup=()=>{
     const {acct,repChoice,targetInput,savedInput}=setupModal;
@@ -2637,41 +2638,68 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
                 <div style={{textAlign:'center',marginBottom:14}}>
                   <div style={{fontSize:30,marginBottom:6}}>{setupModal.acct.icon}</div>
                   <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>{setupModal.acct.name}</div>
+                  <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.5}}>{setupModal.acct.type==='wealth'?'Building wealth doesn\'t happen by accident. It starts with knowing your number.':'Set your savings goal and track your progress.'}</div>
                 </div>
-                <div style={{background:setupModal.acct.bg,border:`1px solid ${setupModal.acct.border}`,borderRadius:8,padding:'10px 12px',fontSize:12,color:setupModal.acct.color,lineHeight:1.6,marginBottom:16}}>
-                  💡 {setupModal.acct.tip}
-                </div>
-                <div style={{marginBottom:12}}>
-                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Goal amount</label>
-                  <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
-                    <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
-                    <input
-                      type="number" min="0" step="100"
-                      placeholder={setupModal.acct.calcTarget(effectiveIncome)>0?`Suggested: $${setupModal.acct.calcTarget(effectiveIncome).toLocaleString()}`:'Enter your goal'}
-                      value={setupModal.targetInput}
-                      onChange={e=>setSetupModal(s=>({...s,targetInput:e.target.value}))}
-                      style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}
-                    />
-                  </div>
-                  {setupModal.acct.calcTarget(effectiveIncome)>0&&effectiveIncome>0&&(
-                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>
-                      Suggested based on your ${effectiveIncome.toLocaleString()}/mo income
+                {setupModal.acct.type==='wealth'?(
+                  <>
+                    <div style={{background:'#f0f4ff',border:'1px solid rgba(99,102,241,0.2)',borderRadius:8,padding:'10px 12px',marginBottom:12}}>
+                      <div style={{fontSize:11,fontWeight:700,color:'#4338ca',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>💡 Your Financial Independence Number (FIN)</div>
+                      <div style={{fontSize:11,color:'#4338ca',lineHeight:1.6,marginBottom:8}}>The amount you need saved to live off your investments indefinitely — calculated as <strong>25× your annual expenses</strong>.</div>
+                      <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:6}}>Adjust your monthly income to calculate your FIN:</div>
+                      <div style={{display:'flex',alignItems:'center',gap:8,background:'#fff',border:'1px solid rgba(99,102,241,0.2)',borderRadius:8,padding:'8px 12px',marginBottom:8}}>
+                        <span style={{fontSize:13,color:'var(--text-muted)'}}>$</span>
+                        <input type="number" min="0" step="100" placeholder="Monthly income"
+                          value={setupModal.finIncome!==undefined?setupModal.finIncome:effectiveIncome||''}
+                          onChange={e=>setSetupModal(s=>({...s,finIncome:parseFloat(e.target.value)||0,targetInput:String(Math.round((parseFloat(e.target.value)||0)*12*25))}))}
+                          style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}/>
+                        <span style={{fontSize:11,color:'var(--text-muted)',whiteSpace:'nowrap'}}>/mo</span>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--text-muted)',marginBottom:3}}>
+                        <span>Annual expenses (est.)</span>
+                        <span style={{fontWeight:600,color:'var(--text-primary)'}}>${((setupModal.finIncome!==undefined?setupModal.finIncome:effectiveIncome||0)*12).toLocaleString()}</span>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--text-muted)'}}>
+                        <span>Multiplier</span><span style={{fontWeight:600,color:'var(--text-primary)'}}>× 25</span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div style={{marginBottom:16}}>
-                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Already saved toward this? <span style={{fontWeight:400,color:'var(--text-muted)'}}>(optional)</span></label>
-                  <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
-                    <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
-                    <input
-                      type="number" min="0" step="1"
-                      placeholder="0"
-                      value={setupModal.savedInput}
-                      onChange={e=>setSetupModal(s=>({...s,savedInput:e.target.value}))}
-                      style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}
-                    />
-                  </div>
-                </div>
+                    <div style={{background:'#4338ca',borderRadius:8,padding:'10px 12px',textAlign:'center',marginBottom:12}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.8)',marginBottom:2}}>Your Financial Independence Number</div>
+                      <div style={{fontSize:22,fontWeight:800,color:'#fff'}}>${Math.round((setupModal.finIncome!==undefined?setupModal.finIncome:effectiveIncome||0)*12*25).toLocaleString()}</div>
+                      <div style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginTop:2}}>Your long-term wealth building target</div>
+                    </div>
+                    <div style={{background:'#fff8f0',border:'1px solid rgba(234,88,12,0.2)',borderRadius:8,padding:'10px 12px',fontSize:11,color:'#9a3412',lineHeight:1.6,marginBottom:12}}>
+                      ⚠️ <strong>This doesn\'t happen by just saving.</strong> Building true wealth requires a strategy — the right habits and a plan tailored to your life. That\'s where a financial professional comes in.
+                    </div>
+                    <div style={{marginBottom:12}}>
+                      <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Already saving toward this? <span style={{fontWeight:400,color:'var(--text-muted)'}}>(optional)</span></label>
+                      <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
+                        <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
+                        <input type="number" min="0" step="1" placeholder="0" value={setupModal.savedInput} onChange={e=>setSetupModal(s=>({...s,savedInput:e.target.value}))} style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}/>
+                      </div>
+                    </div>
+                  </>
+                ):(
+                  <>
+                    <div style={{background:setupModal.acct.bg,border:`1px solid ${setupModal.acct.border}`,borderRadius:8,padding:'10px 12px',fontSize:12,color:setupModal.acct.color,lineHeight:1.6,marginBottom:16}}>
+                      💡 {setupModal.acct.tip}
+                    </div>
+                    <div style={{marginBottom:12}}>
+                      <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Goal amount</label>
+                      <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
+                        <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
+                        <input type="number" min="0" step="100" placeholder={setupModal.acct.calcTarget(effectiveIncome)>0?`Suggested: $${setupModal.acct.calcTarget(effectiveIncome).toLocaleString()}`:'Enter your goal'} value={setupModal.targetInput} onChange={e=>setSetupModal(s=>({...s,targetInput:e.target.value}))} style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}/>
+                      </div>
+                      {setupModal.acct.calcTarget(effectiveIncome)>0&&effectiveIncome>0&&<div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>Suggested based on your ${effectiveIncome.toLocaleString()}/mo income</div>}
+                    </div>
+                    <div style={{marginBottom:16}}>
+                      <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Already saved toward this? <span style={{fontWeight:400,color:'var(--text-muted)'}}>(optional)</span></label>
+                      <div style={{display:'flex',alignItems:'center',gap:8,background:'#f9f9f7',border:'1px solid #e5e7eb',borderRadius:8,padding:'8px 12px'}}>
+                        <span style={{fontSize:14,color:'var(--text-muted)',fontWeight:500}}>$</span>
+                        <input type="number" min="0" step="1" placeholder="0" value={setupModal.savedInput} onChange={e=>setSetupModal(s=>({...s,savedInput:e.target.value}))} style={{border:'none',background:'none',fontSize:15,fontWeight:700,color:'#111',width:'100%',outline:'none'}}/>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div style={{height:1,background:'#f3f4f6',margin:'14px 0'}}/>
                 <div style={{marginBottom:16}}>
                   <div style={{fontSize:11,fontWeight:700,color:'var(--text-primary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>Want help from your financial professional?</div>
