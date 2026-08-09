@@ -420,17 +420,28 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
     }
     try {
       const leadRef = doc(db, 'leads', lead.docId);
+      const categoryMap = {
+        'Life Insurance':      { key: 'interest_life_ins_1',  icon: '🛡️' },
+        'Savings':             { key: 'interest_savings_1',   icon: '🐷' },
+        'Debt':                { key: 'interest_debt_1',      icon: '📉' },
+        'Budgeting':           { key: 'interest_budget_1',    icon: '💡' },
+        'Identity Protection': { key: 'interest_identity_1',  icon: '🔒' },
+        'Mortgage':            { key: 'interest_mortgage_1',  icon: '🏠' },
+        'Wealth Building':     { key: 'interest_wealth_1',    icon: '📈' },
+      };
+      const catInfo = categoryMap[tipCategory] || {};
       const update = {
         lastInterestTopic: tipCategory,
         lastInterestAt: new Date().toISOString(),
-        tipEngagements: arrayUnion({
-          tipId: tip.id,
-          category: tipCategory,
-          title: tipTitle,
-          clickedAt: new Date().toISOString(),
+        contactRequests: arrayUnion({
+          icon: catInfo.icon || '💬',
+          label: tipCategory,
+          detail: tipTitle,
+          requestedAt: new Date().toISOString(),
+          source: 'tip',
         }),
       };
-      if (tipCategory === 'Life Insurance') update.wantsReview = true;
+      if (catInfo.key) update[catInfo.key] = true;
       await updateDoc(leadRef, update);
     } catch(e) {
       console.error('Lead engagement write error:', e);
