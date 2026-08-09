@@ -2668,7 +2668,7 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
                       <div style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginTop:2}}>Your long-term wealth building target</div>
                     </div>
                     <div style={{background:'#fff8f0',border:'1px solid rgba(234,88,12,0.2)',borderRadius:8,padding:'10px 12px',fontSize:11,color:'#9a3412',lineHeight:1.6,marginBottom:12}}>
-                      ⚠️ <strong>This doesn\'t happen by just saving.</strong> Building true wealth requires a strategy — the right habits and a plan tailored to your life. That\'s where a financial professional comes in.
+                      ⚠️ <strong>This doesn't happen by just saving.</strong> Building true wealth requires a strategy — the right habits and a plan tailored to your life. That's where a financial professional comes in.
                     </div>
                     <div style={{marginBottom:12}}>
                       <label style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',display:'block',marginBottom:5}}>Already saving toward this? <span style={{fontWeight:400,color:'var(--text-muted)'}}>(optional)</span></label>
