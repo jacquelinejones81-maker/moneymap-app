@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import AppTour, { useTour } from './AppTour';
 import FinancialTipPopup from './FinancialTips';
 import { db } from './firebase';
-import { doc, setDoc, onSnapshot, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { recordContactRequest, useLeadSync } from './LeadSync';
 
 
 const GROUPS = {
@@ -1122,6 +1123,8 @@ function ClearConfirmModal({title,message,onConfirm,onCancel}){
 
 export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccount }) {
   const uid = firebaseUser?.uid;
+  // Sync lead to Firestore on every load so Hub pipeline stays current
+  useLeadSync(lead, uid);
   const [activeAccount, setActiveAccount] = useState('main');
   const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } });
   const [activeTab, setActiveTab] = useState('register');
@@ -1787,33 +1790,11 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts||[]} setDebts={dbs} onRepContact={async(topic)=>{
-          if(!lead||!lead.docId) return;
-          try{
-            const label=topic||'Debt Help';
-            const update={
-              lastInterestTopic:label,
-              lastInterestAt:new Date().toISOString(),
-              interest_debt_1:true,
-              contactRequests:arrayUnion({icon:'📉',label,detail:'Requested via debt payoff review',requestedAt:new Date().toISOString(),source:'debt'}),
-            };
-            await setDoc(doc(db,'leads',lead.docId),update,{merge:true});
-          }catch(e){console.error('Rep contact write error:',e);}
+          await recordContactRequest(lead,uid,{icon:'📉',label:topic||'Debt Help',detail:'Requested via debt payoff review',source:'debt'});
         }}/>}
-        {activeTab==='savings' && <SavingsTab transactions={transactions||[]} goals={goals||[]} setGoals={gls} onMilestone={setMilestone} uid={uid} lead={lead} onLeadEngagement={async(topic,section)=>{
-          if(!lead||!lead.docId) return;
-          try{
-            const iconMap={'Emergency Account setup':'🚨','Short-Term Account setup':'📆','Wealth Building Account setup':'📈','Savings':'🐷'};
-            const keyMap={'Emergency Account setup':'interest_savings_1','Short-Term Account setup':'interest_savings_1','Wealth Building Account setup':'interest_wealth_1','Savings':'interest_savings_1'};
-            const icon=iconMap[topic]||'🐷';
-            const key=keyMap[topic]||'interest_savings_1';
-            const update={
-              lastInterestTopic:topic,
-              lastInterestAt:new Date().toISOString(),
-              contactRequests:arrayUnion({icon,label:topic,detail:'Requested via savings account setup',requestedAt:new Date().toISOString(),source:'savings'}),
-              [key]:true,
-            };
-            await setDoc(doc(db,'leads',lead.docId),update,{merge:true});
-          }catch(e){console.error(e);}
+        {activeTab==='savings' && <SavingsTab transactions={transactions||[]} goals={goals||[]} setGoals={gls} onMilestone={setMilestone} uid={uid} lead={lead} onLeadEngagement={async(topic)=>{
+          const iconMap={'Emergency Account setup':'🚨','Short-Term Account setup':'📆','Wealth Building Account setup':'📈','Savings':'🐷'};
+          await recordContactRequest(lead,uid,{icon:iconMap[topic]||'🐷',label:topic,detail:'Requested via savings account setup',source:'savings'});
         }}/> }
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
