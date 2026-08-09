@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { doc, getDoc, collection, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, setDoc, arrayUnion } from 'firebase/firestore';
 
 const TIPS = [
   {
@@ -442,7 +442,7 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
         }),
       };
       if (catInfo.key) update[catInfo.key] = true;
-      await updateDoc(leadRef, update);
+      await setDoc(leadRef, update, { merge: true });
     } catch(e) {
       console.error('Lead engagement write error:', e);
     }
