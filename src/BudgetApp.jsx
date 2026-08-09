@@ -4172,3 +4172,4 @@ function exportCSV(transactions,beginBal){
   const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='moneymap_register.csv';a.click();
 }
+   
