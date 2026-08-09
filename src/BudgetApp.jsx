@@ -2723,14 +2723,29 @@ function SavingsTab({transactions,goals,setGoals,onMilestone,uid,lead,onLeadEnga
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
                 <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:barC}}>{pct}%</div>
-                <input type="number" defaultValue={g.saved} min="0" step="10" style={{width:80,fontSize:12,padding:'3px 8px',marginTop:4}} onBlur={e=>{
-                  const newSaved=Math.max(0,parseFloat(e.target.value)||0);
-                  const updated=goals.map(x=>x.id===g.id?{...x,saved:newSaved}:x);
-                  setGoals(updated);
-                  if(newSaved>=g.target&&g.saved<g.target&&onMilestone){
-                    onMilestone({icon:'🏆',title:`${g.name} Complete!`,message:`Amazing! You hit your $${g.target.toLocaleString()} goal. Your future self thanks you! 🎉`});
-                  }
-                }} title="Update saved amount"/>
+                <div style={{display:'flex',gap:4,marginTop:6,alignItems:'center'}}>
+                  <input
+                    type="number" min="0" step="1"
+                    placeholder="Add amount"
+                    id={`savings-add-${g.id}`}
+                    style={{width:90,fontSize:12,padding:'4px 8px',borderRadius:6,border:'1px solid #e5e7eb'}}
+                  />
+                  <button
+                    style={{fontSize:11,fontWeight:700,padding:'4px 10px',background:'var(--green)',color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}
+                    onClick={()=>{
+                      const input=document.getElementById(`savings-add-${g.id}`);
+                      const addAmt=Math.max(0,parseFloat(input.value)||0);
+                      if(!addAmt){alert('Enter an amount to add.');return;}
+                      const newSaved=g.saved+addAmt;
+                      const updated=goals.map(x=>x.id===g.id?{...x,saved:newSaved}:x);
+                      setGoals(updated);
+                      input.value='';
+                      if(newSaved>=g.target&&g.saved<g.target&&onMilestone){
+                        onMilestone({icon:'🏆',title:`${g.name} Complete!`,message:`Amazing! You hit your $${g.target.toLocaleString()} goal. Your future self thanks you! 🎉`});
+                      }
+                    }}
+                  >Add</button>
+                </div>
                 <button className="btn-danger" style={{display:'block',marginTop:4,width:'100%'}} onClick={()=>setGoals(goals.filter(x=>x.id!==g.id))}>✕</button>
               </div>
             </div>
