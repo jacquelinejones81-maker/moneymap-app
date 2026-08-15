@@ -2396,8 +2396,10 @@ function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact
 
 function DebtsTab({debts,setDebts,onRepContact}){
   const [form,setForm]=useState({name:'',bal:'',rate:'',min:''});
-  const [payoffModal,setPayoffModal]=useState(null); // {paidDebt, nextDebt, allDebtFree}
-  const [inlinePayoff,setInlinePayoff]=useState(null); // same shape, persists in tab
+  const [editingId,setEditingId]=useState(null);
+  const [editForm,setEditForm]=useState({name:'',bal:'',rate:'',min:''});
+  const [payoffModal,setPayoffModal]=useState(null);
+  const [inlinePayoff,setInlinePayoff]=useState(null);
 
   const handleMarkPaidOff = (debt) => {
     const remaining = debts.filter(d=>d.id!==debt.id);
@@ -2408,6 +2410,18 @@ function DebtsTab({debts,setDebts,onRepContact}){
     setDebts(remaining);
     setPayoffModal(info);
     setInlinePayoff(info);
+  };
+
+  const startEdit = (d) => {
+    setEditingId(d.id);
+    setEditForm({name:d.name,bal:String(d.bal),rate:String(d.rate),min:String(d.min)});
+  };
+
+  const saveEdit = () => {
+    const {name,bal,rate,min}=editForm;
+    if(!name.trim()||isNaN(parseFloat(bal))||isNaN(parseFloat(rate))||isNaN(parseFloat(min))){alert('Fill in all fields.');return;}
+    setDebts(debts.map(d=>d.id===editingId?{...d,name:name.trim(),bal:parseFloat(bal),rate:parseFloat(rate),min:parseFloat(min)}:d));
+    setEditingId(null);
   };
 
   const addDebt=()=>{
@@ -2494,20 +2508,39 @@ function DebtsTab({debts,setDebts,onRepContact}){
               const color=i<2?colors[i]:colors[2];
               const bg=i<2?bgs[i]:bgs[2];
               return(
-                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{d.name}</span>
-                      <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
+                <div key={d.id} style={{padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
+                  {editingId===d.id?(
+                    <div style={{background:'rgba(26,111,212,0.04)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:8,padding:'10px 12px'}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'var(--text-muted)',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Edit debt</div>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
+                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Name</label><input value={editForm.name} onChange={e=>setEditForm(f=>({...f,name:e.target.value}))} style={{fontSize:13}}/></div>
+                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Balance ($)</label><input type="number" min="0" step="0.01" value={editForm.bal} onChange={e=>setEditForm(f=>({...f,bal:e.target.value}))} style={{fontSize:13}}/></div>
+                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Interest rate (%)</label><input type="number" min="0" step="0.01" value={editForm.rate} onChange={e=>setEditForm(f=>({...f,rate:e.target.value}))} style={{fontSize:13}}/></div>
+                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Min payment ($/mo)</label><input type="number" min="0" step="0.01" value={editForm.min} onChange={e=>setEditForm(f=>({...f,min:e.target.value}))} style={{fontSize:13}}/></div>
+                      </div>
+                      <div style={{display:'flex',gap:6}}>
+                        <button className="btn-gold" style={{fontSize:12,padding:'5px 14px'}} onClick={saveEdit}>Save changes</button>
+                        <button className="btn-outline" style={{fontSize:12,padding:'5px 12px'}} onClick={()=>setEditingId(null)}>Cancel</button>
+                      </div>
                     </div>
-                    <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
-                    <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
-                  </div>
-                  <div style={{textAlign:'right',flexShrink:0}}>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                    <button className="btn-gold" style={{marginTop:6,fontSize:11,padding:'4px 10px'}} onClick={()=>handleMarkPaidOff(d)}>✓ Paid off!</button>
-                    <button className="btn-danger" style={{marginTop:4}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
-                  </div>
+                  ):(
+                    <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                          <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{d.name}</span>
+                          <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
+                        </div>
+                        <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
+                        <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
+                      </div>
+                      <div style={{textAlign:'right',flexShrink:0}}>
+                        <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                        <button className="btn-outline" style={{marginTop:6,fontSize:11,padding:'4px 10px',display:'block',width:'100%'}} onClick={()=>startEdit(d)}>✏️ Edit</button>
+                        <button className="btn-gold" style={{marginTop:4,fontSize:11,padding:'4px 10px',display:'block',width:'100%'}} onClick={()=>handleMarkPaidOff(d)}>🎉 Mark as paid off</button>
+                        <button className="btn-danger" style={{marginTop:4,display:'block',width:'100%'}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
