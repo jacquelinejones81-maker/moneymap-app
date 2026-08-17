@@ -69,8 +69,9 @@ const TIPS = [
     bg: 'rgba(22,163,74,0.06)',
     border: 'rgba(22,163,74,0.2)',
     title: "Do you know your retirement number?",
-    body: "Most people don't know their retirement number — the amount they need saved to retire comfortably. Without knowing your number, you can't know if you're on track. A free financial review can calculate it for you.",
-    cta: "Find out my retirement number",
+    body: "Most people don't know their retirement number — the amount they need saved to retire comfortably. Without knowing your number, you can't know if you're on track. Your Savings tab can help you start building toward it.",
+    cta: "Go to Savings",
+    action: 'tab:savings',
   },
   {
     id: 'auto_home_1',
@@ -251,7 +252,8 @@ const TIPS = [
     border: 'rgba(15,118,110,0.2)',
     title: 'Every dollar of principal builds equity',
     body: "Every dollar of principal you pay down builds equity in your home. The faster you pay it down, the more equity you build — and equity is one of the most powerful wealth-building tools available to homeowners.",
-    cta: "Learn about accelerating my payoff",
+    cta: "See my payoff timeline",
+    action: 'tab:timeline',
   },
   {
     id: 'pay_yourself_1',
