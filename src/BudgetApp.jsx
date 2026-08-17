@@ -1126,7 +1126,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   // Sync lead to Firestore on every load so Hub pipeline stays current
   useLeadSync(lead, uid);
   const [activeAccount, setActiveAccount] = useState('main');
-  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } });
+  const [accounts, setAccounts] = useState({ main: { name:'Main Account', transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', payoffTargetId:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } });
   const [activeTab, setActiveTab] = useState('register');
   const [periodMode, setPeriodMode] = useState('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -1196,6 +1196,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
               bills: [],
               billsPaid: {},
               extraPayment: '',
+              payoffTargetId: '',
               subscriptions: [],
               assets: [],
               liabilities: [],
@@ -1319,7 +1320,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   };
 
   const acct = accounts[activeAccount] || accounts.main;
-  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, subscriptions, assets, liabilities, savingsRateGoal, networthHistory, varBills, varBillsPaid } = acct;
+  const { transactions, debts, budgets, beginBal, goals, bills, billsPaid, extraPayment, payoffTargetId, subscriptions, assets, liabilities, savingsRateGoal, networthHistory, varBills, varBillsPaid } = acct;
 
   const txs = v => updateAccount('transactions', v);
   const dbs = v => updateAccount('debts', v);
@@ -1329,6 +1330,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const bls = v => updateAccount('bills', v);
   const bps = v => updateAccount('billsPaid', v);
   const eps = v => updateAccount('extraPayment', v);
+  const setPtid = v => updateAccount('payoffTargetId', v);
   const subs = v => updateAccount('subscriptions', v);
   const setAssets = v => updateAccount('assets', v);
   const setVarBills = v => updateAccount('varBills', v);
@@ -1361,7 +1363,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const addNewAccount = () => {
     if (!newAccountName.trim()) return;
     const key = `account_${Date.now()}`;
-    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } };
+    const updated = { ...accounts, [key]: { name:newAccountName.trim(), transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', payoffTargetId:'', subscriptions:[], assets:[], liabilities:[], savingsRateGoal:20, networthHistory:[], varBills:[], varBillsPaid:{} } };
     setAccounts(updated);
     saveToFirebase(updated);
     setActiveAccount(key);
@@ -1504,7 +1506,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           title={"Reset " + (acct.name || 'Account') + "?"}
           message="This will wipe ALL transactions, bills, debts, goals, subscriptions, and beginning balance in this account. Other accounts are not affected."
           onConfirm={() => {
-            const reset = { name: acct.name, transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', subscriptions:[] };
+            const reset = { name: acct.name, transactions:[], debts:[], budgets:{}, beginBal:{amount:0,date:'',set:false}, goals:[], bills:[], billsPaid:{}, extraPayment:'', payoffTargetId:'', subscriptions:[] };
             const updated = { ...accounts, [activeAccount]: reset };
             setAccounts(updated);
             saveToFirebase(updated);
@@ -1797,7 +1799,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           await recordContactRequest(lead,uid,{icon:iconMap[topic]||'🐷',label:topic,detail:'Requested via savings account setup',source:'savings'});
         }}/> }
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
-        {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} />}
+        {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} payoffTargetId={payoffTargetId} setPayoffTargetId={setPtid} />}
         {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions||[]} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} budgets={budgets} bills={bills} />}
@@ -2396,10 +2398,8 @@ function DebtPayoffModal({paidDebt, nextDebt, allDebtFree, onClose, onRepContact
 
 function DebtsTab({debts,setDebts,onRepContact}){
   const [form,setForm]=useState({name:'',bal:'',rate:'',min:''});
-  const [editingId,setEditingId]=useState(null);
-  const [editForm,setEditForm]=useState({name:'',bal:'',rate:'',min:''});
-  const [payoffModal,setPayoffModal]=useState(null);
-  const [inlinePayoff,setInlinePayoff]=useState(null);
+  const [payoffModal,setPayoffModal]=useState(null); // {paidDebt, nextDebt, allDebtFree}
+  const [inlinePayoff,setInlinePayoff]=useState(null); // same shape, persists in tab
 
   const handleMarkPaidOff = (debt) => {
     const remaining = debts.filter(d=>d.id!==debt.id);
@@ -2410,18 +2410,6 @@ function DebtsTab({debts,setDebts,onRepContact}){
     setDebts(remaining);
     setPayoffModal(info);
     setInlinePayoff(info);
-  };
-
-  const startEdit = (d) => {
-    setEditingId(d.id);
-    setEditForm({name:d.name,bal:String(d.bal),rate:String(d.rate),min:String(d.min)});
-  };
-
-  const saveEdit = () => {
-    const {name,bal,rate,min}=editForm;
-    if(!name.trim()||isNaN(parseFloat(bal))||isNaN(parseFloat(rate))||isNaN(parseFloat(min))){alert('Fill in all fields.');return;}
-    setDebts(debts.map(d=>d.id===editingId?{...d,name:name.trim(),bal:parseFloat(bal),rate:parseFloat(rate),min:parseFloat(min)}:d));
-    setEditingId(null);
   };
 
   const addDebt=()=>{
@@ -2508,39 +2496,20 @@ function DebtsTab({debts,setDebts,onRepContact}){
               const color=i<2?colors[i]:colors[2];
               const bg=i<2?bgs[i]:bgs[2];
               return(
-                <div key={d.id} style={{padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
-                  {editingId===d.id?(
-                    <div style={{background:'rgba(26,111,212,0.04)',border:'1px solid rgba(26,111,212,0.15)',borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:11,fontWeight:600,color:'var(--text-muted)',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Edit debt</div>
-                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
-                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Name</label><input value={editForm.name} onChange={e=>setEditForm(f=>({...f,name:e.target.value}))} style={{fontSize:13}}/></div>
-                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Balance ($)</label><input type="number" min="0" step="0.01" value={editForm.bal} onChange={e=>setEditForm(f=>({...f,bal:e.target.value}))} style={{fontSize:13}}/></div>
-                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Interest rate (%)</label><input type="number" min="0" step="0.01" value={editForm.rate} onChange={e=>setEditForm(f=>({...f,rate:e.target.value}))} style={{fontSize:13}}/></div>
-                        <div><label style={{fontSize:11,color:'var(--text-muted)',display:'block',marginBottom:3}}>Min payment ($/mo)</label><input type="number" min="0" step="0.01" value={editForm.min} onChange={e=>setEditForm(f=>({...f,min:e.target.value}))} style={{fontSize:13}}/></div>
-                      </div>
-                      <div style={{display:'flex',gap:6}}>
-                        <button className="btn-gold" style={{fontSize:12,padding:'5px 14px'}} onClick={saveEdit}>Save changes</button>
-                        <button className="btn-outline" style={{fontSize:12,padding:'5px 12px'}} onClick={()=>setEditingId(null)}>Cancel</button>
-                      </div>
+                <div key={d.id} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'12px 0',borderBottom:'1px solid var(--border-light)'}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                      <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{d.name}</span>
+                      <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
                     </div>
-                  ):(
-                    <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                          <span style={{fontFamily:'var(--font-display)',fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{d.name}</span>
-                          <span style={{background:bg,color,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:10}}>{label}</span>
-                        </div>
-                        <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
-                        <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
-                      </div>
-                      <div style={{textAlign:'right',flexShrink:0}}>
-                        <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                        <button className="btn-outline" style={{marginTop:6,fontSize:11,padding:'4px 10px',display:'block',width:'100%'}} onClick={()=>startEdit(d)}>✏️ Edit</button>
-                        <button className="btn-gold" style={{marginTop:4,fontSize:11,padding:'4px 10px',display:'block',width:'100%'}} onClick={()=>handleMarkPaidOff(d)}>🎉 Mark as paid off</button>
-                        <button className="btn-danger" style={{marginTop:4,display:'block',width:'100%'}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
-                      </div>
-                    </div>
-                  )}
+                    <div style={{fontSize:12,color:'var(--text-muted)'}}>Min: ${d.min.toFixed(2)}/mo · {d.rate.toFixed(2)}% APR</div>
+                    <div className="debt-bar-track"><div className="debt-bar-fill" style={{width:`${Math.round((d.bal/maxBal)*100)}%`,background:color}}/></div>
+                  </div>
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>${d.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                    <button className="btn-gold" style={{marginTop:6,fontSize:11,padding:'4px 10px'}} onClick={()=>handleMarkPaidOff(d)}>✓ Paid off!</button>
+                    <button className="btn-danger" style={{marginTop:4}} onClick={()=>setDebts(debts.filter(x=>x.id!==d.id))}>✕ Remove</button>
+                  </div>
                 </div>
               );
             })}
@@ -2949,11 +2918,15 @@ function CashTab({transactions,setTransactions}){
   );
 }
 
-function TimelineTab({debts, extraPayment, setExtraPayment}){
+function TimelineTab({debts, extraPayment, setExtraPayment, payoffTargetId, setPayoffTargetId}){
   const extra = extraPayment || '';
   const setExtra = setExtraPayment;
   const extraAmt=parseFloat(extra)||0;
-  const sorted=[...debts].sort((a,b)=>b.rate-a.rate);
+  const avalanche=[...debts].sort((a,b)=>b.rate-a.rate);
+  // If the user picked a specific debt to target, that one goes first (gets the extra payment);
+  // everything else stays in avalanche (highest-rate-first) order behind it.
+  const targeted = debts.find(d=>String(d.id)===String(payoffTargetId));
+  const sorted = targeted ? [targeted, ...avalanche.filter(d=>d.id!==targeted.id)] : avalanche;
   let freed=0;
   const results=sorted.map((d,i)=>{
     const mr=d.rate/100/12;const pmt=d.min+(i===0?extraAmt:0)+freed;
@@ -2969,11 +2942,18 @@ function TimelineTab({debts, extraPayment, setExtraPayment}){
   return(
     <>
       <div className="card">
-        <div className="card-title">Extra monthly payment toward top debt</div>
-        <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div className="card-title">Extra monthly payment toward chosen debt</div>
+        <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
           <input type="number" placeholder="Extra payment ($/mo)" min="0" step="10" value={extra} style={{maxWidth:220}} onChange={e=>setExtra(e.target.value)}/>
           <span style={{fontSize:13,color:'var(--text-muted)'}}>beyond minimums</span>
         </div>
+        {debts.length>0&&<div style={{marginTop:12}}>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Apply extra payment to</label>
+          <select value={payoffTargetId||''} onChange={e=>setPayoffTargetId(e.target.value)} style={{maxWidth:280}}>
+            <option value="">Highest interest rate first (default)</option>
+            {debts.map(d=><option key={d.id} value={d.id}>{d.name} ({d.rate.toFixed(2)}%)</option>)}
+          </select>
+        </div>}
       </div>
       <div className="card">
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
