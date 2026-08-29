@@ -3516,6 +3516,13 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
   const yearlyTotal=subscriptions.reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount:sub.amount*12),0);
   const paidCount=subscriptions.filter(s=>isPaid(s)).length;
   const totalPaid=subscriptions.filter(s=>isPaid(s)).reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount/12:sub.amount),0);
+  // Yearly subscriptions aren't due most months, so they shouldn't block the "all paid"
+  // celebration all year round — the progress bar and celebration below only consider
+  // monthly-cycle subscriptions. A yearly one can still be marked paid any time (it just
+  // isn't required to unlock the celebration).
+  const monthlySubs=subscriptions.filter(s=>s.cycle!=='yearly');
+  const monthlyDuePaidCount=monthlySubs.filter(s=>isPaid(s)).length;
+  const monthlyDueTotal=monthlySubs.length;
 
   const warnings=[];
   if(subscriptions.length>=3&&subscriptions.length<5){
@@ -3658,11 +3665,11 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
 
           <div className="card">
             <div className="card-title">Subscription progress — {now.toLocaleDateString('en-US',{month:'long'})}</div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text-muted)',marginBottom:6}}><span>{paidCount} of {subscriptions.length} paid</span><span>${totalPaid.toFixed(2)} of ${monthlyTotal.toFixed(2)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text-muted)',marginBottom:6}}><span>{monthlyDuePaidCount} of {monthlyDueTotal} due this month paid</span><span>${totalPaid.toFixed(2)} of ${monthlyTotal.toFixed(2)}</span></div>
             <div style={{background:'var(--border-light)',borderRadius:6,height:10,overflow:'hidden'}}>
-              <div style={{height:10,borderRadius:6,width:`${subscriptions.length>0?Math.round((paidCount/subscriptions.length)*100):0}%`,background:paidCount===subscriptions.length?'#16a34a':'linear-gradient(90deg,#7c3aed,#a78bfa)',transition:'width 0.4s ease'}}/>
+              <div style={{height:10,borderRadius:6,width:`${monthlyDueTotal>0?Math.round((monthlyDuePaidCount/monthlyDueTotal)*100):0}%`,background:monthlyDuePaidCount===monthlyDueTotal?'#16a34a':'linear-gradient(90deg,#7c3aed,#a78bfa)',transition:'width 0.4s ease'}}/>
             </div>
-            {paidCount===subscriptions.length&&subscriptions.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All subscriptions paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
+            {monthlyDuePaidCount===monthlyDueTotal&&monthlyDueTotal>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All subscriptions paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
           </div>
 
           <div className="tip-box" style={{marginBottom:'1rem'}}>
