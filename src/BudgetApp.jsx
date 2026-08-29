@@ -1393,7 +1393,10 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       const newTx = { id: Date.now(), date: now.toISOString().split('T')[0], desc: bill.name, type: 'debit', grp: 'Housing', cat: bill.category || 'Other', amt: bill.amount, note: '', refNum: '' };
       const updatedTxs = [newTx, ...(targetAcct.transactions || [])];
       updatedTxs.sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
-      const updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], billsPaid: updatedBillsPaid }, [selectedAccountKey]: { ...accounts[selectedAccountKey], transactions: updatedTxs } };
+      let updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], billsPaid: updatedBillsPaid } };
+      // Merge the transaction into whichever account is the deduction target — same object if it's
+      // the active account (so billsPaid isn't lost), a different one if the bill lives elsewhere.
+      updated = { ...updated, [selectedAccountKey]: { ...updated[selectedAccountKey], transactions: updatedTxs } };
       setAccounts(updated);
       saveToFirebase(updated);
     } else {
