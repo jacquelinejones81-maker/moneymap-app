@@ -3490,7 +3490,10 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
       const newTx={id:Date.now(),date:now.toISOString().split('T')[0],desc:sub.name,type:'debit',grp:'Personal',cat:'Subscriptions',amt:sub.amount,note:'Subscription',refNum:''};
       const updatedTxs=[newTx,...(targetAcct.transactions||[])];
       updatedTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-      const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:updated},[selectedAccountKey]:{...accounts[selectedAccountKey],transactions:updatedTxs}};
+      let updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:updated}};
+      // Merge into whichever account is the deduction target — same object if it's the active
+      // account (so the subsPaid update isn't lost), a different one if paying from elsewhere.
+      updatedAccounts={...updatedAccounts,[selectedAccountKey]:{...updatedAccounts[selectedAccountKey],transactions:updatedTxs}};
       setAccounts(updatedAccounts);
       saveToFirebase(updatedAccounts);
     } else {
