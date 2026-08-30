@@ -1861,6 +1861,12 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   const [selectedTxIds,setSelectedTxIds]=useState([]);
   const [moveToAccount,setMoveToAccount]=useState('');
   const [err,setErr]=useState({});
+  const nowForMonth=new Date();
+  const [viewMonth,setViewMonth]=useState({y:nowForMonth.getFullYear(),m:nowForMonth.getMonth()});
+  const isCurrentMonth=viewMonth.y===nowForMonth.getFullYear()&&viewMonth.m===nowForMonth.getMonth();
+  const monthLabel=new Date(viewMonth.y,viewMonth.m,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const goPrevMonth=()=>setViewMonth(v=>v.m===0?{y:v.y-1,m:11}:{y:v.y,m:v.m-1});
+  const goNextMonth=()=>setViewMonth(v=>{if(v.y===nowForMonth.getFullYear()&&v.m===nowForMonth.getMonth())return v;return v.m===11?{y:v.y+1,m:0}:{y:v.y,m:v.m+1};});
   const grpCats=form.grp?GROUPS[form.grp]?.cats||[]:[];
 
   const addTx=()=>{
@@ -1876,6 +1882,8 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
     setTransactions(updated);
     setForm(f=>({...f,desc:'',amt:'',note:'',refNum:''}));
     setErr({});
+    const txDate=new Date(newTx.date+'T00:00:00');
+    setViewMonth({y:txDate.getFullYear(),m:txDate.getMonth()});
   };
 
   const handleSplit=()=>{
@@ -1887,6 +1895,8 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
       setTransactions(updated);
       setForm(emptyForm);
       setErr({});
+      const txDate=new Date(form.date+'T00:00:00');
+      setViewMonth({y:txDate.getFullYear(),m:txDate.getMonth()});
     });
   };
 
@@ -1902,7 +1912,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   const bals={};
   sorted.forEach(t=>{runBal+=t.type==='credit'?t.amt:-t.amt;bals[t.id]=runBal;});
 
-  let filtered=transactions;
+  let filtered=transactions.filter(t=>{
+    const d=new Date(t.date+'T00:00:00');
+    return d.getFullYear()===viewMonth.y&&d.getMonth()===viewMonth.m;
+  });
   if(filterGrp)filtered=filtered.filter(t=>t.grp===filterGrp);
   if(filterCat)filtered=filtered.filter(t=>t.cat===filterCat);
   if(search)filtered=filtered.filter(t=>`${t.desc} ${t.cat} ${t.grp} ${t.amt} ${t.refNum||''}`.toLowerCase().includes(search.toLowerCase()));
@@ -2009,7 +2022,12 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
       <div className="card">
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem',flexWrap:'wrap',gap:8}}>
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-            <div className="card-title" style={{marginBottom:0}}>Register</div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <button className="btn-outline" style={{fontSize:13,padding:'3px 9px',fontWeight:700}} onClick={goPrevMonth} aria-label="Previous month">‹</button>
+              <div className="card-title" style={{marginBottom:0,minWidth:150,textAlign:'center'}}>{monthLabel} Register</div>
+              <button className="btn-outline" style={{fontSize:13,padding:'3px 9px',fontWeight:700,opacity:isCurrentMonth?0.35:1,cursor:isCurrentMonth?'default':'pointer'}} onClick={goNextMonth} disabled={isCurrentMonth} aria-label="Next month">›</button>
+              {!isCurrentMonth&&<button className="btn-outline" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>setViewMonth({y:nowForMonth.getFullYear(),m:nowForMonth.getMonth()})}>Today</button>}
+            </div>
             {transactions.length>0&&<ClearBtn label="Clear all" onClear={()=>setTransactions([])} title="Clear all transactions?" message="This will permanently delete all transactions in this account." />}
             {selectedTxIds.length>0&&accounts&&Object.keys(accounts).length>1&&(
               <div style={{display:'flex',alignItems:'center',gap:6}}>
@@ -2078,7 +2096,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
                 </tr>
               );
             })}
-            {filtered.length===0&&<tr><td colSpan={7} className="empty-state">No transactions found.</td></tr>}
+            {filtered.length===0&&<tr><td colSpan={7} className="empty-state">No transactions in {monthLabel}.</td></tr>}
           </tbody>
         </table>
       </div>
