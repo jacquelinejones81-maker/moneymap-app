@@ -2197,7 +2197,7 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
               <th style={{width:40}}></th>
             </tr></thead>
             <tbody>
-              {bills.map(bill=>{
+              {[...bills].sort((a,b)=>(a.dueDay||1)-(b.dueDay||1)).map(bill=>{
                 const paid=isPaid(bill.id);
                 const status=paid?'paid':getDueStatus(bill.dueDay);
                 const statusColors={paid:{bg:'rgba(22,163,74,0.1)',color:'#16a34a',label:'✓ Paid'},overdue:{bg:'rgba(220,38,38,0.1)',color:'#dc2626',label:'Overdue'},'due-soon':{bg:'rgba(217,119,6,0.1)',color:'#d97706',label:'Due soon'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',label:'Upcoming'}};
@@ -3649,7 +3649,7 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
                 <th style={{width:40}}></th>
               </tr></thead>
               <tbody>
-                {subscriptions.map(sub=>{
+                {[...subscriptions].sort((a,b)=>(a.dueDay||1)-(b.dueDay||1)).map(sub=>{
                   const paid=isPaid(sub);
                   const status=paid?'paid':getDueStatus(sub.dueDay);
                   const sc=statusColors[status]||statusColors['upcoming'];
