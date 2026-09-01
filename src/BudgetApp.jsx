@@ -2065,7 +2065,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
             <th style={{width:28}}></th>
           </tr></thead>
           <tbody>
-            {beginBal.set&&!filterGrp&&!filterCat&&!search&&(
+            {beginBal.set&&!filterGrp&&!filterCat&&!search&&(()=>{
+              const bbDate=new Date(beginBal.date+'T00:00:00');
+              return bbDate.getFullYear()===viewMonth.y&&bbDate.getMonth()===viewMonth.m;
+            })()&&(
               <tr className="bb-row">
                 <td style={{fontSize:11}}>{new Date(beginBal.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
                 <td colSpan={4} style={{color:'var(--text-muted)'}}>💰 Beginning balance</td>
