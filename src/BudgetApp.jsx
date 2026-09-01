@@ -1269,7 +1269,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const markRolloverSeen = async () => {
     const today = new Date();
     const monthKey = `${today.getFullYear()}_${today.getMonth()}`;
-    await saveUserPrefs({ [`rolloverSeenMonths.${monthKey}`]: true });
+    await saveUserPrefs({ rolloverSeenMonths: { [monthKey]: true } });
   };
 
   const applyRollover = async () => {
