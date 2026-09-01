@@ -1814,8 +1814,12 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
 
 function MetricsBar({transactions,debts,beginBal}){
   const n=new Date();const m=n.getMonth();const y=n.getFullYear();
-  const debits=transactions.filter(t=>t.type==='debit').reduce((s,t)=>s+t.amt,0);
-  const credits=transactions.filter(t=>t.type==='credit').reduce((s,t)=>s+t.amt,0);
+  // Transactions dated before the beginning balance are already reflected in that number —
+  // counting them again on top of it is what was inflating the balance.
+  const bbDateStr=beginBal.set?beginBal.date:null;
+  const sinceReset=bbDateStr?transactions.filter(t=>t.date>=bbDateStr):transactions;
+  const debits=sinceReset.filter(t=>t.type==='debit').reduce((s,t)=>s+t.amt,0);
+  const credits=sinceReset.filter(t=>t.type==='credit').reduce((s,t)=>s+t.amt,0);
   const bal=(beginBal.amount||0)+credits-debits;
   const totalDebt=debts.reduce((s,d)=>s+d.bal,0);
   const monthIncome=transactions.filter(t=>{const d=new Date(t.date+'T00:00:00');return t.type==='credit'&&d.getMonth()===m&&d.getFullYear()===y;}).reduce((s,t)=>s+t.amt,0);
@@ -1908,9 +1912,17 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   };
 
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  // Same fix as the top Account Balance metric: transactions dated before the beginning
+  // balance are already baked into that number, so they're excluded from the running chain —
+  // otherwise re-adding old history on top of a freshly-set balance inflates every row after it.
+  const bbDateStr=beginBal.set?beginBal.date:null;
   let runBal=beginBal.amount||0;
   const bals={};
-  sorted.forEach(t=>{runBal+=t.type==='credit'?t.amt:-t.amt;bals[t.id]=runBal;});
+  sorted.forEach(t=>{
+    if(bbDateStr&&t.date<bbDateStr)return;
+    runBal+=t.type==='credit'?t.amt:-t.amt;
+    bals[t.id]=runBal;
+  });
 
   let filtered=transactions.filter(t=>{
     const d=new Date(t.date+'T00:00:00');
@@ -2094,7 +2106,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
                   <td><span className="grp-badge" style={{background:ci.bg,color:ci.color}}>{t.grp||'?'}</span></td>
                   <td className="debit-color">{t.type==='debit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className="credit-color">{t.type==='credit'?'$'+t.amt.toFixed(2):''}</td>
-                  <td className={`fw ${bal>=0?'credit-color':'debit-color'}`} style={{fontSize:12}}>${Math.abs(bal).toFixed(2)}</td>
+                  <td className={bal!==undefined?`fw ${bal>=0?'credit-color':'debit-color'}`:''} style={{fontSize:12,color:bal===undefined?'var(--text-muted)':undefined}}>{bal!==undefined?'$'+Math.abs(bal).toFixed(2):'—'}</td>
                   <td><button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button></td>
                 </tr>
               );
