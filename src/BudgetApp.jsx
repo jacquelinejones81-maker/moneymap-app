@@ -1037,6 +1037,70 @@ function CSVImportModal({onImport,onCancel,existingTransactions,accounts,default
 }
 
 
+function FeedbackModal({uid,lead,onClose}){
+  const [type,setType]=useState('suggestion');
+  const [message,setMessage]=useState('');
+  const [sending,setSending]=useState(false);
+  const [sent,setSent]=useState(false);
+  const [err,setErr]=useState('');
+
+  const submit=async()=>{
+    if(!message.trim()){setErr('Tell us what you noticed first.');return;}
+    setErr('');
+    setSending(true);
+    try{
+      const id=`fb_${Date.now()}`;
+      await setDoc(doc(db,'feedback',id),{
+        id,uid:uid||'',
+        name:lead?.name||'',
+        email:lead?.email||'',
+        type,
+        message:message.trim(),
+        createdAt:new Date().toISOString(),
+        status:'new',
+      });
+      setSent(true);
+      setTimeout(onClose,1400);
+    }catch(e){
+      console.error(e);
+      setErr("Couldn't send that — try again in a moment.");
+    }finally{
+      setSending(false);
+    }
+  };
+
+  return(
+    <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:2500,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal-box slide-up" style={{maxWidth:420}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.25rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:24}}>💬</span>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:19,color:'var(--text-primary)'}}>Send feedback</h2>
+          </div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'var(--text-muted)',fontSize:18,cursor:'pointer'}}>✕</button>
+        </div>
+
+        {sent ? (
+          <div style={{textAlign:'center',padding:'1rem 0'}}>
+            <div style={{fontSize:32,marginBottom:8}}>✅</div>
+            <div style={{fontSize:14,color:'var(--text-primary)',fontWeight:600}}>Thanks — we got it.</div>
+          </div>
+        ) : (
+          <>
+            <div style={{display:'flex',gap:8,marginBottom:12}}>
+              <button onClick={()=>setType('suggestion')} style={{flex:1,padding:'8px',fontSize:13,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${type==='suggestion'?'var(--green)':'var(--border)'}`,background:type==='suggestion'?'var(--green)':'transparent',color:type==='suggestion'?'white':'var(--text-muted)',cursor:'pointer'}}>💡 Suggestion</button>
+              <button onClick={()=>setType('issue')} style={{flex:1,padding:'8px',fontSize:13,fontWeight:600,borderRadius:'var(--radius-md)',border:`1px solid ${type==='issue'?'var(--red)':'var(--border)'}`,background:type==='issue'?'var(--red)':'transparent',color:type==='issue'?'white':'var(--text-muted)',cursor:'pointer'}}>🐛 Something's off</button>
+            </div>
+            <textarea placeholder="Tell us what you noticed..." value={message} onChange={e=>{setMessage(e.target.value);setErr('');}} rows={4} style={{width:'100%',boxSizing:'border-box',marginBottom:8,resize:'vertical'}}/>
+            {err&&<p style={{color:'var(--red)',fontSize:12,marginBottom:8}}>{err}</p>}
+            <button className="btn-gold" style={{width:'100%'}} onClick={submit} disabled={sending}>{sending?'Sending...':'Send'}</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AddToHomeScreenModal({onClose}){
   return(
     <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:2500,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -1141,6 +1205,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
   const [payBillModal, setPayBillModal] = useState(null);
   const [showResetAccount, setShowResetAccount] = useState(false);
   const [showAddToHome, setShowAddToHome] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showMortgageTip, setShowMortgageTip] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
@@ -1476,6 +1541,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         }}
       />}
       {showAddToHome && <AddToHomeScreenModal onClose={() => setShowAddToHome(false)} />}
+      {showFeedback && <FeedbackModal uid={uid} lead={lead} onClose={() => setShowFeedback(false)} />}
       {showMortgageTip && (
         <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:2500,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setShowMortgageTip(false)}>
           <div className="modal-box slide-up" style={{maxWidth:460}}>
@@ -1698,6 +1764,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         <div className="sidebar-bottom">
           <button className="nav-item" onClick={()=>setShowAddToHome(true)}><span className="nav-icon">📱</span>Add to phone</button>
           <button className="nav-item" onClick={resetTour}><span className="nav-icon">🗺</span>Tour</button>
+          <button className="nav-item" onClick={()=>setShowFeedback(true)}><span className="nav-icon">💬</span>Send feedback</button>
           <button className="nav-item" style={{color:'var(--text-muted)',fontSize:12}}><span className="nav-icon">👤</span>{firstName}</button>
         </div>
       </div>
@@ -1784,8 +1851,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
         {showMobileMore&&(
           <div className="mobile-more-menu">
-            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'tour',label:'Tour',icon:'🗺'}].map(t=>(
-              <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
+            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'tour',label:'Tour',icon:'🗺'},{id:'feedback',label:'Send feedback',icon:'💬'}].map(t=>(
+              <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else if(t.id==='feedback'){setShowFeedback(true);}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
                 <span className="ico">{t.icon}</span>{t.label}
               </button>
             ))}
