@@ -1884,7 +1884,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
     const updated=[newTx,...transactions];
     updated.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
     setTransactions(updated);
-    setForm(f=>({...f,desc:'',amt:'',note:'',refNum:''}));
+    setForm(f=>({...f,desc:'',amt:'',note:'',refNum:'',type:'debit'}));
     setErr({});
     const txDate=new Date(newTx.date+'T00:00:00');
     setViewMonth({y:txDate.getFullYear(),m:txDate.getMonth()});
@@ -2263,7 +2263,7 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} />
+      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />
       <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
     </>
   );
@@ -3317,7 +3317,7 @@ function MovePicker({accounts,currentAccount,onMove}){
 // ── Variable Bills Section ─────────────────────────────────────
 const VAR_BILL_CATS = ['Electric','Gas / heat','Water','Internet (variable)','Other utility'];
 
-function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
+function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid,accounts,activeAccount,setAccounts,saveToFirebase}){
   const [form,setForm]=useState({name:'',category:'Electric',dueDay:1});
   const [editingAmount,setEditingAmount]=useState(null); // bill id
   const [amountInput,setAmountInput]=useState('');
@@ -3335,15 +3335,37 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
   const getPaidAmount=(id)=>varBillsPaid[`${monthKey}_${id}`]?.amount||null;
 
   const markPaid=(bill,amount)=>{
-    setVarBillsPaid({...varBillsPaid,[`${monthKey}_${bill.id}`]:{amount:parseFloat(amount)||0,date:now.toISOString()}});
+    const amt=parseFloat(amount)||0;
+    const key=`${monthKey}_${bill.id}`;
+    const targetAcct=accounts[activeAccount];
+    let updatedTxs=targetAcct.transactions||[];
+    let txId=null;
+    // Only create a transaction (and deduct from balance) when a real amount is entered —
+    // "Mark paid" with amount still TBD just flags it paid, nothing to deduct yet.
+    if(amt>0){
+      const newTx={id:Date.now(),date:now.toISOString().split('T')[0],desc:bill.name,type:'debit',grp:'Housing',cat:bill.category||'Other',amt,note:'Variable bill',refNum:''};
+      txId=newTx.id;
+      updatedTxs=[newTx,...updatedTxs];
+      updatedTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+    }
+    const updatedVarBillsPaid={...varBillsPaid,[key]:{amount:amt,date:now.toISOString(),txId}};
+    const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],varBillsPaid:updatedVarBillsPaid,transactions:updatedTxs}};
+    setAccounts(updatedAccounts);
+    saveToFirebase(updatedAccounts);
     setEditingAmount(null);
     setAmountInput('');
   };
 
   const unmarkPaid=(bill)=>{
-    const updated={...varBillsPaid};
-    delete updated[`${monthKey}_${bill.id}`];
-    setVarBillsPaid(updated);
+    const key=`${monthKey}_${bill.id}`;
+    const paidRecord=varBillsPaid[key];
+    const updatedVarBillsPaid={...varBillsPaid};
+    delete updatedVarBillsPaid[key];
+    let updatedTxs=accounts[activeAccount].transactions||[];
+    if(paidRecord?.txId)updatedTxs=updatedTxs.filter(t=>t.id!==paidRecord.txId);
+    const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],varBillsPaid:updatedVarBillsPaid,transactions:updatedTxs}};
+    setAccounts(updatedAccounts);
+    saveToFirebase(updatedAccounts);
   };
 
   const catIcon={Electric:'⚡',['Gas / heat']:'🔥',Water:'💧',['Internet (variable)']:'🌐',['Other utility']:'🏠'};
