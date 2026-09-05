@@ -9,8 +9,32 @@ export default function AdminPanel({ onBack }) {
   const [repFilter, setRepFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [panelView, setPanelView] = useState('leads');
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
 
-  useEffect(() => { loadLeads(); }, []);
+  useEffect(() => { loadLeads(); loadFeedback(); }, []);
+
+  const loadFeedback = async () => {
+    try {
+      setFeedbackLoading(true);
+      const snap = await getDocs(collection(db, 'feedback'));
+      const data = snap.docs.map(d => ({ ...d.data(), docId: d.id }));
+      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setFeedbackItems(data);
+    } catch (err) {
+      console.error('Load feedback error:', err);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
+  const updateFeedbackStatus = async (docId, status) => {
+    try {
+      await updateDoc(doc(db, 'feedback', docId), { status });
+      setFeedbackItems(feedbackItems.map(f => f.docId === docId ? { ...f, status } : f));
+    } catch (err) { console.error('Update feedback error:', err); }
+  };
 
   const loadLeads = async () => {
     try {
@@ -93,6 +117,17 @@ export default function AdminPanel({ onBack }) {
           </div>
         </div>
 
+        <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem' }}>
+          <button onClick={() => setPanelView('leads')} style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${panelView === 'leads' ? '#1a6fd4' : '#c7ddf7'}`, background: panelView === 'leads' ? '#0f2a5e' : 'transparent', color: panelView === 'leads' ? 'white' : '#6b8dc4', fontFamily: 'var(--font-display)' }}>📋 Leads</button>
+          <button onClick={() => setPanelView('feedback')} style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, borderRadius: 20, cursor: 'pointer', border: `1px solid ${panelView === 'feedback' ? '#1a6fd4' : '#c7ddf7'}`, background: panelView === 'feedback' ? '#0f2a5e' : 'transparent', color: panelView === 'feedback' ? 'white' : '#6b8dc4', fontFamily: 'var(--font-display)', position: 'relative' }}>
+            💬 Feedback
+            {feedbackItems.filter(f => f.status === 'new').length > 0 && (
+              <span style={{ position: 'absolute', top: -7, right: -7, background: '#b83030', color: 'white', width: 18, height: 18, borderRadius: '50%', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{feedbackItems.filter(f => f.status === 'new').length}</span>
+            )}
+          </button>
+        </div>
+
+        {panelView === 'leads' && (<>
         <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0,1fr))', marginBottom: '1.5rem' }}>
           <div className="metric-card"><div className="lbl">Total leads</div><div className="val val-gold">{leads.length}</div></div>
           <div className="metric-card"><div className="lbl">Want review</div><div className="val val-teal">{totalReview}</div></div>
@@ -204,6 +239,38 @@ export default function AdminPanel({ onBack }) {
               </div>
             </div>
           ))
+        )}
+        </>)}
+
+        {panelView === 'feedback' && (
+          feedbackLoading ? (
+            <div className="card"><div className="empty-state">Loading feedback...</div></div>
+          ) : feedbackItems.length === 0 ? (
+            <div className="card"><div className="empty-state">No feedback yet.</div></div>
+          ) : (
+            feedbackItems.map(item => (
+              <div key={item.docId} className="card" style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                  <span style={{
+                    background: item.type === 'issue' ? 'rgba(184,48,48,0.1)' : 'rgba(22,163,74,0.1)',
+                    color: item.type === 'issue' ? '#b83030' : '#16a34a',
+                    fontSize: 11, fontWeight: 600, padding: '2px 10px', borderRadius: 10,
+                  }}>{item.type === 'issue' ? "🐛 Something's off" : '💡 Suggestion'}</span>
+                  <span style={{ fontSize: 11, color: '#6b8dc4' }}>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
+                </div>
+                <div style={{ fontSize: 13, color: '#2d5a9e', marginBottom: 6 }}>{item.message}</div>
+                <div style={{ fontSize: 11, color: '#6b8dc4', marginBottom: 10 }}>{item.name || 'Unknown'}{item.email ? ` · ${item.email}` : ''}</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[['new', 'New'], ['reviewed', 'Reviewed'], ['resolved', 'Resolved']].map(([status, label]) => (
+                    <button key={status} onClick={() => updateFeedbackStatus(item.docId, status)}
+                      style={{ padding: '4px 12px', fontSize: 11, fontWeight: 600, borderRadius: 10, cursor: 'pointer', border: `1px solid ${item.status === status ? '#7c3aed' : '#c7ddf7'}`, background: item.status === status ? 'rgba(124,58,237,0.1)' : 'transparent', color: item.status === status ? '#7c3aed' : '#6b8dc4' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          )
         )}
       </div>
     </div>
