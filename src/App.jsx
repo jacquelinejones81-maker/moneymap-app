@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import LandingPage from './LandingPage';
 import BudgetApp from './BudgetApp';
 import AdminPanel from './AdminPanel';
@@ -426,6 +426,16 @@ function LoadingScreen() {
 function AdminLogin({ onSuccess }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
+  const [newFeedbackCount, setNewFeedbackCount] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'feedback'), where('status', '==', 'new')));
+        setNewFeedbackCount(snap.size);
+      } catch (e) { console.error('Feedback count error:', e); }
+    })();
+  }, []);
 
   const handleLogin = () => {
     if (pw === ADMIN_PASSWORD) { onSuccess(); }
@@ -434,11 +444,15 @@ function AdminLogin({ onSuccess }) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: '#f5f4f0' }}>
-      <div className="modal-box slide-up" style={{ maxWidth: 380 }}>
+      <div className="modal-box slide-up" style={{ maxWidth: 380, position: 'relative' }}>
+        {newFeedbackCount > 0 && (
+          <div style={{ position: 'absolute', top: -10, right: -10, background: '#b83030', color: 'white', width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{newFeedbackCount}</div>
+        )}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 6, color: '#0f2a5e' }}>Admin Access</h2>
           <p style={{ color: '#888', fontSize: 13 }}>Enter your admin password to view leads</p>
+          {newFeedbackCount > 0 && <p style={{ color: '#b83030', fontSize: 11, fontWeight: 500, marginTop: 6 }}>💬 {newFeedbackCount} new feedback item{newFeedbackCount !== 1 ? 's' : ''} waiting</p>}
         </div>
         <input type="password" value={pw} placeholder="Admin password"
           onChange={e => { setPw(e.target.value); setErr(''); }}
