@@ -240,13 +240,6 @@ export default function LandingPage({ onSubmit, repName }) {
             </p>
           </div>
         </div>
-
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <a href="#admin" style={{ fontSize: 11, color: '#ccc', textDecoration: 'none' }}
-            onClick={function() { window.location.hash = 'admin'; window.location.reload(); }}>
-            Admin login
-          </a>
-        </div>
       </div>
 
       {showPopup && (
