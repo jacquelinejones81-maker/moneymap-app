@@ -1859,7 +1859,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </div>
         )}
         {activeTab==='register' && <RegisterTab transactions={transactions||[]} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
-        {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveVarBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=varBills.filter(v=>v.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].varBills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],varBills:srcUpdated},[targetKey]:{...accounts[targetKey],varBills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts||[]} setDebts={dbs} onRepContact={async(topic)=>{
           await recordContactRequest(lead,uid,{icon:'📉',label:topic||'Debt Help',detail:'Requested via debt payoff review',source:'debt'});
@@ -2186,7 +2186,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
+function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,onMoveVarBill,varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -2330,7 +2330,7 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} />
+      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveVarBill={onMoveVarBill} />
       <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
     </>
   );
@@ -3384,10 +3384,11 @@ function MovePicker({accounts,currentAccount,onMove}){
 // ── Variable Bills Section ─────────────────────────────────────
 const VAR_BILL_CATS = ['Electric','Gas / heat','Water','Internet (variable)','Other utility'];
 
-function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid,accounts,activeAccount,setAccounts,saveToFirebase}){
+function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid,accounts,activeAccount,setAccounts,saveToFirebase,onMoveVarBill}){
   const [form,setForm]=useState({name:'',category:'Electric',dueDay:1});
   const [editingAmount,setEditingAmount]=useState(null); // bill id
   const [amountInput,setAmountInput]=useState('');
+  const [editingBill,setEditingBill]=useState(null);
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
@@ -3509,6 +3510,8 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
                       <button className="btn-gold" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>markPaid(bill,0)}>Mark paid</button>
                     </>
                   )}
+                  <button style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} onClick={()=>setEditingBill(bill)}>✏️</button>
+                  {accounts&&Object.keys(accounts).filter(k=>k!==activeAccount).length>0&&<MovePicker accounts={accounts} currentAccount={activeAccount} onMove={(targetKey)=>onMoveVarBill&&onMoveVarBill(bill,targetKey)} />}
                   <button className="btn-danger" onClick={()=>setVarBills(varBills.filter(v=>v.id!==bill.id))}>✕</button>
                 </div>
               </div>
@@ -3516,6 +3519,32 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
           })}
         </div>
       )}
+      {editingBill&&(
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setEditingBill(null)}>
+          <div className="modal-box slide-up" style={{maxWidth:420}}>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit variable bill</h2>
+            <EditVarBillForm bill={editingBill} categories={VAR_BILL_CATS} onSave={(updated)=>{setVarBills(varBills.map(v=>v.id===updated.id?updated:v));setEditingBill(null);}} onCancel={()=>setEditingBill(null)} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EditVarBillForm({bill,categories,onSave,onCancel}){
+  const [form,setForm]=useState({...bill});
+  const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Bill name</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+        <div style={{gridColumn:'1 / -1'}}><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Due day</label><select value={form.dueDay} onChange={e=>setForm(f=>({...f,dueDay:parseInt(e.target.value)}))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{daySuffix(d)} of the month</option>)}</select></div>
+      </div>
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+        <button className="btn-gold" style={{flex:1}} onClick={()=>onSave(form)}>Save changes</button>
+      </div>
     </div>
   );
 }
