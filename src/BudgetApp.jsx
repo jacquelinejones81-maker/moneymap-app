@@ -7,7 +7,7 @@ import { recordContactRequest, useLeadSync } from './LeadSync';
 
 
 const GROUPS = {
-  'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Freelance / side income','Tax refund','Other income'] },
+  'Income':       { color:'#16a34a', bg:'rgba(22,163,74,0.12)', cats:['Paycheck','Commission income','Business income','Freelance / side income','Tax refund','Other income'] },
   'Housing':      { color:'var(--green)', bg:'var(--green-light)', cats:['Mortgage / rent','Electric bill','Water bill','Gas / heat bill','Internet','Cable / streaming','Phone bill','HOA fee','Home repair','Other housing'] },
   'Insurance':    { color:'#7c3aed', bg:'rgba(124,58,237,0.1)', cats:['Auto insurance','Life insurance','Health insurance','Dental / vision','Home / renters ins.','Other insurance'] },
   'Transportation':{ color:'#d97706', bg:'rgba(217,119,6,0.1)', cats:['Car payment','Gas / fuel','Car repair / maintenance','Parking / tolls','Public transit','Rideshare','Registration / tags','Other transport'] },
@@ -19,6 +19,7 @@ const GROUPS = {
   'Entertainment':{ color:'#ea580c', bg:'rgba(234,88,12,0.1)', cats:['Movies / events','Hobbies','Vacation / travel','Dining / nightlife','Books / games','Other entertainment'] },
   'Savings':      { color:'var(--green)', bg:'var(--green-light)', cats:['Emergency fund','Retirement (401k/IRA)','Investment','Savings account','Other savings'] },
   'Cash Spending':{ color:'#0ea5e9', bg:'rgba(14,165,233,0.1)', cats:['Cash - Groceries','Cash - Fast food','Cash - Restaurants','Cash - Gas / fuel','Cash - Coffee','Cash - Hair / grooming','Cash - Clothing','Cash - Entertainment','Cash - Kids','Cash - Household','Cash - Tips','Cash - Other'] },
+  'Business':     { color:'#0891b2', bg:'rgba(8,145,178,0.1)', cats:['Office supplies','Marketing / advertising','Business software / subscriptions','Business travel','Mileage / vehicle expense','Licensing / certification fees','Business insurance','Professional development / training','Client meals / gifts','Other business expense'] },
   'Other':        { color:'#6b7280', bg:'rgba(107,114,128,0.1)', cats:['Miscellaneous','Cash withdrawal','Other'] }
 };
 const ALL_CATS = {};
