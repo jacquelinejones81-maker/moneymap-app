@@ -481,3 +481,14 @@ tr:last-child td { border-bottom: none; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .card { padding: 14px; }
 }
+
+/* ── Print (used by Reports tab "Save as PDF") ─────────── */
+@media print {
+  .sidebar, .mobile-nav, .mobile-more-menu, .topbar, .btn-gold, .btn-outline, .btn-danger { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+  .page-content { padding: 0 !important; }
+  .card:not(.report-print-area) { display: none !important; }
+  .report-print-area { border: none !important; box-shadow: none !important; }
+  .report-print-header { display: block !important; }
+  body { background: white !important; }
+}
