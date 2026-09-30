@@ -2033,6 +2033,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   const [selectedTxIds,setSelectedTxIds]=useState([]);
   const [moveToAccount,setMoveToAccount]=useState('');
   const [err,setErr]=useState({});
+  const [editingTx,setEditingTx]=useState(null);
   const nowForMonth=new Date();
   const [viewMonth,setViewMonth]=useState({y:nowForMonth.getFullYear(),m:nowForMonth.getMonth()});
   const isCurrentMonth=viewMonth.y===nowForMonth.getFullYear()&&viewMonth.m===nowForMonth.getMonth();
@@ -2275,7 +2276,10 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
                   <td className="debit-color">{t.type==='debit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className="credit-color">{t.type==='credit'?'$'+t.amt.toFixed(2):''}</td>
                   <td className={bal!==undefined?`fw ${bal>=0?'credit-color':'debit-color'}`:''} style={{fontSize:12,color:bal===undefined?'var(--text-muted)':undefined}}>{bal!==undefined?'$'+Math.abs(bal).toFixed(2):'—'}</td>
-                  <td><button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button></td>
+                  <td style={{display:'flex',gap:4}}>
+                    <button style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} onClick={()=>setEditingTx(t)}>✏️</button>
+                    <button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button>
+                  </td>
                 </tr>
               );
             })}
@@ -2283,6 +2287,14 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
           </tbody>
         </table>
       </div>
+      {editingTx&&(
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setEditingTx(null)}>
+          <div className="modal-box slide-up" style={{maxWidth:420}}>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit transaction</h2>
+            <EditTransactionForm tx={editingTx} onSave={(updated)=>{setTransactions(transactions.map(x=>x.id===updated.id?updated:x));setEditingTx(null);}} onCancel={()=>setEditingTx(null)} />
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -3044,6 +3056,7 @@ function CashTab({transactions,setTransactions}){
   const CASH_CATS=GROUPS['Cash Spending'].cats;
   const [form,setForm]=useState({date:new Date().toISOString().split('T')[0],desc:'',cat:CASH_CATS[0],amt:''});
   const [err,setErr]=useState({});
+  const [editingTx,setEditingTx]=useState(null);
   const n=new Date();const m=n.getMonth();const y=n.getFullYear();
   const cashTxs=transactions.filter(t=>t.grp==='Cash Spending'&&t.type==='debit');
   const monthCash=cashTxs.filter(t=>{const d=new Date(t.date+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
@@ -3111,13 +3124,24 @@ function CashTab({transactions,setTransactions}){
                   <td>{t.desc}</td>
                   <td><span className="badge" style={{background:'rgba(14,165,233,0.1)',color:'#0ea5e9'}}>{t.cat.replace('Cash - ','')}</span></td>
                   <td style={{textAlign:'right',fontWeight:600,color:'#0ea5e9'}}>${t.amt.toFixed(2)}</td>
-                  <td><button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button></td>
+                  <td style={{display:'flex',gap:4}}>
+                    <button style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} onClick={()=>setEditingTx(t)}>✏️</button>
+                    <button className="btn-danger" onClick={()=>setTransactions(transactions.filter(x=>x.id!==t.id))}>✕</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+      {editingTx&&(
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setEditingTx(null)}>
+          <div className="modal-box slide-up" style={{maxWidth:420}}>
+            <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit transaction</h2>
+            <EditTransactionForm tx={editingTx} onSave={(updated)=>{setTransactions(transactions.map(x=>x.id===updated.id?updated:x));setEditingTx(null);}} onCancel={()=>setEditingTx(null)} />
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -3607,6 +3631,59 @@ function EditVarBillForm({bill,categories,onSave,onCancel}){
   );
 }
 
+
+function EditTransactionForm({tx,onSave,onCancel}){
+  const [form,setForm]=useState({...tx,amt:String(tx.amt)});
+  const [err,setErr]=useState({});
+  const grpCats=form.grp?GROUPS[form.grp]?.cats||[]:[];
+
+  const save=()=>{
+    const e={};
+    if(!form.date)e.date=true;
+    if(!form.desc.trim())e.desc=true;
+    if(!form.cat)e.cat=true;
+    if(!form.amt||isNaN(parseFloat(form.amt))||parseFloat(form.amt)<=0)e.amt=true;
+    if(Object.keys(e).length){setErr(e);return;}
+    onSave({...form,amt:parseFloat(form.amt)});
+  };
+
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Date</label><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={err.date?{borderColor:'var(--red)'}:{}}/></div>
+        <div><label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Type</label><select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}><option value="debit">Debit</option><option value="credit">Credit</option></select></div>
+      </div>
+      <div style={{marginBottom:10}}>
+        <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Description</label>
+        <input value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} style={err.desc?{borderColor:'var(--red)'}:{}}/>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <div>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Group</label>
+          <select value={form.grp} onChange={e=>setForm(f=>({...f,grp:e.target.value,cat:''}))}>
+            <option value="">-- Group --</option>
+            {Object.keys(GROUPS).map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Category</label>
+          <select value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))} disabled={!form.grp} style={err.cat?{borderColor:'var(--red)'}:{}}>
+            <option value="">-- Category --</option>
+            {grpCats.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{marginBottom:14}}>
+        <label style={{fontSize:12,color:'var(--text-muted)',display:'block',marginBottom:4}}>Amount</label>
+        <input type="number" min="0" step="0.01" value={form.amt} onChange={e=>setForm(f=>({...f,amt:e.target.value}))} style={err.amt?{borderColor:'var(--red)'}:{}}/>
+      </div>
+      <div style={{display:'flex',gap:10}}>
+        <button className="btn-outline" style={{flex:1}} onClick={onCancel}>Cancel</button>
+        <button className="btn-gold" style={{flex:1}} onClick={save}>Save changes</button>
+      </div>
+    </div>
+  );
+}
 
 function EditBillForm({bill,billCats,onSave,onCancel}){
   const [form,setForm]=useState({...bill});
