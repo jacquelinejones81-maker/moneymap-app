@@ -1562,6 +1562,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     {id:'timeline',label:'Payoff',icon:'⏱'},
     {id:'spending',label:'Spending',icon:'📊'},
     {id:'networth',label:'Net Worth',icon:'💎'},
+    {id:'reports',label:'Reports',icon:'📑'},
   ];
 
   if (loading) return (
@@ -1835,7 +1836,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         ))}
         <div className="sidebar-divider"/>
         <div className="sidebar-section-label">Other</div>
-        {[{id:'cash',label:'Cash',icon:'💵'}].map(t=>(
+        {[{id:'cash',label:'Cash',icon:'💵'},{id:'reports',label:'Reports',icon:'📑'}].map(t=>(
           <button key={t.id} className={`nav-item${activeTab===t.id?' active':''}`} onClick={()=>handleTabSwitch(t.id)}>
             <span className="nav-icon">{t.icon}</span>{t.label}
           </button>
@@ -1950,7 +1951,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
         {showMobileMore&&(
           <div className="mobile-more-menu">
-            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'tour',label:'Tour',icon:'🗺'},{id:'feedback',label:'Send feedback',icon:'💬'}].map(t=>(
+            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'reports',label:'Reports',icon:'📑'},{id:'tour',label:'Tour',icon:'🗺'},{id:'feedback',label:'Send feedback',icon:'💬'}].map(t=>(
               <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else if(t.id==='feedback'){setShowFeedback(true);}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
                 <span className="ico">{t.icon}</span>{t.label}
               </button>
@@ -1971,6 +1972,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} payoffTargetId={payoffTargetId} setPayoffTargetId={setPtid} />}
         {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} onPaySub={handlePaySub} onUnpaySub={handleUnpaySub} onMarkVarPaid={(bill)=>setVarPayModal(bill)} onUnmarkVarPaid={handleUnmarkVarPaid} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions||[]} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
+        {activeTab==='reports' && <ReportsTab transactions={transactions||[]} beginBal={beginBal} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} budgets={budgets} bills={bills} />}
       </div>
       </div>
@@ -4359,6 +4361,102 @@ function NetWorthTab({assets,setAssets,liabilities,setLiabilities,transactions,n
   );
 }
 
+
+function ReportsTab({transactions=[],beginBal}){
+  const years=Array.from(new Set(transactions.map(t=>t.date.slice(0,4))));
+  const thisYear=String(new Date().getFullYear());
+  if(!years.includes(thisYear))years.push(thisYear);
+  years.sort((a,b)=>b.localeCompare(a));
+
+  const [year,setYear]=useState(thisYear);
+  const [group,setGroup]=useState('Business');
+
+  const filtered=transactions.filter(t=>{
+    const matchYear=t.date.slice(0,4)===year;
+    const matchGroup=group==='all'||t.grp===group;
+    return matchYear&&matchGroup;
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+
+  const totalDebit=filtered.filter(t=>t.type==='debit').reduce((s,t)=>s+t.amt,0);
+  const totalCredit=filtered.filter(t=>t.type==='credit').reduce((s,t)=>s+t.amt,0);
+
+  const exportReportCSV=()=>{
+    const rows=[['Date','Description','Category','Type','Amount']];
+    filtered.forEach(t=>rows.push([t.date,`"${t.desc}"`,t.cat,t.type,t.amt.toFixed(2)]));
+    rows.push([]);
+    rows.push(['','','','Total expenses',totalDebit.toFixed(2)]);
+    rows.push(['','','','Total income',totalCredit.toFixed(2)]);
+    const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`moneymap_${group.toLowerCase().replace(/\s+/g,'_')}_${year}.csv`;a.click();
+  };
+
+  const printReport=()=>window.print();
+
+  const groupLabel=group==='all'?'All categories':group;
+
+  return(
+    <>
+      <div className="card">
+        <div className="card-title">Yearly report</div>
+        <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:14,lineHeight:1.6}}>
+          Pull every transaction for a given year and category — handy for taxes, or handing your accountant a clean expense report.
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
+          <div>
+            <label style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:4}}>Year</label>
+            <select value={year} onChange={e=>setYear(e.target.value)}>
+              {years.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:4}}>Category</label>
+            <select value={group} onChange={e=>setGroup(e.target.value)}>
+              <option value="all">All categories</option>
+              {Object.keys(GROUPS).map(g=><option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-gold" style={{flex:1}} onClick={exportReportCSV} disabled={filtered.length===0}>⬇ Export CSV</button>
+          <button className="btn-outline" style={{flex:1}} onClick={printReport} disabled={filtered.length===0}>🖨 Save as PDF</button>
+        </div>
+        {filtered.length===0&&<div style={{fontSize:12,color:'var(--text-muted)',marginTop:10,fontStyle:'italic'}}>No transactions in {groupLabel} for {year}.</div>}
+      </div>
+
+      <div className="card report-print-area">
+        <div className="report-print-header" style={{display:'none'}}>
+          <div style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:4}}>MoneyMap — {groupLabel} report, {year}</div>
+        </div>
+        <div className="metric-grid" style={{gridTemplateColumns:'repeat(2,minmax(0,1fr))',marginBottom:'1.25rem'}}>
+          <div className="metric-card"><div className="lbl">Total expenses</div><div className="val val-red">${totalDebit.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+          <div className="metric-card"><div className="lbl">Total income</div><div className="val val-green">${totalCredit.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+        </div>
+        {filtered.length>0&&(
+          <table style={{width:'100%',fontSize:13,borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid var(--border)'}}>
+                <th style={{textAlign:'left',padding:'6px 8px',fontSize:11,color:'var(--text-muted)',textTransform:'uppercase'}}>Date</th>
+                <th style={{textAlign:'left',padding:'6px 8px',fontSize:11,color:'var(--text-muted)',textTransform:'uppercase'}}>Description</th>
+                <th style={{textAlign:'left',padding:'6px 8px',fontSize:11,color:'var(--text-muted)',textTransform:'uppercase'}}>Category</th>
+                <th style={{textAlign:'right',padding:'6px 8px',fontSize:11,color:'var(--text-muted)',textTransform:'uppercase'}}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(t=>(
+                <tr key={t.id} style={{borderBottom:'1px solid var(--border-light)'}}>
+                  <td style={{padding:'6px 8px'}}>{new Date(t.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
+                  <td style={{padding:'6px 8px'}}>{t.desc}</td>
+                  <td style={{padding:'6px 8px',color:'var(--text-muted)'}}>{t.cat}</td>
+                  <td style={{padding:'6px 8px',textAlign:'right',fontWeight:600,color:t.type==='credit'?'var(--green)':'var(--text-primary)'}}>{t.type==='credit'?'+':'-'}${t.amt.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}
 
 function exportCSV(transactions,beginBal){
   const sorted=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
