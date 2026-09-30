@@ -1479,6 +1479,75 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     updateAccount('billsPaid', updated);
   };
 
+  const [paySubModal, setPaySubModal] = useState(null);
+  const handlePaySub = (sub) => setPaySubModal(sub);
+  const handlePaySubConfirm = (selectedAccountKey, deduct) => {
+    const sub = paySubModal;
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const updatedSubs = subscriptions.map(s => s.id !== sub.id ? s : { ...s, subsPaid: { ...(s.subsPaid || {}), [monthKey]: { paidAt: new Date().toISOString() } } });
+    if (deduct && accounts && selectedAccountKey) {
+      const targetAcct = accounts[selectedAccountKey];
+      const newTx = { id: Date.now(), date: now.toISOString().split('T')[0], desc: sub.name, type: 'debit', grp: 'Personal', cat: 'Subscriptions', amt: sub.amount, note: 'Subscription', refNum: '' };
+      const updatedTxs = [newTx, ...(targetAcct.transactions || [])];
+      updatedTxs.sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+      let updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], subscriptions: updatedSubs } };
+      updated = { ...updated, [selectedAccountKey]: { ...updated[selectedAccountKey], transactions: updatedTxs } };
+      setAccounts(updated);
+      saveToFirebase(updated);
+    } else {
+      subs(updatedSubs);
+    }
+    setPaySubModal(null);
+  };
+  const handleUnpaySub = (subId) => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const updatedSubs = subscriptions.map(s => {
+      if (s.id !== subId) return s;
+      const newPaid = { ...(s.subsPaid || {}) };
+      delete newPaid[monthKey];
+      return { ...s, subsPaid: newPaid };
+    });
+    subs(updatedSubs);
+  };
+
+  const [varPayModal, setVarPayModal] = useState(null);
+  const [varAmountInput, setVarAmountInput] = useState('');
+  const handleMarkVarPaid = (bill, amount) => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const amt = parseFloat(amount) || 0;
+    const key = `${monthKey}_${bill.id}`;
+    let updatedTxs = accounts[activeAccount].transactions || [];
+    let txId = null;
+    if (amt > 0) {
+      const newTx = { id: Date.now(), date: now.toISOString().split('T')[0], desc: bill.name, type: 'debit', grp: 'Housing', cat: bill.category || 'Other', amt, note: 'Variable bill', refNum: '' };
+      txId = newTx.id;
+      updatedTxs = [newTx, ...updatedTxs];
+      updatedTxs.sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+    }
+    const updatedVarBillsPaid = { ...varBillsPaid, [key]: { amount: amt, date: now.toISOString(), txId } };
+    const updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], varBillsPaid: updatedVarBillsPaid, transactions: updatedTxs } };
+    setAccounts(updated);
+    saveToFirebase(updated);
+    setVarPayModal(null);
+    setVarAmountInput('');
+  };
+  const handleUnmarkVarPaid = (bill) => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const key = `${monthKey}_${bill.id}`;
+    const paidRecord = varBillsPaid[key];
+    const updatedVarBillsPaid = { ...varBillsPaid };
+    delete updatedVarBillsPaid[key];
+    let updatedTxs = accounts[activeAccount].transactions || [];
+    if (paidRecord?.txId) updatedTxs = updatedTxs.filter(t => t.id !== paidRecord.txId);
+    const updated = { ...accounts, [activeAccount]: { ...accounts[activeAccount], varBillsPaid: updatedVarBillsPaid, transactions: updatedTxs } };
+    setAccounts(updated);
+    saveToFirebase(updated);
+  };
+
   const firstName = lead?.name?.split(' ')[0] || firebaseUser?.displayName?.split(' ')[0] || 'there';
 
   const tabs = [
@@ -1570,6 +1639,35 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
       )}
       {payBillModal && <PayBillModal bill={payBillModal} accounts={accounts} onConfirm={handlePayBillConfirm} onCancel={() => setPayBillModal(null)} />}
+      {paySubModal && (
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
+          <div className="modal-box slide-up" style={{maxWidth:420}}>
+            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:36,marginBottom:8}}>📱</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Mark "{paySubModal.name}" as paid</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)'}}>${paySubModal.amount.toFixed(2)}</p>
+            </div>
+            {accounts && <PaySubAccountSelector accounts={accounts} sub={paySubModal} onConfirm={handlePaySubConfirm} onCancel={() => setPaySubModal(null)} />}
+          </div>
+        </div>
+      )}
+      {varPayModal && (
+        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={e=>e.target===e.currentTarget&&setVarPayModal(null)}>
+          <div className="modal-box slide-up" style={{maxWidth:380}}>
+            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+              <div style={{fontSize:36,marginBottom:8}}>🧾</div>
+              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Mark "{varPayModal.name}" as paid</h2>
+              <p style={{fontSize:13,color:'var(--text-muted)'}}>Enter the actual amount from the bill.</p>
+            </div>
+            <input type="number" placeholder="$0.00" min="0" step="0.01" value={varAmountInput} onChange={e=>setVarAmountInput(e.target.value)} autoFocus style={{width:'100%',boxSizing:'border-box',marginBottom:14}} onKeyDown={e=>e.key==='Enter'&&varAmountInput&&handleMarkVarPaid(varPayModal,varAmountInput)}/>
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn-outline" style={{flex:1}} onClick={()=>{setVarPayModal(null);setVarAmountInput('');}}>Cancel</button>
+              <button className="btn-gold" style={{flex:1}} onClick={()=>varAmountInput&&handleMarkVarPaid(varPayModal,varAmountInput)}>Save & mark paid</button>
+            </div>
+            <button style={{width:'100%',marginTop:10,background:'none',border:'none',color:'var(--text-muted)',fontSize:12,textDecoration:'underline',cursor:'pointer'}} onClick={()=>handleMarkVarPaid(varPayModal,0)}>Mark paid, amount still unknown</button>
+          </div>
+        </div>
+      )}
       {showResetAccount && (
         <ClearConfirmModal
           title={"Reset " + (acct.name || 'Account') + "?"}
@@ -1859,7 +1957,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
           </div>
         )}
         {activeTab==='register' && <RegisterTab transactions={transactions||[]} setTransactions={txs} beginBal={beginBal} setBeginBal={bbs} onSplitRequest={(form, onConfirm) => setSplitModal({ form, onConfirm })} onMortgageDetected={() => { const seen = localStorage.getItem('mm_mortgage_tip_' + uid); if(!seen) { setShowMortgageTip(true); localStorage.setItem('mm_mortgage_tip_' + uid, 'true'); }}} accounts={accounts} activeAccount={activeAccount} onMoveTransactions={(txIds, targetKey)=>{ const toMove=transactions.filter(t=>txIds.includes(t.id)); const remaining=transactions.filter(t=>!txIds.includes(t.id)); const targetTxs=[...(accounts[targetKey].transactions||[]),...toMove]; targetTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); const updated={...accounts,[activeAccount]:{...accounts[activeAccount],transactions:remaining},[targetKey]:{...accounts[targetKey],transactions:targetTxs}}; setAccounts(updated); saveToFirebase(updated); }} />}
-        {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveVarBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=varBills.filter(v=>v.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].varBills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],varBills:srcUpdated},[targetKey]:{...accounts[targetKey],varBills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
+        {activeTab==='bills' && <BillsTab bills={bills||[]} setBills={bls} billsPaid={billsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} subscriptions={subscriptions} setSubscriptions={subs} onPaySub={handlePaySub} onUnpaySub={handleUnpaySub} onMarkVarPaid={(bill)=>setVarPayModal(bill)} onUnmarkVarPaid={handleUnmarkVarPaid} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} onMoveBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=bills.filter(b=>b.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].bills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],bills:srcUpdated},[targetKey]:{...accounts[targetKey],bills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveSubscription={(sub,targetKey)=>{ if(!targetKey)return; const srcUpdated=subscriptions.filter(s=>s.id!==sub.id); const tgtUpdated=[...(accounts[targetKey].subscriptions||[]),sub]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:srcUpdated},[targetKey]:{...accounts[targetKey],subscriptions:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} onMoveVarBill={(bill,targetKey)=>{ if(!targetKey)return; const srcUpdated=varBills.filter(v=>v.id!==bill.id); const tgtUpdated=[...(accounts[targetKey].varBills||[]),bill]; const updated={...accounts,[activeAccount]:{...accounts[activeAccount],varBills:srcUpdated},[targetKey]:{...accounts[targetKey],varBills:tgtUpdated}}; setAccounts(updated); saveToFirebase(updated); }} />}
         {activeTab==='budgets' && <BudgetsTab transactions={transactions} budgets={budgets} setBudgets={bgs} />}
         {activeTab==='debts' && <DebtsTab debts={debts||[]} setDebts={dbs} onRepContact={async(topic)=>{
           await recordContactRequest(lead,uid,{icon:'📉',label:topic||'Debt Help',detail:'Requested via debt payoff review',source:'debt'});
@@ -1870,7 +1968,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         }}/> }
         {activeTab==='cash' && <CashTab transactions={transactions} setTransactions={txs} />}
         {activeTab==='timeline' && <TimelineTab debts={debts} extraPayment={extraPayment} setExtraPayment={eps} payoffTargetId={payoffTargetId} setPayoffTargetId={setPtid} />}
-        {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} />}
+        {activeTab==='calendar' && <CalendarTab bills={bills||[]} billsPaid={billsPaid||{}} subscriptions={subscriptions||[]} varBills={varBills||[]} varBillsPaid={varBillsPaid||{}} onPayBill={handlePayBill} onUnpayBill={handleUnpayBill} onPaySub={handlePaySub} onUnpaySub={handleUnpaySub} onMarkVarPaid={(bill)=>setVarPayModal(bill)} onUnmarkVarPaid={handleUnmarkVarPaid} />}
         {activeTab==='networth' && <NetWorthTab assets={assets||[]} setAssets={setAssets} liabilities={liabilities||[]} setLiabilities={setLiabilities} transactions={transactions||[]} networthHistory={networthHistory||[]} setNetworthHistory={setNetworthHistory} savingsRateGoal={savingsRateGoal||20} setSavingsRateGoal={setSavingsRateGoal} goals={goals} />}
         {activeTab==='spending' && <SpendingTab transactions={transactions} periodMode={periodMode} setPeriodMode={setPeriodMode} periodOffset={periodOffset} setPeriodOffset={setPeriodOffset} budgets={budgets} bills={bills} />}
       </div>
@@ -2186,7 +2284,7 @@ function RegisterTab({transactions,setTransactions,beginBal,setBeginBal,onSplitR
   );
 }
 
-function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,onMoveVarBill,varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
+function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscriptions=[],setSubscriptions,onPaySub,onUnpaySub,onMarkVarPaid,onUnmarkVarPaid,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveBill,onMoveSubscription,onMoveVarBill,varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
@@ -2330,8 +2428,8 @@ function BillsTab({bills=[],setBills,billsPaid={},onPayBill,onUnpayBill,subscrip
           {paidCount===bills.length&&bills.length>0&&<div style={{textAlign:'center',fontSize:12,color:'#16a34a',marginTop:8,fontWeight:600}}>🎉 All bills paid for {now.toLocaleDateString('en-US',{month:'long'})}!</div>}
         </div>
       )}
-      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveVarBill={onMoveVarBill} />
-      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} />
+      <VarBillsSection varBills={varBills||[]} setVarBills={setVarBills} varBillsPaid={varBillsPaid||{}} setVarBillsPaid={setVarBillsPaid} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveVarBill={onMoveVarBill} onMarkVarPaid={onMarkVarPaid} onUnmarkVarPaid={onUnmarkVarPaid} />
+      <SubscriptionsSection subscriptions={subscriptions||[]} setSubscriptions={setSubscriptions} transactions={transactions} goals={goals} accounts={accounts} activeAccount={activeAccount} setAccounts={setAccounts} saveToFirebase={saveToFirebase} onMoveSubscription={onMoveSubscription} onPaySub={onPaySub} onUnpaySub={onUnpaySub} />
     </>
   );
 }
@@ -3384,10 +3482,8 @@ function MovePicker({accounts,currentAccount,onMove}){
 // ── Variable Bills Section ─────────────────────────────────────
 const VAR_BILL_CATS = ['Electric','Gas / heat','Water','Internet (variable)','Other utility'];
 
-function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid,accounts,activeAccount,setAccounts,saveToFirebase,onMoveVarBill}){
+function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPaid,accounts,activeAccount,setAccounts,saveToFirebase,onMoveVarBill,onMarkVarPaid,onUnmarkVarPaid}){
   const [form,setForm]=useState({name:'',category:'Electric',dueDay:1});
-  const [editingAmount,setEditingAmount]=useState(null); // bill id
-  const [amountInput,setAmountInput]=useState('');
   const [editingBill,setEditingBill]=useState(null);
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -3401,40 +3497,6 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
 
   const isPaid=(id)=>!!varBillsPaid[`${monthKey}_${id}`];
   const getPaidAmount=(id)=>varBillsPaid[`${monthKey}_${id}`]?.amount||null;
-
-  const markPaid=(bill,amount)=>{
-    const amt=parseFloat(amount)||0;
-    const key=`${monthKey}_${bill.id}`;
-    const targetAcct=accounts[activeAccount];
-    let updatedTxs=targetAcct.transactions||[];
-    let txId=null;
-    // Only create a transaction (and deduct from balance) when a real amount is entered —
-    // "Mark paid" with amount still TBD just flags it paid, nothing to deduct yet.
-    if(amt>0){
-      const newTx={id:Date.now(),date:now.toISOString().split('T')[0],desc:bill.name,type:'debit',grp:'Housing',cat:bill.category||'Other',amt,note:'Variable bill',refNum:''};
-      txId=newTx.id;
-      updatedTxs=[newTx,...updatedTxs];
-      updatedTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-    }
-    const updatedVarBillsPaid={...varBillsPaid,[key]:{amount:amt,date:now.toISOString(),txId}};
-    const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],varBillsPaid:updatedVarBillsPaid,transactions:updatedTxs}};
-    setAccounts(updatedAccounts);
-    saveToFirebase(updatedAccounts);
-    setEditingAmount(null);
-    setAmountInput('');
-  };
-
-  const unmarkPaid=(bill)=>{
-    const key=`${monthKey}_${bill.id}`;
-    const paidRecord=varBillsPaid[key];
-    const updatedVarBillsPaid={...varBillsPaid};
-    delete updatedVarBillsPaid[key];
-    let updatedTxs=accounts[activeAccount].transactions||[];
-    if(paidRecord?.txId)updatedTxs=updatedTxs.filter(t=>t.id!==paidRecord.txId);
-    const updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],varBillsPaid:updatedVarBillsPaid,transactions:updatedTxs}};
-    setAccounts(updatedAccounts);
-    saveToFirebase(updatedAccounts);
-  };
 
   const catIcon={Electric:'⚡',['Gas / heat']:'🔥',Water:'💧',['Internet (variable)']:'🌐',['Other utility']:'🏠'};
 
@@ -3495,19 +3557,12 @@ function VarBillsSection({varBills=[],setVarBills,varBillsPaid={},setVarBillsPai
                     <>
                       <span style={{fontSize:13,fontWeight:600,color:'#16a34a'}}>${paidAmt?.toFixed(2)||'0.00'}</span>
                       <span style={{background:'rgba(22,163,74,0.12)',color:'#16a34a',border:'0.5px solid rgba(22,163,74,0.25)',borderRadius:20,fontSize:11,fontWeight:600,padding:'2px 10px'}}>Paid ✓</span>
-                      <button className="btn-outline" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>unmarkPaid(bill)}>Undo</button>
-                    </>
-                  ) : editingAmount===bill.id ? (
-                    <>
-                      <input type="number" placeholder="$0.00" min="0" step="0.01" value={amountInput} onChange={e=>setAmountInput(e.target.value)} style={{width:90,fontSize:12}} autoFocus onKeyDown={e=>e.key==='Enter'&&amountInput&&markPaid(bill,amountInput)}/>
-                      <button className="btn-gold" style={{fontSize:11,padding:'5px 10px'}} onClick={()=>amountInput&&markPaid(bill,amountInput)}>Save & mark paid</button>
-                      <button className="btn-outline" style={{fontSize:11,padding:'5px 8px'}} onClick={()=>{setEditingAmount(null);setAmountInput('');}}>✕</button>
+                      <button className="btn-outline" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>onUnmarkVarPaid(bill)}>Undo</button>
                     </>
                   ) : (
                     <>
                       <span style={{fontSize:11,color:'var(--text-muted)',fontStyle:'italic'}}>Amount TBD</span>
-                      <button className="btn-outline" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>{setEditingAmount(bill.id);setAmountInput('');}}>Enter amount</button>
-                      <button className="btn-gold" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>markPaid(bill,0)}>Mark paid</button>
+                      <button className="btn-gold" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>onMarkVarPaid(bill)}>Mark paid</button>
                     </>
                   )}
                   <button style={{background:'var(--green-light)',color:'var(--green)',border:'1px solid var(--green-mid)',borderRadius:'var(--radius-sm)',padding:'3px 7px',fontSize:11,cursor:'pointer'}} onClick={()=>setEditingBill(bill)}>✏️</button>
@@ -3600,14 +3655,13 @@ function EditSubForm({sub,categories,onSave,onCancel}){
 }
 
 
-function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveSubscription}){
+function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[],goals=[],accounts,activeAccount,setAccounts,saveToFirebase,onMoveSubscription,onPaySub,onUnpaySub}){
   const now=new Date();
   const monthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const todayDay=now.getDate();
   const [form,setForm]=useState({name:'',amount:'',cycle:'monthly',category:'Streaming',dueDay:'1',autopay:false});
   const [showForm,setShowForm]=useState(false);
   const [err,setErr]=useState({});
-  const [paySubModal,setPaySubModal]=useState(null);
   const [editingSub,setEditingSub]=useState(null);
   const CATEGORIES=['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other'];
   const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
@@ -3626,42 +3680,6 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
   const isPaid=sub=>!!(sub.subsPaid&&sub.subsPaid[monthKey]);
   const paidAt=sub=>{const p=sub.subsPaid&&sub.subsPaid[monthKey];return p?new Date(p.paidAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):null;};
   const getDueStatus=dueDay=>{if(dueDay<todayDay)return'overdue';if(dueDay-todayDay<=3)return'due-soon';return'upcoming';};
-
-  const handlePaySub=(sub)=>setPaySubModal(sub);
-
-  const handlePaySubConfirm=(selectedAccountKey,deduct)=>{
-    const sub=paySubModal;
-    const key=monthKey;
-    const updated=subscriptions.map(s=>{
-      if(s.id!==sub.id)return s;
-      return{...s,subsPaid:{...(s.subsPaid||{}),[key]:{paidAt:new Date().toISOString()}}};
-    });
-    if(deduct&&accounts&&selectedAccountKey){
-      const targetAcct=accounts[selectedAccountKey];
-      const newTx={id:Date.now(),date:now.toISOString().split('T')[0],desc:sub.name,type:'debit',grp:'Personal',cat:'Subscriptions',amt:sub.amount,note:'Subscription',refNum:''};
-      const updatedTxs=[newTx,...(targetAcct.transactions||[])];
-      updatedTxs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-      let updatedAccounts={...accounts,[activeAccount]:{...accounts[activeAccount],subscriptions:updated}};
-      // Merge into whichever account is the deduction target — same object if it's the active
-      // account (so the subsPaid update isn't lost), a different one if paying from elsewhere.
-      updatedAccounts={...updatedAccounts,[selectedAccountKey]:{...updatedAccounts[selectedAccountKey],transactions:updatedTxs}};
-      setAccounts(updatedAccounts);
-      saveToFirebase(updatedAccounts);
-    } else {
-      setSubscriptions(updated);
-    }
-    setPaySubModal(null);
-  };
-
-  const handleUnpaySub=subId=>{
-    const updated=subscriptions.map(s=>{
-      if(s.id!==subId)return s;
-      const newPaid={...(s.subsPaid||{})};
-      delete newPaid[monthKey];
-      return{...s,subsPaid:newPaid};
-    });
-    setSubscriptions(updated);
-  };
 
   const monthlyTotal=subscriptions.reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount/12:sub.amount),0);
   const yearlyTotal=subscriptions.reduce((s,sub)=>s+(sub.cycle==='yearly'?sub.amount:sub.amount*12),0);
@@ -3702,20 +3720,6 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
           <div className="modal-box slide-up" style={{maxWidth:480}}>
             <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:'1.25rem',color:'var(--text-primary)'}}>✏️ Edit Subscription</h2>
             <EditSubForm sub={editingSub} categories={['Streaming','Music','Gaming','Fitness','Software','News','Food / Delivery','Education','Other']} onSave={(updated)=>{setSubscriptions(subscriptions.map(s=>s.id===updated.id?updated:s));setEditingSub(null);}} onCancel={()=>setEditingSub(null)} />
-          </div>
-        </div>
-      )}
-      {paySubModal&&(
-        <div className="modal-overlay" style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}}>
-          <div className="modal-box slide-up" style={{maxWidth:420}}>
-            <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
-              <div style={{fontSize:36,marginBottom:8}}>📱</div>
-              <h2 style={{fontFamily:'var(--font-display)',fontSize:20,marginBottom:6,color:'var(--text-primary)'}}>Mark "{paySubModal.name}" as paid</h2>
-              <p style={{fontSize:13,color:'var(--text-muted)'}}>${paySubModal.amount.toFixed(2)}</p>
-            </div>
-            {accounts&&(
-              <PaySubAccountSelector accounts={accounts} sub={paySubModal} onConfirm={handlePaySubConfirm} onCancel={()=>setPaySubModal(null)} />
-            )}
           </div>
         </div>
       )}
@@ -3794,9 +3798,9 @@ function SubscriptionsSection({subscriptions=[],setSubscriptions,transactions=[]
                       <td style={{textAlign:'right',fontWeight:700,fontSize:13,color:paid?'var(--text-muted)':'var(--text-primary)'}}>${sub.amount.toFixed(2)}</td>
                       <td style={{textAlign:'center'}}>
                         {paid?(
-                          <button onClick={()=>handleUnpaySub(sub.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                          <button onClick={()=>onUnpaySub(sub.id)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                         ):(
-                          <button onClick={()=>handlePaySub(sub)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
+                          <button onClick={()=>onPaySub(sub)} style={{background:sc.bg,color:sc.color,border:`1px solid ${sc.color}40`,borderRadius:20,padding:'3px 10px',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>{sc.label}</button>
                         )}
                       </td>
                       <td style={{textAlign:'center',fontSize:11,color:'var(--text-muted)'}}>{paidAt(sub)||'—'}</td>
@@ -3935,7 +3939,7 @@ function TransferModal({accounts,onTransfer,onCancel}){
 }
 
 // ── Calendar Tab ───────────────────────────────────────────────
-function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBillsPaid={}}){
+function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBillsPaid={},onPayBill,onUnpayBill,onPaySub,onUnpaySub,onMarkVarPaid,onUnmarkVarPaid}){
   const now=new Date();
   const year=now.getFullYear();
   const month=now.getMonth();
@@ -3959,7 +3963,7 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
     const paid=isPaid(b.id,'bill');
     const diff=d-todayDay;
     const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
-    dayMap[d].push({name:b.name,amount:b.amount,status,type:'bill'});
+    dayMap[d].push({name:b.name,amount:b.amount,status,type:'bill',item:b,paid});
   });
   (subscriptions||[]).forEach(s=>{
     const d=s.dueDay||1;
@@ -3967,7 +3971,7 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
     const paid=isPaid(s.id,'sub');
     const diff=d-todayDay;
     const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'upcoming';
-    dayMap[d].push({name:s.name,amount:s.amount,status,type:'sub'});
+    dayMap[d].push({name:s.name,amount:s.amount,status,type:'sub',item:s,paid});
   });
   (varBills||[]).forEach(v=>{
     const d=v.dueDay||1;
@@ -3976,9 +3980,16 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
     const paid=!!paidEntry;
     const diff=d-todayDay;
     const status=paid?'paid':diff<0?'overdue':diff<=3?'due-soon':'var-tbd';
-    dayMap[d].push({name:v.name,amount:paidEntry?.amount||null,status,type:'var'});
+    dayMap[d].push({name:v.name,amount:paidEntry?.amount||null,status,type:'var',item:v,paid});
   });
 
+  // One click handler shared by the calendar chips and the "All bills this month" list —
+  // paid items open the unpay action, unpaid items open the appropriate pay flow for their type.
+  const handleItemClick=(entry)=>{
+    if(entry.type==='bill'){ entry.paid?onUnpayBill(entry.item.id):onPayBill(entry.item); }
+    else if(entry.type==='sub'){ entry.paid?onUnpaySub(entry.item.id):onPaySub(entry.item); }
+    else if(entry.type==='var'){ entry.paid?onUnmarkVarPaid(entry.item):onMarkVarPaid(entry.item); }
+  };
   const statusColors={paid:{bg:'rgba(22,163,74,0.15)',color:'#16a34a',dot:'#16a34a'},'due-soon':{bg:'rgba(217,119,6,0.15)',color:'#d97706',dot:'#d97706'},overdue:{bg:'rgba(220,38,38,0.15)',color:'#dc2626',dot:'#dc2626'},upcoming:{bg:'rgba(107,114,128,0.08)',color:'#6b7280',dot:'var(--border)'},'var-tbd':{bg:'rgba(124,58,237,0.1)',color:'#7c3aed',dot:'#7c3aed'}};
 
   const totalDue=(bills||[]).length+(subscriptions||[]).length+(varBills||[]).length;
@@ -4021,7 +4032,7 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
                 {items.map((item,idx)=>{
                   const sc=statusColors[item.status]||statusColors['upcoming'];
                   return(
-                    <div key={idx} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden'}} title={`${item.name}${item.amount!=null?' - $'+item.amount.toFixed(2):''}`}>
+                    <div key={idx} onClick={()=>handleItemClick(item)} style={{background:sc.bg,borderRadius:3,padding:'1px 4px',marginBottom:1,overflow:'hidden',cursor:item.status==='paid'?'default':'pointer'}} title={`${item.name}${item.amount!=null?' - $'+item.amount.toFixed(2):''}${item.status!=='paid'?' — tap to mark paid':''}`}>
                       <div style={{fontSize:9,color:sc.color,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.name}</div>
                     </div>
                   );
@@ -4040,14 +4051,14 @@ function CalendarTab({bills=[],billsPaid={},subscriptions=[],varBills=[],varBill
           const sc=statusColors[status]||statusColors['upcoming'];
           const daySuffix=d=>{if(d>=11&&d<=13)return`${d}th`;const s=['th','st','nd','rd'];return`${d}${s[d%10]||'th'}`;};
           return(
-            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)'}}>
+            <div key={i} onClick={()=>handleItemClick({type:item.itemType,item,paid})} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border-light)',cursor:'pointer'}}>
               <div style={{width:8,height:8,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{item.name}</div>
                 <div style={{fontSize:11,color:'var(--text-muted)'}}>Due {daySuffix(item.dueDay)} · {item.itemType==='sub'?'Subscription':item.itemType==='var'?'Variable bill':'Fixed bill'}</div>
               </div>
               <div style={{fontWeight:700,color:'var(--text-primary)'}}>{item.amount!=null?`$${item.amount.toFixed(2)}`:'TBD'}</div>
-              <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap'}}>{status==='due-soon'?'Due soon':status==='var-tbd'?'Amount TBD':status.charAt(0).toUpperCase()+status.slice(1)}</span>
+              <span style={{background:sc.bg,color:sc.color,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,whiteSpace:'nowrap',border:paid?'none':`1px solid ${sc.color}40`}}>{paid?'Paid ✓ · tap to undo':status==='due-soon'?'Due soon · tap to pay':status==='var-tbd'?'Amount TBD · tap to pay':status==='overdue'?'Overdue · tap to pay':'Tap to pay early'}</span>
             </div>
           );
         })}
