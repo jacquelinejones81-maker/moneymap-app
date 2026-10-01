@@ -1841,6 +1841,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             <span className="nav-icon">{t.icon}</span>{t.label}
           </button>
         ))}
+        <button className="nav-item" onClick={()=>setShowRolloverModal(true)}>
+          <span className="nav-icon">🔄</span>Rollover settings
+        </button>
         {(()=>{
           const today = new Date();
           const todayDay = today.getDate();
@@ -1951,8 +1954,8 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
         </div>
         {showMobileMore&&(
           <div className="mobile-more-menu">
-            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'reports',label:'Reports',icon:'📑'},{id:'tour',label:'Tour',icon:'🗺'},{id:'feedback',label:'Send feedback',icon:'💬'}].map(t=>(
-              <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else if(t.id==='feedback'){setShowFeedback(true);}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
+            {[{id:'calendar',label:'Calendar',icon:'📅'},{id:'spending',label:'Spending',icon:'📊'},{id:'cash',label:'Cash',icon:'💵'},{id:'timeline',label:'Payoff',icon:'⏱'},{id:'networth',label:'Net Worth',icon:'💎'},{id:'reports',label:'Reports',icon:'📑'},{id:'tour',label:'Tour',icon:'🗺'},{id:'feedback',label:'Send feedback',icon:'💬'},{id:'rollover',label:'Rollover settings',icon:'🔄'}].map(t=>(
+              <button key={t.id} className={`mobile-more-btn${activeTab===t.id?' active':''}`} onClick={()=>{if(t.id==='tour'){resetTour();}else if(t.id==='feedback'){setShowFeedback(true);}else if(t.id==='rollover'){setShowRolloverModal(true);}else{handleTabSwitch(t.id);}setShowMobileMore(false);}}>
                 <span className="ico">{t.icon}</span>{t.label}
               </button>
             ))}
