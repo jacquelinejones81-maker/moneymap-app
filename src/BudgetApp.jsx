@@ -1338,10 +1338,22 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     await saveUserPrefs({ rolloverSeenMonths: { [monthKey]: true } });
   };
 
-  const applyRollover = async () => {
-    await markRolloverSeen();
+  const [rolloverAcctKey, setRolloverAcctKey] = useState(activeAccount);
+  const [rolloverDoneAccts, setRolloverDoneAccts] = useState([]);
 
-    const acct = accounts[activeAccount];
+  // Reset the modal's own account selector + progress whenever it's (re)opened,
+  // so it always starts on whichever account you're currently viewing.
+  useEffect(() => {
+    if (showRolloverModal) {
+      setRolloverAcctKey(activeAccount);
+      setRolloverDoneAccts([]);
+    }
+  }, [showRolloverModal]);
+
+  // Computes the rolled-over version of one account's data — doesn't save anything itself.
+  const computeRolledOverAccount = (acctKey) => {
+    const today = new Date();
+    const acct = accounts[acctKey];
     let updated = { ...acct };
 
     if (rolloverSettings.clearTransactions) {
@@ -1351,8 +1363,6 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     }
 
     if (rolloverSettings.carryUnspent) {
-      // Last calendar month's date range — carrying over "unspent balance" should mean
-      // last month's surplus specifically, not an all-time total.
       const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       const lastMonthKey = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
       const lastMonthTxs = acct.transactions.filter(t => t.date.startsWith(lastMonthKey));
@@ -1360,7 +1370,7 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
       const spent = lastMonthTxs.filter(t => t.type === 'debit').reduce((s, t) => s + t.amt, 0);
       const surplus = income - spent;
       if (surplus > 0) {
-        const carryTx = { id: Date.now(), date: today.toISOString().slice(0, 10), desc: 'Carried over from last month', type: 'credit', grp: 'Income', cat: 'Other income', amt: parseFloat(surplus.toFixed(2)), note: '', refNum: '' };
+        const carryTx = { id: Date.now() + Math.random(), date: today.toISOString().slice(0, 10), desc: 'Carried over from last month', type: 'credit', grp: 'Income', cat: 'Other income', amt: parseFloat(surplus.toFixed(2)), note: '', refNum: '' };
         updated.transactions = [carryTx, ...(updated.transactions || [])];
       }
     }
@@ -1369,7 +1379,31 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     if (!rolloverSettings.subscriptions) updated.subscriptions = [];
     if (!rolloverSettings.variableExpenses) updated.budgets = {};
 
-    const newAccounts = { ...accounts, [activeAccount]: updated };
+    return updated;
+  };
+
+  // Applies the rollover to just the account currently selected in the modal, marks it
+  // done, and auto-advances to the next not-yet-done account rather than closing outright —
+  // so you can click straight through Main → Bills → Savings without reopening the modal.
+  const applyRollover = async () => {
+    await markRolloverSeen();
+    const updated = computeRolledOverAccount(rolloverAcctKey);
+    const newAccounts = { ...accounts, [rolloverAcctKey]: updated };
+    setAccounts(newAccounts);
+    saveToFirebase(newAccounts);
+    const nowDone = [...rolloverDoneAccts, rolloverAcctKey];
+    setRolloverDoneAccts(nowDone);
+    const remaining = Object.keys(accounts).filter(k => !nowDone.includes(k));
+    if (remaining.length > 0) setRolloverAcctKey(remaining[0]);
+    else setShowRolloverModal(false);
+  };
+
+  // Explicit opt-in shortcut for when identical treatment really is wanted everywhere —
+  // applies the same current toggle settings to every account at once.
+  const applyRolloverToAllAccounts = async () => {
+    await markRolloverSeen();
+    const newAccounts = { ...accounts };
+    Object.keys(accounts).forEach(k => { newAccounts[k] = computeRolledOverAccount(k); });
     setAccounts(newAccounts);
     saveToFirebase(newAccounts);
     setShowRolloverModal(false);
@@ -1760,6 +1794,19 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
               </div>
             </div>
 
+            {Object.keys(accounts).length > 1 && (
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:8 }}>Applying to</div>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {Object.keys(accounts).map(k => (
+                    <button key={k} onClick={() => setRolloverAcctKey(k)} style={{ padding:'6px 12px', borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer', border: rolloverAcctKey===k ? '1px solid var(--green)' : '1px solid var(--border)', background: rolloverAcctKey===k ? 'var(--green)' : rolloverDoneAccts.includes(k) ? 'var(--green-light)' : '#fafaf8', color: rolloverAcctKey===k ? '#fff' : rolloverDoneAccts.includes(k) ? 'var(--green)' : 'var(--text-muted)' }}>
+                      {rolloverDoneAccts.includes(k) && '✓ '}{accounts[k].name || k}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:8 }}>Budget categories</div>
             <div style={{ background:'#fafaf8', border:'1px solid #eee', borderRadius:10, marginBottom:14, overflow:'hidden' }}>
               {[
@@ -1816,8 +1863,13 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
             </div>
 
             <button onClick={applyRollover} style={{ width:'100%', background:'var(--green)', color:'#fff', border:'none', borderRadius:10, padding:'13px', fontSize:14, fontWeight:700, cursor:'pointer', marginBottom:8 }}>
-              Start {new Date().toLocaleString('default',{month:'long'})} →
+              Start {new Date().toLocaleString('default',{month:'long'})} for {accounts[rolloverAcctKey]?.name || rolloverAcctKey} →
             </button>
+            {Object.keys(accounts).length > 1 && (
+              <button onClick={applyRolloverToAllAccounts} style={{ width:'100%', background:'none', border:'1px solid var(--border)', borderRadius:10, padding:'10px', fontSize:12, fontWeight:600, color:'var(--text-muted)', cursor:'pointer', marginBottom:8 }}>
+                Apply these same settings to all {Object.keys(accounts).length} accounts
+              </button>
+            )}
             <button onClick={async () => { await markRolloverSeen(); setShowRolloverModal(false); }} style={{ width:'100%', background:'none', border:'none', color:'var(--text-muted)', fontSize:12, cursor:'pointer', textDecoration:'underline' }}>
               Decide later
             </button>
