@@ -1351,11 +1351,16 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     }
 
     if (rolloverSettings.carryUnspent) {
-      const income = acct.transactions.filter(t => parseFloat(t.amount) > 0).reduce((s, t) => s + parseFloat(t.amount), 0);
-      const spent = acct.transactions.filter(t => parseFloat(t.amount) < 0).reduce((s, t) => s + Math.abs(parseFloat(t.amount)), 0);
+      // Last calendar month's date range — carrying over "unspent balance" should mean
+      // last month's surplus specifically, not an all-time total.
+      const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthKey = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+      const lastMonthTxs = acct.transactions.filter(t => t.date.startsWith(lastMonthKey));
+      const income = lastMonthTxs.filter(t => t.type === 'credit').reduce((s, t) => s + t.amt, 0);
+      const spent = lastMonthTxs.filter(t => t.type === 'debit').reduce((s, t) => s + t.amt, 0);
       const surplus = income - spent;
       if (surplus > 0) {
-        const carryTx = { id: Date.now(), date: today.toISOString().slice(0, 10), desc: 'Carried over from last month', amount: surplus.toFixed(2), category: 'Other income', note: '' };
+        const carryTx = { id: Date.now(), date: today.toISOString().slice(0, 10), desc: 'Carried over from last month', type: 'credit', grp: 'Income', cat: 'Other income', amt: parseFloat(surplus.toFixed(2)), note: '', refNum: '' };
         updated.transactions = [carryTx, ...(updated.transactions || [])];
       }
     }
@@ -1364,7 +1369,9 @@ export default function BudgetApp({ lead, firebaseUser, onSignOut, onDeleteAccou
     if (!rolloverSettings.subscriptions) updated.subscriptions = [];
     if (!rolloverSettings.variableExpenses) updated.budgets = {};
 
-    setAccounts(prev => ({ ...prev, [activeAccount]: updated }));
+    const newAccounts = { ...accounts, [activeAccount]: updated };
+    setAccounts(newAccounts);
+    saveToFirebase(newAccounts);
     setShowRolloverModal(false);
   };
 
