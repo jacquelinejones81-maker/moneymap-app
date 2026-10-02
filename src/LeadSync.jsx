@@ -45,6 +45,9 @@ export async function recordContactRequest(lead, uid, requestInfo) {
     'Emergency Account setup':        'interest_savings_1',
     'Short-Term Account setup':       'interest_savings_1',
     'Wealth Building Account setup':  'interest_wealth_1',
+    'Auto & Home Insurance':          'interest_home_ins_1',
+    'Home Security':                  'interest_home_security_1',
+    'Financial Needs Analysis':       'interest_fna_1',
   };
 
   const interestKey = CATEGORY_MAP[requestInfo.label] || CATEGORY_MAP[requestInfo.source] || null;
