@@ -420,6 +420,8 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
       'Life Insurance': '🛡️', 'Savings': '🐷', 'Debt': '📉',
       'Budgeting': '💡', 'Identity Protection': '🔒',
       'Legal Protection': '⚖️', 'Mortgage': '🏠', 'Wealth Building': '📈',
+      'Auto & Home Insurance': '🏡', 'Home Security': '🔐',
+      'Financial Needs Analysis': '💼',
     };
     await recordContactRequest(lead, uid, {
       icon: iconMap[tipCategory] || '💬',
@@ -429,10 +431,10 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
     });
   }
 
-  function handleCta() {
+  async function handleCta() {
     // Only record engagement when user takes a positive action (rep: or no action = wants contact)
     if (!tip.action || tip.action.startsWith('rep:')) {
-      recordLeadEngagement(tip.category, tip.title);
+      await recordLeadEngagement(tip.category, tip.title);
       markTipSeen(uid, tip.id);
       setConfirmed(true);
       return;
