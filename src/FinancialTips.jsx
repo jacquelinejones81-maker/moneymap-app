@@ -400,6 +400,7 @@ export function RepContactCard({ repName, uid }) {
 export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
   const [tip, setTip] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(function() {
@@ -415,36 +416,42 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
 
   if (!tip || dismissed || showTour) return null;
 
-  async function recordLeadEngagement(tipCategory, tipTitle) {
-    const iconMap = {
-      'Life Insurance': '🛡️', 'Savings': '🐷', 'Debt': '📉',
-      'Budgeting': '💡', 'Identity Protection': '🔒',
-      'Legal Protection': '⚖️', 'Mortgage': '🏠', 'Wealth Building': '📈',
-      'Auto & Home Insurance': '🏡', 'Home Security': '🔐',
-      'Financial Needs Analysis': '💼',
-    };
-    await recordContactRequest(lead, uid, {
-      icon: iconMap[tipCategory] || '💬',
-      label: tipCategory,
-      detail: tipTitle,
-      source: 'tip',
-    });
-  }
+  const TIP_ICON_MAP = {
+    'Life Insurance': '🛡️', 'Savings': '🐷', 'Debt': '📉',
+    'Budgeting': '💡', 'Identity Protection': '🔒',
+    'Legal Protection': '⚖️', 'Mortgage': '🏠', 'Wealth Building': '📈',
+    'Auto & Home Insurance': '🏡', 'Home Security': '🔐',
+    'Financial Needs Analysis': '💼',
+  };
 
   async function handleCta() {
-    // Only record engagement when user takes a positive action (rep: or no action = wants contact)
-    if (!tip.action || tip.action.startsWith('rep:')) {
-      await recordLeadEngagement(tip.category, tip.title);
-      markTipSeen(uid, tip.id);
-      setConfirmed(true);
-      return;
-    }
-    if (tip.action.startsWith('tab:')) {
-      const tab = tip.action.replace('tab:', '');
-      if (onTabSwitch) onTabSwitch(tab);
-      markTipSeen(uid, tip.id);
-      setDismissed(true);
-      return;
+    try {
+      // Only record engagement when user takes a positive action (rep: or no action = wants contact).
+      // Calls recordContactRequest directly here — the exact same function and call shape used by
+      // the Savings account setup flow (Emergency/Short-Term/Wealth Building), with no wrapper in between.
+      if (!tip.action || tip.action.startsWith('rep:')) {
+        await recordContactRequest(lead, uid, {
+          icon: TIP_ICON_MAP[tip.category] || '💬',
+          label: tip.category,
+          detail: tip.title,
+          source: 'tip',
+        });
+        markTipSeen(uid, tip.id);
+        setConfirmed(true);
+        return;
+      }
+      if (tip.action.startsWith('tab:')) {
+        const tab = tip.action.replace('tab:', '');
+        if (onTabSwitch) onTabSwitch(tab);
+        markTipSeen(uid, tip.id);
+        setDismissed(true);
+        return;
+      }
+    } catch (e) {
+      // Previously this kind of failure was silent — nothing visibly happened when clicking
+      // the button. Now the actual error shows directly in the card, visible without dev tools.
+      console.error('FinancialTips: handleCta error', e);
+      setErrorMsg(e && e.message ? e.message : String(e));
     }
   }
 
@@ -491,28 +498,33 @@ export default function FinancialTips({ uid, lead, onTabSwitch, showTour }) {
           style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color:'var(--text-muted)', opacity:0.5, padding:0, lineHeight:1, flexShrink:0 }}
         >✕</button>
       </div>
-      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-        <button
-          onClick={handleCta}
-          style={{ flex:1, background:tip.color, color:'#fff', border:'none', borderRadius:7, padding:'8px 10px', fontSize:12, fontWeight:700, cursor:'pointer' }}
-        >
-          {tip.cta}
-        </button>
+      <button
+        onClick={handleCta}
+        style={{ width:'100%', boxSizing:'border-box', background:tip.color, color:'#fff', border:'none', borderRadius:7, padding:'10px 12px', fontSize:12, fontWeight:700, cursor:'pointer', marginBottom:8 }}
+      >
+        {tip.cta}
+      </button>
+      <div style={{ display:'flex', gap:8, alignItems:'center', justifyContent:'space-between' }}>
         {tip.secondaryCta && (
           <button
             onClick={handleSecondaryCta}
-            style={{ background:'transparent', color:tip.color, border:'1px solid '+tip.border, borderRadius:7, padding:'8px 10px', fontSize:12, fontWeight:600, cursor:'pointer' }}
+            style={{ flex:1, background:'transparent', color:tip.color, border:'1px solid '+tip.border, borderRadius:7, padding:'8px 10px', fontSize:12, fontWeight:600, cursor:'pointer' }}
           >
             {tip.secondaryCta}
           </button>
         )}
         <button
           onClick={function() { markTipSeen(uid, tip.id); setDismissed(true); }}
-          style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', padding:'6px 4px', textDecoration:'underline', whiteSpace:'nowrap' }}
+          style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', padding:'6px 10px', textDecoration:'underline', whiteSpace:'nowrap', flexShrink:0 }}
         >
           Not now
         </button>
       </div>
+      {errorMsg && (
+        <div style={{ marginTop:8, padding:'8px 10px', background:'rgba(184,48,48,0.08)', border:'1px solid rgba(184,48,48,0.25)', borderRadius:7, fontSize:11, color:'#b83030', lineHeight:1.5 }}>
+          Something went wrong sending this: {errorMsg}
+        </div>
+      )}
     </div>
   );
 }
